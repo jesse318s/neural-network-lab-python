@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+
+# Machine Learning Model Files
+*.h5
+*.weights.h5
+model_weights*.h5
+*.pkl
+
+# Data Files (if they're generated/temporary)
+*.csv
+data_summary.json
+
+# Training Output and Logs
+training_output/
