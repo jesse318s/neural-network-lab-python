@@ -593,11 +593,98 @@ def demonstrate_individual_components():
         print(f"✗ Adaptive loss functions test failed: {e}")
 
 
+def run_systematic_experiments():
+    """Run systematic experiments using the new experiment framework."""
+    print("\n" + "=" * 60)
+    print("SYSTEMATIC NEURAL NETWORK EXPERIMENTS")
+    print("=" * 60)
+    
+    try:
+        from experiment_config import ExperimentConfigManager
+        from experiment_runner import ExperimentRunner
+        from experiment_analysis import ExperimentAnalyzer
+        
+        # Create experiment configuration manager
+        print("\n--- Generating Experiment Configurations ---")
+        config_manager = ExperimentConfigManager("physics_simulation_experiments")
+        
+        # Generate a test subset for demonstration
+        test_configs = config_manager.generate_subset_configurations(
+            particle_counts=[100, 500],
+            architectures=['shallow_wide', 'deep_narrow'],
+            constraints=['none', 'all_constraints'],
+            loss_strategies=['mse_only', 'combined_adaptive'],
+            random_seeds=[42],
+            epochs=15
+        )
+        
+        print(f"Generated {len(test_configs)} test configurations")
+        
+        # Save configurations
+        config_manager.save_configurations("test_experiment_configs.json")
+        
+        # Create experiment runner
+        print("\n--- Running Systematic Experiments ---")
+        runner = ExperimentRunner("physics_simulation_experiments")
+        
+        # Run a small subset for demonstration (first 4 experiments)
+        success = runner.run_all_experiments(
+            test_configs,
+            experiment_subset=list(range(min(4, len(test_configs))))
+        )
+        
+        print(f"Experiment execution {'successful' if success else 'completed with some failures'}")
+        
+        # Analyze results if we have enough data
+        results_file = runner.results_file
+        if os.path.exists(results_file):
+            print("\n--- Analyzing Experiment Results ---")
+            analyzer = ExperimentAnalyzer(results_file)
+            
+            # Generate analysis report
+            report = analyzer.generate_comprehensive_report("systematic_analysis_report.json")
+            
+            if report:
+                print("✓ Systematic experiment analysis completed")
+            else:
+                print("⚠ Analysis completed with limited results")
+        
+        return True
+        
+    except ImportError as e:
+        print(f"⚠ Systematic experiments not available: {e}")
+        print("  Running standard experiment mode instead...")
+        return False
+    except Exception as e:
+        print(f"✗ Error in systematic experiments: {e}")
+        return False
+
+
 def main():
-    """Main function to run the complete TensorFlow lab."""
+    """Main function to run the complete TensorFlow lab with optional systematic experiments."""
     print("=" * 60)
     print("ADVANCED TENSORFLOW LAB: CUSTOM WEIGHT MODIFICATION")
     print("=" * 60)
+    
+    # Check for systematic experiment mode
+    try:
+        import sys
+        if len(sys.argv) > 1 and sys.argv[1] == '--systematic':
+            print("Running in systematic experiment mode...")
+            systematic_success = run_systematic_experiments()
+            if systematic_success:
+                print("\n" + "=" * 60)
+                print("SYSTEMATIC EXPERIMENTS COMPLETED!")
+                print("=" * 60)
+                return
+        elif len(sys.argv) > 1 and sys.argv[1] == '--help':
+            print("\nUsage:")
+            print("  python main.py              # Run standard single experiment")
+            print("  python main.py --systematic # Run systematic experiments")
+            print("  python main.py --help       # Show this help")
+            return
+    except Exception:
+        pass
     
     # Demonstrate individual components first
     demonstrate_individual_components()

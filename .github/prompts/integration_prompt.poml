@@ -1,0 +1,214 @@
+<poml syntax="markdown">
+
+<role>You are an expert Python developer and machine learning engineer specializing in systematic neural network experimentation for physics simulations.</role>
+
+<task>
+Integrate systematic neural network experimentation capabilities into the existing python-lab project to enable comprehensive testing of weight constraints, adaptive loss functions, and architectural variations for physics simulations.
+
+The integration should add the following key components:
+<list>
+  <item>Experiment configuration manager for systematic parameter combinations</item>
+  <item>Comprehensive experiment runner with detailed metrics collection</item>
+  <item>Statistical analysis module for identifying optimal configurations</item>
+  <item>Enhanced data generation with variable particle counts</item>
+  <item>CSV results export with comprehensive performance metrics</item>
+</list>
+</task>
+
+<h>Current Project Structure</h>
+
+<folder src="python-lab" filter="\.py$|\.txt$|\.md$">
+python-lab/
+├── adaptive_loss.py          # Adaptive loss function implementations
+├── data_loader.py            # CSV data loading and particle simulation
+├── main.py                   # Main neural network with weight constraints
+├── performance_tracker.py     # Training performance tracking
+├── weight_constraints.py     # Binary weight constraints and oscillation dampening
+├── test_main.py              # Unit tests
+├── requirements.txt          # Dependencies
+└── README.md                 # Project documentation
+</folder>
+
+<h>Integration Requirements</h>
+
+<cp caption="Primary Features to Integrate">
+<list>
+  <item>**Systematic Experimentation**: Test all combinations of weight constraints (binary changes, binary max, oscillation dampening) with adaptive loss strategies</item>
+  <item>**Architecture Generalizability**: Test multiple neural network architectures across different particle counts to verify scalability</item>
+  <item>**Comprehensive Metrics**: Collect MSE, MAE, R², training time, model size, inference speed, convergence analysis, and stability scores</item>
+  <item>**Statistical Analysis**: ANOVA testing, pairwise comparisons, and identification of optimal configurations</item>
+  <item>**CSV Export**: Save all experimental results to CSV for further analysis and reporting</item>
+</list>
+</cp>
+
+<cp caption="Key Benefits of Weight Constraints">
+<list>
+  <item>**Binary Precision Constraints**: Prevent overflow and improve model compression by limiting weight precision</item>
+  <item>**Oscillation Dampening**: Reduce noise and prevent local minima trapping through weight stability</item>
+  <item>**Adaptive Application**: Focus optimization when weights settle early, allowing other weights to continue learning</item>
+  <item>**Smoothing Effects**: Reduce small fluctuations and add beneficial noise through rounding errors</item>
+</list>
+</cp>
+
+<cp caption="Adaptive Loss Function Benefits">
+<list>
+  <item>**Multi-Strategy Weighting**: Combine MSE and MAE using epoch-based, accuracy-based, and loss-based strategies</item>
+  <item>**Dynamic Adaptation**: Prevent early convergence by switching between loss functions during training</item>
+  <item>**Composite Optimization**: Shake up training dynamics for better global optima discovery</item>
+  <item>**Complex Loss Functions**: Enable multiple loss function usage without predetermining the best approach</item>
+</list>
+</cp>
+
+<h>Integration Plan</h>
+
+<stepwise-instructions>
+<list>
+  <item>Create experiment_config.py with systematic parameter combination generation</item>
+  <item>Develop experiment_runner.py for comprehensive experiment execution and metrics collection</item>
+  <item>Build experiment_analysis.py for statistical analysis and optimal configuration identification</item>
+  <item>Enhance data_loader.py to support variable particle counts and enhanced data generation</item>
+  <item>Update main.py to integrate with the new experiment framework</item>
+  <item>Add integration tests to verify the new functionality works correctly</item>
+</list>
+</stepwise-instructions>
+
+<h>Required File Implementations</h>
+
+<cp caption="experiment_config.py">
+Create a configuration manager that generates systematic combinations of:
+<list>
+  <item>Particle counts: [100, 500, 1000, 2000] for generalizability testing</item>
+  <item>Batch size pairs: [(32,16), (64,32), (128,64)] for training vs validation optimization</item>
+  <item>Neural architectures: shallow_wide, deep_narrow, mixed_activation for architecture comparison</item>
+  <item>Weight constraints: none, binary_changes_only, binary_max_only, oscillation_only, binary_combined, all_constraints</item>
+  <item>Loss strategies: mse_only, epoch_based, accuracy_based, loss_based, combined_adaptive</item>
+  <item>Random seeds: [42, 123, 456] for reproducible results</item>
+</list>
+</cp>
+
+<cp caption="experiment_runner.py">
+Implement comprehensive experiment execution with:
+<list>
+  <item>Individual experiment execution with error handling and recovery</item>
+  <item>Metrics collection: MSE, MAE, RMSE, R², training time, model size, inference speed</item>
+  <item>Advanced metrics: convergence epoch, stability score, generalization gap, constraint application counts</item>
+  <item>Real-time CSV saving to prevent data loss during long experiment runs</item>
+  <item>Progress tracking and failure recovery mechanisms</item>
+</list>
+</cp>
+
+<cp caption="experiment_analysis.py">
+Build statistical analysis capabilities including:
+<list>
+  <item>ANOVA testing for constraint and loss function effectiveness</item>
+  <item>Pairwise comparisons between different configurations</item>
+  <item>Generalizability analysis across particle counts and architectures</item>
+  <item>Best combination identification for different optimization criteria</item>
+  <item>Comprehensive reporting with recommendations for optimal configurations</item>
+</list>
+</cp>
+
+<cp caption="Enhanced data_loader.py">
+Extend current data generation with:
+<list>
+  <item>Variable particle count support for scalability testing</item>
+  <item>Enhanced physics simulation complexity based on particle count</item>
+  <item>Improved data validation and integrity checking</item>
+  <item>Better error handling and fallback data generation</item>
+</list>
+</cp>
+
+<h>Implementation Guidelines</h>
+
+<cp caption="Code Quality Standards">
+<list>
+  <item>Follow existing code style and patterns from the current python-lab files</item>
+  <item>Implement comprehensive error handling with graceful degradation</item>
+  <item>Include detailed docstrings and type hints for all functions</item>
+  <item>Maintain backward compatibility with existing main.py functionality</item>
+  <item>Use the existing import patterns and module structure</item>
+</list>
+</cp>
+
+<cp caption="Integration Points">
+<list>
+  <item>Extend AdvancedNeuralNetwork class to work with experiment configurations</item>
+  <item>Enhance PerformanceTracker to collect additional metrics required for analysis</item>
+  <item>Update data_loader.generate_particle_data to accept configurable parameters</item>
+  <item>Ensure compatibility with existing weight_constraints and adaptive_loss modules</item>
+  <item>Maintain the existing CSV export functionality while adding new experiment results</item>
+</list>
+</cp>
+
+<h>Expected Outcomes</h>
+
+<cp caption="Deliverables">
+<list>
+  <item>Complete systematic experimentation framework integrated into python-lab</item>
+  <item>CSV results file with comprehensive metrics from all experiment combinations</item>
+  <item>Statistical analysis report identifying optimal configurations for physics simulations</item>
+  <item>Enhanced documentation explaining the new experimentation capabilities</item>
+  <item>Integration tests verifying the new functionality works correctly with existing code</item>
+</list>
+</cp>
+
+<examples>
+<example>
+  <input caption="Usage Example">How would someone run a subset of experiments to test the new integration?</input>
+  <output caption="Implementation">
+```python
+# Run a subset of experiments for testing
+from experiment_runner import ExperimentRunner
+
+runner = ExperimentRunner('physics_simulation_experiments')
+runner.run_all_experiments(experiment_subset=list(range(10)))  # First 10 experiments
+
+# Analyze results
+from experiment_analysis import ExperimentAnalyzer
+analyzer = ExperimentAnalyzer('physics_simulation_experiments/experiment_results.csv')
+analyzer.generate_comprehensive_report()
+```
+  </output>
+</example>
+
+<example>
+  <input caption="Configuration Example">What would a typical experiment configuration look like?</input>
+  <output caption="Configuration Structure">
+```python
+experiment_config = {
+    'experiment_id': 42,
+    'particle_count': 1000,
+    'train_batch_size': 64,
+    'val_batch_size': 32,
+    'architecture': {'name': 'deep_narrow', 'layers': [64, 64, 32, 32]},
+    'constraints': {'name': 'all_constraints', 'binary_changes': True, 'binary_max': True, 'oscillation': True},
+    'loss_config': {'name': 'combined_adaptive', 'strategy': 'combined', 'adaptive': True},
+    'epochs': 50,
+    'random_seed': 42
+}
+```
+  </output>
+</example>
+</examples>
+
+<output-format>
+Provide the complete implementation files for the integration, ensuring each file:
+<list>
+  <item>Follows the existing code patterns and imports from the current python-lab project</item>
+  <item>Includes comprehensive error handling and graceful degradation</item>
+  <item>Has detailed docstrings explaining functionality and integration points</item>
+  <item>Maintains compatibility with existing modules (main.py, data_loader.py, etc.)</item>
+  <item>Implements the systematic experimentation framework as specified</item>
+</list>
+
+Files to implement:
+<list>
+  <item>experiment_config.py - Configuration manager for systematic experiments</item>
+  <item>experiment_runner.py - Comprehensive experiment execution framework</item>
+  <item>experiment_analysis.py - Statistical analysis and reporting</item>
+  <item>Enhanced data_loader.py modifications - Variable particle count support</item>
+  <item>integration_test.py - Tests to verify the new functionality</item>
+</list>
+</output-format>
+
+</poml>
