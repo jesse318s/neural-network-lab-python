@@ -460,9 +460,7 @@ def main():
         if weight_mods:
             for mod in weight_mods:
                 print(f"  ✓ {mod}")
-        else:
-            print(f"  None applied")
-        
+        else: print(f"  None applied")
         print(f"\n📈 Adaptive Loss Strategy:")
         adaptive_strategy = performance_summary.get('adaptive_loss_strategy', 'none')
         print(f"  Strategy: {adaptive_strategy}", \n⚠ Errors: {error_summary.get('total_errors', 0)}")
@@ -482,21 +480,15 @@ def main():
         else: print(f"  ✗ {file_path} (not found)")
     
     print("\n" + "=" * 60)
-    print("🎉 ADVANCED TENSORFLOW LAB COMPLETED!")
-    print("=" * 60, "\n📁 Check 'training_output' directory for detailed results.")
+    print("🎉 ADVANCED TENSORFLOW LAB COMPLETED! \n", "=" * 60, "\n📁 Check 'training_output' directory for detailed results.")
     print("🔬 Lab demonstrated:")
-    print("   • Binary weight precision constraints")
-    print("   • Oscillation dampening for weight stability")
-    print("   • Adaptive loss function combinations")
-    print("   • Comprehensive performance tracking")
-    print("   • Railway-style error handling")
-    print("   • CSV data processing for particle physics simulations")
+    print("   • Binary weight precision constraints \n   • Oscillation dampening for weight stability")
+    print("   • Adaptive loss function combinations \n • Comprehensive performance tracking")
+    print("   • Railway-style error handling \n  • CSV data processing for particle physics simulations")
     
     # Final success/failure summary
     total_errors = results.get('error_summary', {}).get('total_errors', 0)
-    if total_errors == 0: print("\n🏆 Lab completed with NO ERRORS!")
-    elif total_errors < 5: print(f"\n⚠ Lab completed with {total_errors} minor errors")
-    else: print(f"\n⚠ Lab completed with {total_errors} errors")
+    print("\n🏆 Lab completed with NO ERRORS!") if total_errors == 0 else  print(f"\n⚠ Lab completed with {total_errors} minor errors")
 if __name__ == "__main__":
     try:
         main()
