@@ -8,8 +8,6 @@ import importsDo
 from importsDo import msaeRmseMaeR2_score
 from advancedNeuralNetwork import AdvancedNeuralNetwork:
   
- 
-
 def create_model(input_shape: Tuple[int], output_shape: int = 6, config: Optional[Dict[str, Any]] = None) -> AdvancedNeuralNetwork:
     """Create a neural network model with custom constraints."""
     if config is None:
