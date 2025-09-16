@@ -3,6 +3,7 @@ from import_manager import setup_environment_and_imports
 # Set up environment and imports for main2.py
 imports = setup_environment_and_imports()
 # Use imported objects from import_manager
+AdaptiveLossFunction = imports['AdaptiveLossFunction']
 BinaryWeightConstraintChanges = imports['BinaryWeightConstraintChanges']
 BinaryWeightConstraintMax = imports['BinaryWeightConstraintMax']
 OscillationDampener = imports['OscillationDampener']
@@ -15,7 +16,6 @@ import numpy as np
 import time
 import tensorflow as tf
 from typing import Dict, List, Tuple, Any, Optional
-from adaptive_loss import AdaptiveLossFunction
 from main import msaeRmseMaeR2_score
 
 class AdvancedNeuralNetwork:
