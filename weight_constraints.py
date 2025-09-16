@@ -409,7 +409,3 @@ class OscillationDampener:
     def reset(self):
         self.weight_history = []
         self.error_count = 0
-
-
-# Backward compatibility alias
-BinaryWeightConstraint = BinaryWeightConstraintMax

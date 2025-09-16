@@ -1,22 +1,34 @@
-from import_manager import setup_environment_and_imports
-
-# Set up environment and imports for main2.py
-imports = setup_environment_and_imports()
-# Use imported objects from import_manager
-AdaptiveLossFunction = imports['AdaptiveLossFunction']
-BinaryWeightConstraintChanges = imports['BinaryWeightConstraintChanges']
-BinaryWeightConstraintMax = imports['BinaryWeightConstraintMax']
-OscillationDampener = imports['OscillationDampener']
-PerformanceTracker = imports['PerformanceTracker']
-load_and_prepare_data = imports['load_and_prepare_data']
-epoch_weighted_loss = imports['epoch_weighted_loss']
-accuracy_weighted_loss = imports['accuracy_weighted_loss']
-loss_weighted_loss = imports['loss_weighted_loss']
+import os
 import numpy as np
 import time
+from typing import Dict, List, Tuple, Any
+
+# Suppress TensorFlow warnings
+os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
+
+# Import TensorFlow with Keras
 import tensorflow as tf
-from typing import Dict, List, Tuple, Any, Optional
-from main import msaeRmseMaeR2_score
+
+# Direct imports to avoid circular dependency issues
+from weight_constraints import (BinaryWeightConstraintChanges, BinaryWeightConstraintMax, OscillationDampener)
+from performance_tracker import PerformanceTracker
+from adaptive_loss import AdaptiveLossFunction
+
+def msaeRmseMaeR2_score(y_test, y_pred):
+    """Calculate MSE, MAE, RMSE, and R² score efficiently."""
+    from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+    
+    # Convert to numpy arrays
+    y_test, y_pred = np.asarray(y_test, dtype=np.float32), np.asarray(y_pred, dtype=np.float32)
+    
+    # Calculate metrics
+    mse = float(mean_squared_error(y_test, y_pred))
+    mae = float(mean_absolute_error(y_test, y_pred))
+    rmse = float(np.sqrt(mse))
+    r2 = float(r2_score(y_test, y_pred)) if len(y_test) > 1 else 0.0
+    
+    return mse, mae, rmse, r2
+
 
 class AdvancedNeuralNetwork:
     """ Neural network with custom weight constraints and adaptive loss functions.
@@ -256,6 +268,7 @@ class AdvancedNeuralNetwork:
         except Exception as e:
             self.errors.append(f"Model evaluation failed: {e}")
             return {'mse': float('inf'), 'mae': float('inf'), 'rmse': float('inf'), 'r2_score': -1.0, 'inference_time': 0.0}
+    
     def get_error_summary(self) -> Dict[str, Any]:
         """Get a summary of all errors encountered."""
         error_counts = {}

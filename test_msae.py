@@ -6,7 +6,7 @@ to the original implementation.
 
 import unittest
 import numpy as np
-from main import msaeRmseMaeR2_score
+from advanced_neural_network import msaeRmseMaeR2_score
 
 
 class TestMsaeRmseMaeR2Score(unittest.TestCase):
