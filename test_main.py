@@ -32,10 +32,10 @@ except ImportError:
     PERFORMANCE_TRACKER_AVAILABLE = False
 
 try:
-    from advanced_neural_network import msaeRmseMaeR2_score
-    MSAE_AVAILABLE = True
+    from advanced_neural_network import calculate_regression_metrics
+    REGRESSION_METRICS_AVAILABLE = True
 except ImportError:
-    MSAE_AVAILABLE = False
+    REGRESSION_METRICS_AVAILABLE = False
 
 
 class TestWeightConstraints(unittest.TestCase):
@@ -120,11 +120,11 @@ class TestPerformanceTracker(unittest.TestCase):
         self.assertIn('current_accuracy', summary)
 
 
-class TestMSAE(unittest.TestCase):
-    """Test MSAE metrics functionality."""
+class TestRegressionMetrics(unittest.TestCase):
+    """Test metrics functionality."""
     
     def setUp(self):
-        if not MSAE_AVAILABLE:
+        if not REGRESSION_METRICS_AVAILABLE:
             self.skipTest("MSAE function not available")
         
         # Test data with known results
@@ -137,18 +137,18 @@ class TestMSAE(unittest.TestCase):
     
     def test_function_returns_four_values(self):
         """Test that function returns exactly four values."""
-        result = msaeRmseMaeR2_score(self.y_test_1, self.y_pred_1)
+        result = calculate_regression_metrics(self.y_test_1, self.y_pred_1)
         self.assertEqual(len(result), 4)
     
     def test_return_types(self):
         """Test that all returned values are floats."""
-        result = msaeRmseMaeR2_score(self.y_test_1, self.y_pred_1)
+        result = calculate_regression_metrics(self.y_test_1, self.y_pred_1)
         for value in result:
             self.assertIsInstance(value, float)
     
     def test_perfect_predictions(self):
         """Test with perfect predictions."""
-        mse, mae, rmse, r2 = msaeRmseMaeR2_score(self.y_test_2, self.y_pred_2)
+        mse, mae, rmse, r2 = calculate_regression_metrics(self.y_test_2, self.y_pred_2)
         
         self.assertAlmostEqual(mse, 0.0, places=6)
         self.assertAlmostEqual(mae, 0.0, places=6)
@@ -157,7 +157,7 @@ class TestMSAE(unittest.TestCase):
     
     def test_metrics_relationships(self):
         """Test mathematical relationships between metrics."""
-        mse, mae, rmse, r2 = msaeRmseMaeR2_score(self.y_test_1, self.y_pred_1)
+        mse, mae, rmse, r2 = calculate_regression_metrics(self.y_test_1, self.y_pred_1)
         
         # RMSE should be the square root of MSE
         self.assertAlmostEqual(rmse, np.sqrt(mse), places=6)
@@ -177,7 +177,7 @@ class TestIntegration(unittest.TestCase):
             'weight_constraints': WEIGHT_CONSTRAINTS_AVAILABLE,
             'adaptive_loss': ADAPTIVE_LOSS_AVAILABLE,
             'performance_tracker': PERFORMANCE_TRACKER_AVAILABLE,
-            'msae_function': MSAE_AVAILABLE
+            'regression_metrics_function': REGRESSION_METRICS_AVAILABLE
         }
         
         # At least one component should be available

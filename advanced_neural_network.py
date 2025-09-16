@@ -14,7 +14,7 @@ from weight_constraints import (BinaryWeightConstraintChanges, BinaryWeightConst
 from performance_tracker import PerformanceTracker
 from adaptive_loss import AdaptiveLossFunction
 
-def msaeRmseMaeR2_score(y_test, y_pred):
+def calculate_regression_metrics(y_test, y_pred):
     """Calculate MSE, MAE, RMSE, and R² score efficiently."""
     from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
     
@@ -95,8 +95,11 @@ class AdvancedNeuralNetwork:
         activation = self.config.get('activation', 'relu')
         dropout_rate = self.config.get('dropout_rate', 0.2)
         
-        model = tf.keras.Sequential([ tf.keras.layers.Dense(hidden_layers[0], activation=activation, input_shape=self.input_shape),
-            tf.keras.layers.Dropout(dropout_rate) if dropout_rate > 0 else tf.keras.layers.Lambda(lambda x: x),])
+        model = tf.keras.Sequential([
+            tf.keras.layers.Input(shape=self.input_shape),
+            tf.keras.layers.Dense(hidden_layers[0], activation=activation),
+            tf.keras.layers.Dropout(dropout_rate) if dropout_rate > 0 else tf.keras.layers.Lambda(lambda x: x),
+        ])
         
         for units in hidden_layers[1:]:
             model.add(tf.keras.layers.Dense(units, activation=activation))
@@ -214,7 +217,7 @@ class AdvancedNeuralNetwork:
             # Validation
             try:
                 val_pred = self.model.predict(X_val, verbose=0)
-                val_loss, val_mae, rmse, accuracy = msaeRmseMaeR2_score(y_val, val_pred)     
+                val_loss, val_mae, rmse, accuracy = calculate_regression_metrics(y_val, val_pred)     
             except Exception as e:
                 val_loss, val_mae, accuracy = float(np.mean(epoch_losses)), float(np.mean(epoch_mae)), 0.0
             
@@ -263,7 +266,7 @@ class AdvancedNeuralNetwork:
             if self.performance_tracker: inference_time = self.performance_tracker.measure_inference_time(self.model, X_test, num_runs=10)
             # Make predictions, calculate metrics
             y_pred = self.model.predict(X_test, verbose=0)
-            mse, mae, rmse, r2_score =msaeRmseMaeR2_score(y_test, y_pred)     
+            mse, mae, rmse, r2_score = calculate_regression_metrics(y_test, y_pred)     
             return {'mse': mse, 'mae': mae, 'rmse': rmse, 'r2_score': r2_score, 'inference_time': inference_time} 
         except Exception as e:
             self.errors.append(f"Model evaluation failed: {e}")
