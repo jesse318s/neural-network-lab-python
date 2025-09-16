@@ -1,12 +1,22 @@
 """Advanced TensorFlow Lab: Custom Weight Modification and Adaptive Loss Functions
 
 This lab implements neural network training with binary weight constraints, 
-oscillation dampening, adaptive loss functions, and performance tracking 
+oscillation dampening, adaptive l        print(f"📈 Adaptive Loss Strategy:")
+        adaptive_strategy = performance_summary.get('adaptive_loss_strategy', 'none')
+        print(f"  Strategy: {adaptive_strategy}")
+        print(f"\n⚠ Errors: {error_summary.get('total_errors', 0)}") functions, and performance tracking 
 for particle physics simulations."""
 
 import importsDo
-from importsDo import msaeRmseMaeR2_score
-from advancedNeuralNetwork import AdvancedNeuralNetwork:
+import os
+import numpy as np
+import time
+from typing import Dict, List, Tuple, Any, Optional
+from main import msaeRmseMaeR2_score
+from advancedNeuralNetwork import AdvancedNeuralNetwork
+from weight_constraints import BinaryWeightConstraintChanges, BinaryWeightConstraintMax, OscillationDampener
+from data_loader import load_and_prepare_data
+from adaptive_loss import epoch_weighted_loss, accuracy_weighted_loss, loss_weighted_loss
   
 def create_model(input_shape: Tuple[int], output_shape: int = 6, config: Optional[Dict[str, Any]] = None) -> AdvancedNeuralNetwork:
     """Create a neural network model with custom constraints."""
@@ -20,7 +30,7 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
                        X_train: np.ndarray, X_val: np.ndarray, X_test: np.ndarray, y_train: np.ndarray, 
                        y_val: np.ndarray, y_test: np.ndarray, config: Dict[str, Any]) -> Dict[str, Any]:
     """Complete training pipeline with comprehensive tracking."""
-    print("=== Starting Training Pipeline === /n")
+    print("=== Starting Training Pipeline ===\n")
     # Compile model
     try:
         model.compile_model()
@@ -66,7 +76,7 @@ def demonstrate_individual_components():
         constraint_changes = BinaryWeightConstraintChanges(max_additional_digits=1)
         previous_weight = 0.625  # 1.010 in binary
         current_weights = np.array([[0.875], [0.6875], [1.125], [0.5625]])
-        print(f"Previous weight: {previous_weight} /n Testing weight constraint changes:")
+        print(f"Previous weight: {previous_weight}\nTesting weight constraint changes:")
         # Initialize with previous weight
         constraint_changes.apply_constraint(np.array([[previous_weight]]))
         for i, weight in enumerate(current_weights.flatten()):
@@ -81,9 +91,10 @@ def demonstrate_individual_components():
     try:
         constraint_max = BinaryWeightConstraintMax(max_binary_digits=3)
         test_weights = np.array([[0.125, 0.875], [1.5, 0.75]])
-        print("Original weights: /n, test_weights")
+        print("Original weights:\n", test_weights)
         constrained_weights = constraint_max.apply_constraint(test_weights)
-        print("Constrained weights: /n", constrained_weights), "✓ Binary constraint max test completed")
+        print("Constrained weights:\n", constrained_weights)
+        print("✓ Binary constraint max test completed")
     except Exception as e:
         print(f"✗ Binary constraint max test failed: {e}")
     # Test oscillation dampening
@@ -104,7 +115,7 @@ def demonstrate_individual_components():
     print("\n--- Adaptive Loss Functions ---")
     try:
         mse_loss, mae_loss = 0.15, 0.12
-        print(f"Base losses - MSE: {mse_loss}, MAE: {mae_loss} /n Epoch-based weighting:")
+        print(f"Base losses - MSE: {mse_loss}, MAE: {mae_loss}\nEpoch-based weighting:")
         # Test epoch-based weighting
         for epoch in [5, 15, 25, 35]:
             combined_loss = epoch_weighted_loss(epoch, mse_loss, mae_loss)
@@ -124,10 +135,14 @@ def demonstrate_individual_components():
         print(f"✗ Adaptive loss functions test failed: {e}")
 def main():
     """Main function to run the complete TensorFlow lab."""
-    print("=" * 60, "/n ADVANCED TENSORFLOW LAB: CUSTOM WEIGHT MODIFICATION, /n", "=" * 60)
+    print("=" * 60)
+    print("ADVANCED TENSORFLOW LAB: CUSTOM WEIGHT MODIFICATION")
+    print("=" * 60)
     # Demonstrate individual components first
     demonstrate_individual_components()
-    print("\n" + "=" * 40, " /n LOADING PARTICLE DATA /n ", "=" * 40)
+    print("\n" + "=" * 40)
+    print("LOADING PARTICLE DATA")
+    print("=" * 40)
     # Load and prepare data
     try:
         X_train, X_val, X_test, y_train, y_val, y_test, data_summary = load_and_prepare_data()
@@ -138,7 +153,9 @@ def main():
         print(f"✗ Data loading failed: {e}")
         return
     
-    print("\n" + "=" * 40, "/n CREATING AND TRAINING MODEL", "=" * 40)
+    print("\n" + "=" * 40)
+    print("CREATING AND TRAINING MODEL")
+    print("=" * 40)
     
     # Create model with configuration
     model_config = {'hidden_layers': [64, 32, 16], 'activation': 'relu', 'dropout_rate': 0.2, 'optimizer': 'adam',
@@ -162,7 +179,8 @@ def main():
         print(f"✗ Training pipeline failed: {e}")
         return
     print("\n" + "=" * 40)
-    print("RESULTS SUMMARY /n", "=" * 40)
+    print("RESULTS SUMMARY")
+    print("=" * 40)
     # Display results
     try:
         performance_summary = results.get('performance_summary', {})
@@ -189,11 +207,14 @@ def main():
         else: print(f"  None applied")
         print(f"\n📈 Adaptive Loss Strategy:")
         adaptive_strategy = performance_summary.get('adaptive_loss_strategy', 'none')
-        print(f"  Strategy: {adaptive_strategy}", \n⚠ Errors: {error_summary.get('total_errors', 0)}")
+        print(f"  Strategy: {adaptive_strategy}")
+        print(f"\n⚠ Errors: {error_summary.get('total_errors', 0)}")
         
     except Exception as e:
         print(f"✗ Error displaying results: {e}")
-    print("\n" + "=" * 40, "OUTPUT FILES \n", "=" * 40)
+    print("\n" + "=" * 40)
+    print("OUTPUT FILES")
+    print("=" * 40)
     # Check for output files
     output_files = [
         'training_output/training_results.csv', 'training_output/loss_history.csv',
@@ -206,15 +227,23 @@ def main():
         else: print(f"  ✗ {file_path} (not found)")
     
     print("\n" + "=" * 60)
-    print("🎉 ADVANCED TENSORFLOW LAB COMPLETED! \n", "=" * 60, "\n📁 Check 'training_output' directory for detailed results.")
+    print("\n🎉 ADVANCED TENSORFLOW LAB COMPLETED!")
+    print("=" * 60)
+    print("📁 Check 'training_output' directory for detailed results.")
     print("🔬 Lab demonstrated:")
-    print("   • Binary weight precision constraints \n   • Oscillation dampening for weight stability")
-    print("   • Adaptive loss function combinations \n • Comprehensive performance tracking")
-    print("   • Railway-style error handling \n  • CSV data processing for particle physics simulations")
+    print("   • Binary weight precision constraints")
+    print("   • Oscillation dampening for weight stability")
+    print("   • Adaptive loss function combinations")
+    print("   • Comprehensive performance tracking")
+    print("   • Railway-style error handling")
+    print("   • CSV data processing for particle physics simulations")
     
     # Final success/failure summary
     total_errors = results.get('error_summary', {}).get('total_errors', 0)
-    print("\n🏆 Lab completed with NO ERRORS!") if total_errors == 0 else  print(f"\n⚠ Lab completed with {total_errors} minor errors")
+    if total_errors == 0:
+        print("\n🏆 Lab completed with NO ERRORS!")
+    else:
+        print(f"\n⚠ Lab completed with {total_errors} minor errors")
 if __name__ == "__main__":
     try:
         main()

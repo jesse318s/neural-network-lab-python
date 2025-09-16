@@ -30,6 +30,12 @@ def msaeRmseMaeR2_score(y_test, y_pred):
 # Import custom modules and tensorflow
 try:
     import tensorflow as tf
+    # Try to import keras from tensorflow - fallback to standalone keras if needed
+    try:
+        from tensorflow import keras
+    except ImportError:
+        import keras
+    
     from weight_constraints import (BinaryWeightConstraintChanges, BinaryWeightConstraintMax, OscillationDampener)
     from performance_tracker import PerformanceTracker
     from data_loader import load_and_prepare_data
@@ -98,28 +104,28 @@ class AdvancedNeuralNetwork:
             self.errors.append(f"Performance tracker failed: {e}")
             return None
     
-    def _build_model(self) -> tf.keras.Model:
+    def _build_model(self) -> keras.Model:
         """Build the neural network model."""
         hidden_layers = self.config.get('hidden_layers', [64, 32, 16])
         activation = self.config.get('activation', 'relu')
         dropout_rate = self.config.get('dropout_rate', 0.2)
         
-        model = tf.keras.Sequential([ tf.keras.layers.Dense(hidden_layers[0], activation=activation, input_shape=self.input_shape),
-            tf.keras.layers.Dropout(dropout_rate) if dropout_rate > 0 else tf.keras.layers.Lambda(lambda x: x),])
+        model = keras.Sequential([ keras.layers.Dense(hidden_layers[0], activation=activation, input_shape=self.input_shape),
+            keras.layers.Dropout(dropout_rate) if dropout_rate > 0 else keras.layers.Lambda(lambda x: x),])
         
         for units in hidden_layers[1:]:
-            model.add(tf.keras.layers.Dense(units, activation=activation))
-            if dropout_rate > 0: model.add(tf.keras.layers.Dropout(dropout_rate))
+            model.add(keras.layers.Dense(units, activation=activation))
+            if dropout_rate > 0: model.add(keras.layers.Dropout(dropout_rate))
         
-        model.add(tf.keras.layers.Dense(self.output_shape, activation='linear'))
+        model.add(keras.layers.Dense(self.output_shape, activation='linear'))
         return model
     
     def compile_model(self) -> None:
         """Compile the model."""
         optimizer_name = self.config.get('optimizer', 'adam')
         learning_rate = self.config.get('learning_rate', 0.001)
-        optimizer_map = {'adam': tf.keras.optimizers.Adam,'sgd': tf.keras.optimizers.SGD,'rmsprop': tf.keras.optimizers.RMSprop}
-        optimizer_class = optimizer_map.get(optimizer_name.lower(), tf.keras.optimizers.Adam)
+        optimizer_map = {'adam': keras.optimizers.Adam,'sgd': keras.optimizers.SGD,'rmsprop': keras.optimizers.RMSprop}
+        optimizer_class = optimizer_map.get(optimizer_name.lower(), keras.optimizers.Adam)
         optimizer = optimizer_class(learning_rate=learning_rate)
         self.model.compile(optimizer=optimizer, loss='mse', metrics=['mae', 'mse'])
     
@@ -187,7 +193,7 @@ class AdvancedNeuralNetwork:
     def train_with_custom_constraints(self, X_train: np.ndarray, y_train: np.ndarray, X_val: np.ndarray, y_val: np.ndarray,
                                     epochs: int = 50, batch_size: int = 32) -> Dict[str, Any]:
         """Train the model with custom weight constraints and adaptive loss."""
-        print(f"\n=== Starting Training === \n, Epochs: {epochs}, Batch size: {batch_size}")
+        print(f"\n=== Starting Training ===\nEpochs: {epochs}, Batch size: {batch_size}")
         
         # Start training tracking
         training_config = {
@@ -223,12 +229,13 @@ class AdvancedNeuralNetwork:
             # Validation
             try:
                 val_pred = self.model.predict(X_val, verbose=0)
-                val_loss, val_mae, rmse, accuracy=msaeRmseMaeR2_score(y_test, y_pred)     
+                val_loss, val_mae, rmse, accuracy = msaeRmseMaeR2_score(y_val, val_pred)     
             except Exception as e:
-                val_loss, val_mae, accruacy = float(np.mean(epoch_losses)), float(np.mean(epoch_mae)), accuracy = 0.0
+                val_loss, val_mae, accuracy = float(np.mean(epoch_losses)), float(np.mean(epoch_mae)), 0.0
             
             # Update adaptive loss function
-            if self.adaptive_loss: self.adaptive_loss.update_epoch(epoch, accuracy)
+            if self.adaptive_loss:
+                self.adaptive_loss.update_epoch(epoch, accuracy)
             
             # Record metrics
             epoch_time = time.time() - epoch_start_time
@@ -252,11 +259,11 @@ class AdvancedNeuralNetwork:
                     pass
             # Print progress
             if epoch % 5 == 0 or epoch == epochs - 1:
-                print(f"Epoch {epoch:3d}/{epochs} - Loss: {epoch_loss:.4f}, "f"Val Loss: {val_loss:.4f}, Accuracy: {accuracy:.4f}")
+                print(f"Epoch {epoch:3d}/{epochs} - Loss: {epoch_loss:.4f}, Val Loss: {val_loss:.4f}, Accuracy: {accuracy:.4f}")
                 if applied_constraints: print(f"    Constraints: {', '.join(applied_constraints)}")
         # End training
         final_results = {}
-        if self.performance_tracker:final_results = self.performance_tracker.end_training()
+        if self.performance_tracker: final_results = self.performance_tracker.end_training()
         
         # Get adaptive loss history
         adaptive_loss_history = {}
@@ -273,7 +280,7 @@ class AdvancedNeuralNetwork:
             if self.performance_tracker: inference_time = self.performance_tracker.measure_inference_time(self.model, X_test, num_runs=10)
             # Make predictions, calculate metrics
             y_pred = self.model.predict(X_test, verbose=0)
-            mse, mae, rmse, r2_score =msaeRmseMaeR2_score(y_test, y_pred)     
+            mse, mae, rmse, r2_score = msaeRmseMaeR2_score(y_test, y_pred)     
             return {'mse': mse, 'mae': mae, 'rmse': rmse, 'r2_score': r2_score, 'inference_time': inference_time} 
         except Exception as e:
             self.errors.append(f"Model evaluation failed: {e}")
@@ -300,7 +307,7 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
                        X_train: np.ndarray, X_val: np.ndarray, X_test: np.ndarray, y_train: np.ndarray, 
                        y_val: np.ndarray, y_test: np.ndarray, config: Dict[str, Any]) -> Dict[str, Any]:
     """Complete training pipeline with comprehensive tracking."""
-    print("=== Starting Training Pipeline === /n")
+    print("=== Starting Training Pipeline ===\n")
     # Compile model
     try:
         model.compile_model()
@@ -340,13 +347,13 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
         'performance_summary': model.performance_tracker.get_summary() if model.performance_tracker else {}, 'error_summary': error_summary}
 def demonstrate_individual_components():
     """Demonstrate individual components with simplified error handling."""
-    print("\n=== Demonstrating Individual Components ===, \n--- Binary Weight Constraint Changes ---")
+    print("\n=== Demonstrating Individual Components ===\n--- Binary Weight Constraint Changes ---")
      # Test binary weight constraints
     try:
         constraint_changes = BinaryWeightConstraintChanges(max_additional_digits=1)
         previous_weight = 0.625  # 1.010 in binary
         current_weights = np.array([[0.875], [0.6875], [1.125], [0.5625]])
-        print(f"Previous weight: {previous_weight} /n Testing weight constraint changes:")
+        print(f"Previous weight: {previous_weight}\nTesting weight constraint changes:")
         # Initialize with previous weight
         constraint_changes.apply_constraint(np.array([[previous_weight]]))
         for i, weight in enumerate(current_weights.flatten()):
@@ -361,9 +368,10 @@ def demonstrate_individual_components():
     try:
         constraint_max = BinaryWeightConstraintMax(max_binary_digits=3)
         test_weights = np.array([[0.125, 0.875], [1.5, 0.75]])
-        print("Original weights: /n, test_weights")
+        print("Original weights:\n", test_weights)
         constrained_weights = constraint_max.apply_constraint(test_weights)
-        print("Constrained weights: /n", constrained_weights), "✓ Binary constraint max test completed")
+        print("Constrained weights:\n", constrained_weights)
+        print("✓ Binary constraint max test completed")
     except Exception as e:
         print(f"✗ Binary constraint max test failed: {e}")
     # Test oscillation dampening
@@ -384,7 +392,7 @@ def demonstrate_individual_components():
     print("\n--- Adaptive Loss Functions ---")
     try:
         mse_loss, mae_loss = 0.15, 0.12
-        print(f"Base losses - MSE: {mse_loss}, MAE: {mae_loss} /n Epoch-based weighting:")
+        print(f"Base losses - MSE: {mse_loss}, MAE: {mae_loss}\nEpoch-based weighting:")
         # Test epoch-based weighting
         for epoch in [5, 15, 25, 35]:
             combined_loss = epoch_weighted_loss(epoch, mse_loss, mae_loss)
@@ -404,10 +412,14 @@ def demonstrate_individual_components():
         print(f"✗ Adaptive loss functions test failed: {e}")
 def main():
     """Main function to run the complete TensorFlow lab."""
-    print("=" * 60, "/n ADVANCED TENSORFLOW LAB: CUSTOM WEIGHT MODIFICATION, /n", "=" * 60)
+    print("=" * 60)
+    print("ADVANCED TENSORFLOW LAB: CUSTOM WEIGHT MODIFICATION")
+    print("=" * 60)
     # Demonstrate individual components first
     demonstrate_individual_components()
-    print("\n" + "=" * 40, " /n LOADING PARTICLE DATA /n ", "=" * 40)
+    print("\n" + "=" * 40)
+    print("LOADING PARTICLE DATA")
+    print("=" * 40)
     # Load and prepare data
     try:
         X_train, X_val, X_test, y_train, y_val, y_test, data_summary = load_and_prepare_data()
@@ -418,7 +430,9 @@ def main():
         print(f"✗ Data loading failed: {e}")
         return
     
-    print("\n" + "=" * 40, "/n CREATING AND TRAINING MODEL", "=" * 40)
+    print("\n" + "=" * 40)
+    print("CREATING AND TRAINING MODEL")
+    print("=" * 40)
     
     # Create model with configuration
     model_config = {'hidden_layers': [64, 32, 16], 'activation': 'relu', 'dropout_rate': 0.2, 'optimizer': 'adam',
@@ -442,7 +456,8 @@ def main():
         print(f"✗ Training pipeline failed: {e}")
         return
     print("\n" + "=" * 40)
-    print("RESULTS SUMMARY /n", "=" * 40)
+    print("RESULTS SUMMARY")
+    print("=" * 40)
     # Display results
     try:
         performance_summary = results.get('performance_summary', {})
@@ -469,11 +484,14 @@ def main():
         else: print(f"  None applied")
         print(f"\n📈 Adaptive Loss Strategy:")
         adaptive_strategy = performance_summary.get('adaptive_loss_strategy', 'none')
-        print(f"  Strategy: {adaptive_strategy}", \n⚠ Errors: {error_summary.get('total_errors', 0)}")
+        print(f"  Strategy: {adaptive_strategy}")
+        print(f"⚠ Errors: {error_summary.get('total_errors', 0)}")
         
     except Exception as e:
         print(f"✗ Error displaying results: {e}")
-    print("\n" + "=" * 40, "OUTPUT FILES \n", "=" * 40)
+    print("\n" + "=" * 40)
+    print("OUTPUT FILES")
+    print("=" * 40)
     # Check for output files
     output_files = [
         'training_output/training_results.csv', 'training_output/loss_history.csv',
@@ -486,15 +504,23 @@ def main():
         else: print(f"  ✗ {file_path} (not found)")
     
     print("\n" + "=" * 60)
-    print("🎉 ADVANCED TENSORFLOW LAB COMPLETED! \n", "=" * 60, "\n📁 Check 'training_output' directory for detailed results.")
+    print("🎉 ADVANCED TENSORFLOW LAB COMPLETED!")
+    print("=" * 60)
+    print("📁 Check 'training_output' directory for detailed results.")
     print("🔬 Lab demonstrated:")
-    print("   • Binary weight precision constraints \n   • Oscillation dampening for weight stability")
-    print("   • Adaptive loss function combinations \n • Comprehensive performance tracking")
-    print("   • Railway-style error handling \n  • CSV data processing for particle physics simulations")
+    print("   • Binary weight precision constraints")
+    print("   • Oscillation dampening for weight stability")
+    print("   • Adaptive loss function combinations")
+    print("   • Comprehensive performance tracking")
+    print("   • Railway-style error handling")
+    print("   • CSV data processing for particle physics simulations")
     
     # Final success/failure summary
     total_errors = results.get('error_summary', {}).get('total_errors', 0)
-    print("\n🏆 Lab completed with NO ERRORS!") if total_errors == 0 else  print(f"\n⚠ Lab completed with {total_errors} minor errors")
+    if total_errors == 0:
+        print("\n🏆 Lab completed with NO ERRORS!")
+    else:
+        print(f"\n⚠ Lab completed with {total_errors} minor errors")
 if __name__ == "__main__":
     try:
         main()

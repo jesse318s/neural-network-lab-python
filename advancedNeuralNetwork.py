@@ -1,4 +1,12 @@
 import importsDo
+import numpy as np
+import time
+import tensorflow as tf
+from typing import Dict, List, Tuple, Any, Optional
+from weight_constraints import BinaryWeightConstraintChanges, BinaryWeightConstraintMax, OscillationDampener
+from performance_tracker import PerformanceTracker
+from adaptive_loss import AdaptiveLossFunction
+from main import msaeRmseMaeR2_score
 
 class AdvancedNeuralNetwork:
     """ Neural network with custom weight constraints and adaptive loss functions.
@@ -184,9 +192,9 @@ class AdvancedNeuralNetwork:
             # Validation
             try:
                 val_pred = self.model.predict(X_val, verbose=0)
-                val_loss, val_mae, rmse, accuracy=msaeRmseMaeR2_score(y_test, y_pred)     
+                val_loss, val_mae, rmse, accuracy = msaeRmseMaeR2_score(y_val, val_pred)     
             except Exception as e:
-                val_loss, val_mae, accruacy = float(np.mean(epoch_losses)), float(np.mean(epoch_mae)), accuracy = 0.0
+                val_loss, val_mae, accuracy = float(np.mean(epoch_losses)), float(np.mean(epoch_mae)), 0.0
             
             # Update adaptive loss function
             if self.adaptive_loss: self.adaptive_loss.update_epoch(epoch, accuracy)
