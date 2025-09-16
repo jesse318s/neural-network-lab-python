@@ -7,16 +7,24 @@ oscillation dampening, adaptive l        print(f"📈 Adaptive Loss Strategy:")
         print(f"\n⚠ Errors: {error_summary.get('total_errors', 0)}") functions, and performance tracking 
 for particle physics simulations."""
 
-import importsDo
+from import_manager import setup_environment_and_imports
+
+# Set up environment and imports for main2.py
+imports = setup_environment_and_imports()
 import os
 import numpy as np
 import time
 from typing import Dict, List, Tuple, Any, Optional
-from main import msaeRmseMaeR2_score
 from advancedNeuralNetwork import AdvancedNeuralNetwork
-from weight_constraints import BinaryWeightConstraintChanges, BinaryWeightConstraintMax, OscillationDampener
-from data_loader import load_and_prepare_data
-from adaptive_loss import epoch_weighted_loss, accuracy_weighted_loss, loss_weighted_loss
+# Use imported objects from import_manager
+BinaryWeightConstraintChanges = imports['BinaryWeightConstraintChanges']
+BinaryWeightConstraintMax = imports['BinaryWeightConstraintMax']
+OscillationDampener = imports['OscillationDampener']
+PerformanceTracker = imports['PerformanceTracker']
+load_and_prepare_data = imports['load_and_prepare_data']
+epoch_weighted_loss = imports['epoch_weighted_loss']
+accuracy_weighted_loss = imports['accuracy_weighted_loss']
+loss_weighted_loss = imports['loss_weighted_loss']
   
 def create_model(input_shape: Tuple[int], output_shape: int = 6, config: Optional[Dict[str, Any]] = None) -> AdvancedNeuralNetwork:
     """Create a neural network model with custom constraints."""

@@ -1,4 +1,16 @@
-import importsDo
+from import_manager import setup_environment_and_imports
+
+# Set up environment and imports for main2.py
+imports = setup_environment_and_imports()
+# Use imported objects from import_manager
+BinaryWeightConstraintChanges = imports['BinaryWeightConstraintChanges']
+BinaryWeightConstraintMax = imports['BinaryWeightConstraintMax']
+OscillationDampener = imports['OscillationDampener']
+PerformanceTracker = imports['PerformanceTracker']
+load_and_prepare_data = imports['load_and_prepare_data']
+epoch_weighted_loss = imports['epoch_weighted_loss']
+accuracy_weighted_loss = imports['accuracy_weighted_loss']
+loss_weighted_loss = imports['loss_weighted_loss']
 import numpy as np
 import time
 import tensorflow as tf
