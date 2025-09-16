@@ -13,47 +13,19 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 warnings.filterwarnings('ignore')
 
 def msaeRmseMaeR2_score(y_test, y_pred):
-    """
-    Calculate MSE, MAE, RMSE, and R² score using Keras built-in functions.
+    """Calculate MSE, MAE, RMSE, and R² score efficiently."""
+    from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
     
-    Args:
-        y_test: True values
-        y_pred: Predicted values
-        
-    Returns:
-        tuple: (mse, mae, rmse, r2_score) as floats
-    """
-    # Import required modules
-    from sklearn.metrics import r2_score
-    
-    # Convert to TensorFlow tensors for consistent data types
-    y_true_tf = tf.convert_to_tensor(y_test, dtype=tf.float32)
-    y_pred_tf = tf.convert_to_tensor(y_pred, dtype=tf.float32)
-    
-    # Use Keras built-in metrics
-    mse_metric = tf.keras.metrics.MeanSquaredError()
-    mae_metric = tf.keras.metrics.MeanAbsoluteError()
-    rmse_metric = tf.keras.metrics.RootMeanSquaredError()
+    # Convert to numpy arrays
+    y_test, y_pred = np.asarray(y_test, dtype=np.float32), np.asarray(y_pred, dtype=np.float32)
     
     # Calculate metrics
-    mse_metric.update_state(y_true_tf, y_pred_tf)
-    mae_metric.update_state(y_true_tf, y_pred_tf)
-    rmse_metric.update_state(y_true_tf, y_pred_tf)
+    mse = float(mean_squared_error(y_test, y_pred))
+    mae = float(mean_absolute_error(y_test, y_pred))
+    rmse = float(np.sqrt(mse))
+    r2 = float(r2_score(y_test, y_pred)) if len(y_test) > 1 else 0.0
     
-    mse = float(mse_metric.result().numpy())
-    mae = float(mae_metric.result().numpy())
-    rmse = float(rmse_metric.result().numpy())
-    
-    # Use sklearn for R² score as Keras doesn't have a built-in R² metric
-    # Handle edge case where R² is undefined (e.g., single sample)
-    try:
-        r2 = float(r2_score(y_test, y_pred))
-        if np.isnan(r2):
-            r2 = 0.0
-    except ValueError:
-        r2 = 0.0
-    
-    return mse, mae, rmse, r2     
+    return mse, mae, rmse, r2   
 
 # Import custom modules and tensorflow
 try:
