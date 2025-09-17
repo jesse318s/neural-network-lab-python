@@ -1,19 +1,15 @@
-"""
-Binary Weight Constraint Classes for Advanced TensorFlow Training - 415 lines
+"""Binary Weight Constraint Classes for Advanced TensorFlow Training - 415 lines
 
 This module implements custom weight constraint classes that manage binary precision
-of neural network weights and prevent oscillations during training.
-"""
+of neural network weights and prevent oscillations during training."""
 
 import numpy as np
 from typing import List, Optional, Tuple
 import struct
 
 class BinaryWeightConstraintChanges:
-    """
-    Manages binary precision of weight changes, allowing only one additional 
-    significant figure in binary format compared to previous weights.
-    """
+    """ Manages binary precision of weight changes, allowing only one additional 
+    significant figure in binary format compared to previous weights. """
     def __init__(self, max_additional_digits: int = 1):
         self.max_additional_digits = max_additional_digits
         self.previous_weights = None
@@ -47,9 +43,7 @@ class BinaryWeightConstraintChanges:
         try:
             if binary_str.startswith('-'): binary_str = binary_str[1:]
             if '.' in binary_str: integer_part, fractional_part = binary_str.split('.')
-            else:
-                integer_part = binary_str
-                fractional_part = ""
+            else: integer_part, fractional_part = binary_str, ""
             integer_part = integer_part.lstrip('0')
             if not integer_part: integer_part = "0"
             fractional_part = fractional_part.rstrip('0')
@@ -67,7 +61,6 @@ class BinaryWeightConstraintChanges:
             previous_digits = self._count_significant_binary_digits(previous_binary)
             max_allowed_digits = previous_digits + self.max_additional_digits
             if current_digits <= max_allowed_digits: return current_weight
-            
             # Reduce precision
             reduction_factor = current_digits - max_allowed_digits
             magnitude = 10 ** (-reduction_factor)
@@ -114,10 +107,8 @@ class BinaryWeightConstraintChanges:
         self.previous_weights = None
         self.error_count = 0
 class BinaryWeightConstraintMax:
-    """
-    Manages binary precision of weights with maximum binary digits allowed
-    (excluding trailing zeros and ones).
-    """
+    """ Manages binary precision of weights with maximum binary digits allowed
+    (excluding trailing zeros and ones)."""
     def __init__(self, max_binary_digits: int = 5):
         self.max_binary_digits = max_binary_digits
         self.error_count = 0
@@ -198,10 +189,8 @@ class BinaryWeightConstraintMax:
     def get_error_count(self) -> int:
         return self.error_count
 class OscillationDampener:
-    """
-    Monitors weight changes across consecutive epochs and dampens oscillations
-    by setting the smallest non-zero binary digit to zero.
-    """
+    """ Monitors weight changes across consecutive epochs and dampens oscillations
+    by setting the smallest non-zero binary digit to zero."""
     def __init__(self, window_size: int = 3):
         self.window_size = window_size
         self.weight_history: List[np.ndarray] = []
@@ -251,20 +240,17 @@ class OscillationDampener:
         except Exception:
             self.error_count += 1
             return weight * 0.99
-    
     def detect_and_dampen_oscillations(self, current_weights: np.ndarray) -> np.ndarray:
         """Detect oscillations and apply dampening."""
         try:
             if len(self.weight_history) < self.window_size:
                 return current_weights
             dampened_weights = current_weights.copy()
-            
             if len(current_weights.shape) == 1:
                 for i in range(current_weights.shape[0]):
                     weight_sequence = [hist_weights[i] for hist_weights in self.weight_history 
                                      if hist_weights.shape == current_weights.shape]
                     weight_sequence.append(current_weights[i])
-                    
                     if len(weight_sequence) >= self.window_size:
                         recent_values = weight_sequence[-self.window_size:]
                         if self._detect_oscillation_pattern(recent_values):
@@ -275,14 +261,12 @@ class OscillationDampener:
                         weight_sequence = [hist_weights[i, j] for hist_weights in self.weight_history 
                                          if hist_weights.shape == current_weights.shape]
                         weight_sequence.append(current_weights[i, j])
-                        if len(weight_sequence) >= self.window_size:
-                            recent_values = weight_sequence[-self.window_size:]
+                        if len(weight_sequence) >= self.window_size: recent_values = weight_sequence[-self.window_size:]
                             if self._detect_oscillation_pattern(recent_values):
                                 dampened_weights[i, j] = self._set_smallest_binary_digit_to_zero(current_weights[i, j])
             else:
                 # Higher dimensional arrays
-                flat_current = current_weights.flatten()
-                flat_dampened = dampened_weights.flatten()
+                flat_current, flat_dampened = current_weights.flatten(), dampened_weights.flatten()
                 for i in range(len(flat_current)):
                     weight_sequence = []
                     for hist_weights in self.weight_history:
