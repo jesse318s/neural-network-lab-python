@@ -370,20 +370,3 @@ class PerformanceTracker:
         self.error_count += 1
         self.errors_log.append(f"{datetime.now().isoformat()}: {error_message}")
         print(f"Performance Tracker Error: {error_message}")
-
-
-class TrainingCallback:
-    """Keras callback for integrating with PerformanceTracker."""
-    
-    def __init__(self, performance_tracker: PerformanceTracker):
-        self.performance_tracker = performance_tracker
-    
-    def on_epoch_begin(self, epoch, logs=None):
-        """Called at the beginning of each epoch."""
-        self.performance_tracker.start_epoch(epoch)
-    
-    def on_epoch_end(self, epoch, logs=None):
-        """Called at the end of each epoch."""
-        if logs is None:
-            logs = {}
-        self.performance_tracker.end_epoch(epoch, logs)

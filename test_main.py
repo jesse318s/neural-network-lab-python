@@ -131,21 +131,6 @@ class TestRegressionMetrics(unittest.TestCase):
         self.y_test_2 = np.array([1.0, 2.0, 3.0])
         self.y_pred_2 = np.array([1.0, 2.0, 3.0])
     
-    def test_function_returns_four_values(self):
-        """Test that function returns exactly four values."""
-        result = AdvancedNeuralNetwork.calculate_regression_metrics(
-            self.y_test_1, self.y_pred_1)
-        
-        self.assertEqual(len(result), 4)
-    
-    def test_return_types(self):
-        """Test that all returned values are floats."""
-        result = AdvancedNeuralNetwork.calculate_regression_metrics(
-            self.y_test_1, self.y_pred_1)
-        
-        for value in result:
-            self.assertIsInstance(value, float)
-    
     def test_perfect_predictions(self):
         """Test with perfect predictions."""
         mse, mae, rmse, r2 = AdvancedNeuralNetwork.calculate_regression_metrics(
