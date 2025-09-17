@@ -48,7 +48,6 @@ class TestWeightConstraints(unittest.TestCase):
     def test_binary_weight_constraint_max(self):
         """Test binary weight constraint max functionality."""
         constraint = BinaryWeightConstraintMax(max_binary_digits=3)
-        
         weights = np.array([[0.125, 0.875], [1.5, 0.75]])
         result = constraint.apply_constraint(weights)
         
@@ -58,10 +57,8 @@ class TestWeightConstraints(unittest.TestCase):
     def test_oscillation_dampener(self):
         """Test oscillation dampener functionality."""
         dampener = OscillationDampener(window_size=3)
-        
         weights = np.array([[0.5]])
         dampener.add_weights(weights)
-        
         new_weights = np.array([[0.8]])
         result = dampener.detect_and_dampen_oscillations(new_weights)
         
@@ -79,6 +76,7 @@ class TestAdaptiveLoss(unittest.TestCase):
     def test_adaptive_loss_initialization(self):
         """Test adaptive loss function creation."""
         loss_fn = create_adaptive_loss_fn(strategy='epoch_based')
+
         self.assertTrue(callable(loss_fn))
         self.assertTrue(hasattr(loss_fn, 'update_state'))
         self.assertTrue(hasattr(loss_fn, 'get_current_info'))
@@ -129,7 +127,6 @@ class TestRegressionMetrics(unittest.TestCase):
         # Test data with known results
         self.y_test_1 = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         self.y_pred_1 = np.array([1.1, 2.2, 2.9, 4.1, 4.9])
-        
         # Perfect predictions
         self.y_test_2 = np.array([1.0, 2.0, 3.0])
         self.y_pred_2 = np.array([1.0, 2.0, 3.0])
@@ -138,12 +135,14 @@ class TestRegressionMetrics(unittest.TestCase):
         """Test that function returns exactly four values."""
         result = AdvancedNeuralNetwork.calculate_regression_metrics(
             self.y_test_1, self.y_pred_1)
+        
         self.assertEqual(len(result), 4)
     
     def test_return_types(self):
         """Test that all returned values are floats."""
         result = AdvancedNeuralNetwork.calculate_regression_metrics(
             self.y_test_1, self.y_pred_1)
+        
         for value in result:
             self.assertIsInstance(value, float)
     
@@ -163,8 +162,7 @@ class TestRegressionMetrics(unittest.TestCase):
             self.y_test_1, self.y_pred_1)
         
         # RMSE should be the square root of MSE
-        self.assertAlmostEqual(rmse, np.sqrt(mse), places=6)
-        
+        self.assertAlmostEqual(rmse, np.sqrt(mse), places=6) 
         # All metrics should be non-negative
         self.assertGreaterEqual(mse, 0)
         self.assertGreaterEqual(mae, 0)
@@ -182,16 +180,13 @@ class TestIntegration(unittest.TestCase):
             'performance_tracker': PERFORMANCE_TRACKER_AVAILABLE,
             'regression_metrics_function': REGRESSION_METRICS_AVAILABLE
         }
-        
-        # At least one component should be available
         available_count = sum(components.values())
-        self.assertGreater(available_count, 0, "No components available")
+
+        # All components should be available
+        self.assertEqual(available_count, len(components))
     
     def test_numpy_compatibility(self):
         """Test NumPy array handling."""
-        if not WEIGHT_CONSTRAINTS_AVAILABLE:
-            self.skipTest("Weight constraints module not available")
-        
         test_array = np.array([[0.5, 0.3], [0.7, 0.2]])
         constraint = BinaryWeightConstraintMax(max_binary_digits=3)
         result = constraint.apply_constraint(test_array)
