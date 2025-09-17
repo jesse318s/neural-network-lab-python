@@ -30,8 +30,7 @@ def create_model(input_shape: Tuple[int], output_shape: int = 6, config: Optiona
 def train_with_tracking(model: AdvancedNeuralNetwork, 
                        X_train: np.ndarray, X_val: np.ndarray, X_test: np.ndarray, y_train: np.ndarray, 
                        y_val: np.ndarray, y_test: np.ndarray, config: Dict[str, Any]) -> Dict[str, Any]:
-    """Complete training pipeline with comprehensive tracking."""
-    print("=== Starting Training Pipeline ===\n")
+    """Complete training with comprehensive tracking."""
     
     # Compile model
     try:
@@ -83,7 +82,7 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
 def main():
     """Main function to run the complete TensorFlow lab."""
     print("=" * 60)
-    print("ADVANCED TENSORFLOW LAB: CUSTOM WEIGHT MODIFICATION")
+    print("ADVANCED TENSORFLOW LAB")
     print("=" * 60)
     print("\n" + "=" * 40)
     print("LOADING PARTICLE DATA")
@@ -93,7 +92,6 @@ def main():
     try:
         data_splits, pipeline_info = complete_data_pipeline(num_particles=1000)
         X_train, X_val, X_test, y_train, y_val, y_test = data_splits
-        data_summary = pipeline_info.get('data_summary', {})
         print(f"✓ Data loaded successfully:")
         print(f"  Training: {X_train.shape[0]}, Validation: {X_val.shape[0]}, Test: {X_test.shape[0]}")
         print(f"  Features: {X_train.shape[1]} -> {y_train.shape[1]}")
@@ -186,7 +184,7 @@ def main():
     print("\n" + "=" * 60)
     print("🎉 ADVANCED TENSORFLOW LAB COMPLETED!")
     print("=" * 60)
-    print("📁 Check 'training_output' directory for detailed results.")
+    print("📁 Check 'training_output' directory for detailed results.\n")
     print("🔬 Lab demonstrated:")
     print("   • Binary weight precision constraints")
     print("   • Oscillation dampening for weight stability")

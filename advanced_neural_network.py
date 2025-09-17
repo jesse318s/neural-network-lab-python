@@ -170,7 +170,6 @@ class AdvancedNeuralNetwork:
     def train_with_custom_constraints(self, X_train: np.ndarray, y_train: np.ndarray, X_val: np.ndarray, y_val: np.ndarray,
                                     epochs: int = 50, batch_size: int = 32) -> Dict[str, Any]:
         """Train the model with custom weight constraints and adaptive loss."""
-        print(f"\n=== Starting Training === \n, Epochs: {epochs}, Batch size: {batch_size}")
         
         # Start training tracking
         training_config = {
