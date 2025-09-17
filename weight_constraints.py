@@ -6,7 +6,7 @@ of neural network weights and prevent oscillations during training.
 """
 
 import numpy as np
-from typing import List, Optional, Tuple
+from typing import List
 import struct
 
 

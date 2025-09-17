@@ -50,10 +50,11 @@ python test_main.py
 
 ```python
 from main import create_model, train_with_tracking
-from data_loader import load_and_prepare_data
+from ml_utils import complete_data_pipeline
 
 # Load data and create model
-X_train, X_val, X_test, y_train, y_val, y_test, summary = load_and_prepare_data()
+data_splits, pipeline_info = complete_data_pipeline(num_particles=1000)
+X_train, X_val, X_test, y_train, y_val, y_test = data_splits
 model = create_model(input_shape=(X_train.shape[1],), output_shape=y_train.shape[1])
 
 # Train with tracking
@@ -67,9 +68,8 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ├── main.py                      # Main training script
 ├── advanced_neural_network.py   # Core neural network implementation
 ├── weight_constraints.py        # Binary weight management
-├── adaptive_loss.py             # Custom loss functions
+├── ml_utils.py                  # Consolidated ML utilities (adaptive loss, data processing, & metrics)
 ├── performance_tracker.py       # Metrics tracking and CSV output
-├── data_loader.py               # Data loading and preprocessing
 ├── test_main.py                 # Test suite
 ├── requirements.txt             # Dependencies
 └── training_output/             # Generated results

@@ -20,7 +20,7 @@ except ImportError:
     WEIGHT_CONSTRAINTS_AVAILABLE = False
 
 try:
-    from adaptive_loss import AdaptiveLossFunction
+    from ml_utils import create_adaptive_loss_fn, compute_loss_weights
     ADAPTIVE_LOSS_AVAILABLE = True
 except ImportError:
     ADAPTIVE_LOSS_AVAILABLE = False
@@ -32,7 +32,7 @@ except ImportError:
     PERFORMANCE_TRACKER_AVAILABLE = False
 
 try:
-    from advanced_neural_network import calculate_regression_metrics
+    from advanced_neural_network import AdvancedNeuralNetwork
     REGRESSION_METRICS_AVAILABLE = True
 except ImportError:
     REGRESSION_METRICS_AVAILABLE = False
@@ -77,16 +77,15 @@ class TestAdaptiveLoss(unittest.TestCase):
             self.skipTest("Adaptive loss module not available")
     
     def test_adaptive_loss_initialization(self):
-        """Test AdaptiveLossFunction initialization."""
-        loss_fn = AdaptiveLossFunction(weighting_strategy='epoch_based')
-        self.assertEqual(loss_fn.weighting_strategy, 'epoch_based')
-        self.assertEqual(loss_fn.current_epoch, 0)
+        """Test adaptive loss function creation."""
+        loss_fn = create_adaptive_loss_fn(strategy='epoch_based')
+        self.assertTrue(callable(loss_fn))
+        self.assertTrue(hasattr(loss_fn, 'update_state'))
+        self.assertTrue(hasattr(loss_fn, 'get_current_info'))
     
     def test_adaptive_loss_get_weights(self):
-        """Test getting weights from adaptive loss function."""
-        loss_fn = AdaptiveLossFunction(weighting_strategy='epoch_based')
-        
-        mse_weight, mae_weight = loss_fn.get_weights()
+        """Test getting weights from compute_loss_weights function."""
+        mse_weight, mae_weight = compute_loss_weights('epoch_based', epoch=5)
         
         self.assertGreater(mse_weight, 0)
         self.assertGreater(mae_weight, 0)
@@ -125,7 +124,7 @@ class TestRegressionMetrics(unittest.TestCase):
     
     def setUp(self):
         if not REGRESSION_METRICS_AVAILABLE:
-            self.skipTest("MSAE function not available")
+            self.skipTest("Regression metrics function not available")
         
         # Test data with known results
         self.y_test_1 = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
@@ -137,18 +136,21 @@ class TestRegressionMetrics(unittest.TestCase):
     
     def test_function_returns_four_values(self):
         """Test that function returns exactly four values."""
-        result = calculate_regression_metrics(self.y_test_1, self.y_pred_1)
+        result = AdvancedNeuralNetwork.calculate_regression_metrics(
+            self.y_test_1, self.y_pred_1)
         self.assertEqual(len(result), 4)
     
     def test_return_types(self):
         """Test that all returned values are floats."""
-        result = calculate_regression_metrics(self.y_test_1, self.y_pred_1)
+        result = AdvancedNeuralNetwork.calculate_regression_metrics(
+            self.y_test_1, self.y_pred_1)
         for value in result:
             self.assertIsInstance(value, float)
     
     def test_perfect_predictions(self):
         """Test with perfect predictions."""
-        mse, mae, rmse, r2 = calculate_regression_metrics(self.y_test_2, self.y_pred_2)
+        mse, mae, rmse, r2 = AdvancedNeuralNetwork.calculate_regression_metrics(
+            self.y_test_2, self.y_pred_2)
         
         self.assertAlmostEqual(mse, 0.0, places=6)
         self.assertAlmostEqual(mae, 0.0, places=6)
@@ -157,7 +159,8 @@ class TestRegressionMetrics(unittest.TestCase):
     
     def test_metrics_relationships(self):
         """Test mathematical relationships between metrics."""
-        mse, mae, rmse, r2 = calculate_regression_metrics(self.y_test_1, self.y_pred_1)
+        mse, mae, rmse, r2 = AdvancedNeuralNetwork.calculate_regression_metrics(
+            self.y_test_1, self.y_pred_1)
         
         # RMSE should be the square root of MSE
         self.assertAlmostEqual(rmse, np.sqrt(mse), places=6)

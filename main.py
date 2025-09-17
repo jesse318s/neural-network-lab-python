@@ -1,21 +1,21 @@
-"""Advanced TensorFlow Lab: Custom Weight Modification and Adaptive Loss Functions
+"""
+Advanced TensorFlow Lab: Custom Weight Modification and Adaptive Loss Functions
 
 This lab implements neural network training with binary weight constraints, 
 oscillation dampening, adaptive loss functions, and performance tracking 
-for particle physics simulations."""
+for particle physics simulations.
+"""
+
 import os
 import numpy as np
 from typing import Dict, Tuple, Any, Optional
 
-# Suppress TensorFlow warnings
-os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
-
-# Direct imports
+# Import custom modules
 from advanced_neural_network import AdvancedNeuralNetwork
 from weight_constraints import BinaryWeightConstraintChanges, BinaryWeightConstraintMax, OscillationDampener
-from data_loader import load_and_prepare_data
-from adaptive_loss import epoch_weighted_loss, accuracy_weighted_loss, loss_weighted_loss  
-  
+from ml_utils import complete_data_pipeline, compute_loss_weights  
+
+
 def create_model(input_shape: Tuple[int], output_shape: int = 6, config: Optional[Dict[str, Any]] = None) -> AdvancedNeuralNetwork:
     """Create a neural network model with custom constraints."""
     if config is None:
@@ -25,6 +25,7 @@ def create_model(input_shape: Tuple[int], output_shape: int = 6, config: Optiona
             'output_dir': 'training_output'}
 
     return AdvancedNeuralNetwork(input_shape, output_shape, config)
+
 
 def train_with_tracking(model: AdvancedNeuralNetwork, 
                        X_train: np.ndarray, X_val: np.ndarray, X_test: np.ndarray, y_train: np.ndarray, 
@@ -78,101 +79,21 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
     return {'training': training_results, 'test': test_results,
         'performance_summary': model.performance_tracker.get_summary() if model.performance_tracker else {}, 'error_summary': error_summary}
 
-def demonstrate_individual_components():
-    """Demonstrate individual components with simplified error handling."""
-    print("\n=== Demonstrating Individual Components ===\n--- Binary Weight Constraint Changes ---")
-     # Test binary weight constraints
-    try:
-        constraint_changes = BinaryWeightConstraintChanges(max_additional_digits=1)
-        previous_weight = 0.625  # 1.010 in binary
-        current_weights = np.array([[0.875], [0.6875], [1.125], [0.5625]])
-        print(f"Previous weight: {previous_weight}\nTesting weight constraint changes:")
-        # Initialize with previous weight
-        constraint_changes.apply_constraint(np.array([[previous_weight]]))
-
-        for i, weight in enumerate(current_weights.flatten()):
-            test_array = np.array([[weight]])
-            constrained = constraint_changes.apply_constraint(test_array)
-            print(f"  Original: {weight:.4f} -> Constrained: {constrained[0,0]:.4f}")
-        
-        print(f"✓ Binary constraint changes test completed")
-    except Exception as e:
-        print(f"✗ Binary constraint changes test failed: {e}")
-    
-    # Test binary max constraints
-    print("\n--- Binary Weight Constraint Max ---")
-
-    try:
-        constraint_max = BinaryWeightConstraintMax(max_binary_digits=3)
-        test_weights = np.array([[0.125, 0.875], [1.5, 0.75]])
-        print("Original weights:\n", test_weights)
-        constrained_weights = constraint_max.apply_constraint(test_weights)
-        print("Constrained weights:\n", constrained_weights)
-        print("✓ Binary constraint max test completed")
-    except Exception as e:
-        print(f"✗ Binary constraint max test failed: {e}")
-
-    # Test oscillation dampening
-    print("\n--- Oscillation Dampening ---")
-
-    try:
-        dampener = OscillationDampener(window_size=3)
-        # Simulate oscillating weights
-        weights_sequence = [np.array([[0.5]]), np.array([[0.7]]), np.array([[0.4]]), np.array([[0.8]])]
-        print("Weight sequence (simulating oscillation):")
-
-        for i, weights in enumerate(weights_sequence):
-            dampener.add_weights(weights)
-            dampened = dampener.detect_and_dampen_oscillations(weights)
-            print(f"  Step {i+1}: Original: {weights[0,0]:.3f} -> Dampened: {dampened[0,0]:.3f}")
-        
-        print("✓ Oscillation dampening test completed")   
-    except Exception as e:
-        print(f"✗ Oscillation dampening test failed: {e}")
-
-    # Test adaptive loss functions
-    print("\n--- Adaptive Loss Functions ---")
-    try:
-        mse_loss, mae_loss = 0.15, 0.12
-        print(f"Base losses - MSE: {mse_loss}, MAE: {mae_loss}\nEpoch-based weighting:")
-
-        # Test epoch-based weighting
-        for epoch in [5, 15, 25, 35]:
-            combined_loss = epoch_weighted_loss(epoch, mse_loss, mae_loss)
-            print(f"  Epoch {epoch:2d}: Combined loss = {combined_loss:.4f}")
-
-        # Test accuracy-based weighting
-        print("Accuracy-based weighting:")
-
-        for accuracy in [0.3, 0.6, 0.8, 0.95]:
-            combined_loss = accuracy_weighted_loss(accuracy, mse_loss, mae_loss)
-            print(f"  Accuracy {accuracy:.2f}: Combined loss = {combined_loss:.4f}")
-
-        # Test loss-based weighting
-        print("Loss-based weighting:")
-
-        for prev_loss in [2.0, 0.5, 0.1, 0.05]:
-            combined_loss = loss_weighted_loss(prev_loss, mse_loss, mae_loss)
-            print(f"  Prev loss {prev_loss:.2f}: Combined loss = {combined_loss:.4f}")
-
-        print("✓ Adaptive loss functions test completed")
-    except Exception as e:
-        print(f"✗ Adaptive loss functions test failed: {e}")
 
 def main():
     """Main function to run the complete TensorFlow lab."""
     print("=" * 60)
     print("ADVANCED TENSORFLOW LAB: CUSTOM WEIGHT MODIFICATION")
     print("=" * 60)
-    # Demonstrate individual components first
-    demonstrate_individual_components()
     print("\n" + "=" * 40)
     print("LOADING PARTICLE DATA")
     print("=" * 40)
 
     # Load and prepare data
     try:
-        X_train, X_val, X_test, y_train, y_val, y_test, data_summary = load_and_prepare_data()
+        data_splits, pipeline_info = complete_data_pipeline(num_particles=1000)
+        X_train, X_val, X_test, y_train, y_val, y_test = data_splits
+        data_summary = pipeline_info.get('data_summary', {})
         print(f"✓ Data loaded successfully:")
         print(f"  Training: {X_train.shape[0]}, Validation: {X_val.shape[0]}, Test: {X_test.shape[0]}")
         print(f"  Features: {X_train.shape[1]} -> {y_train.shape[1]}")
@@ -280,6 +201,7 @@ def main():
         print("\n🏆 Lab completed with NO ERRORS!")
     else:
         print(f"\n⚠ Lab completed with {total_errors} minor errors")
+
 
 if __name__ == "__main__":
     try:

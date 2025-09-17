@@ -9,30 +9,17 @@ os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
 # Import TensorFlow with Keras
 import tensorflow as tf
 
-# Direct imports to avoid circular dependency issues
+# Import custom modules
 from weight_constraints import (BinaryWeightConstraintChanges, BinaryWeightConstraintMax, OscillationDampener)
 from performance_tracker import PerformanceTracker
-from adaptive_loss import AdaptiveLossFunction
-
-def calculate_regression_metrics(y_test, y_pred):
-    """Calculate MSE, MAE, RMSE, and R² score efficiently."""
-    from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-    
-    # Convert to numpy arrays
-    y_test, y_pred = np.asarray(y_test, dtype=np.float32), np.asarray(y_pred, dtype=np.float32)
-    
-    # Calculate metrics
-    mse = float(mean_squared_error(y_test, y_pred))
-    mae = float(mean_absolute_error(y_test, y_pred))
-    rmse = float(np.sqrt(mse))
-    r2 = float(r2_score(y_test, y_pred)) if len(y_test) > 1 else 0.0
-    
-    return mse, mae, rmse, r2
+from ml_utils import create_adaptive_loss_fn
 
 
 class AdvancedNeuralNetwork:
-    """ Neural network with custom weight constraints and adaptive loss functions.
-    Implements railway-style error handling for robust execution. """
+    """ 
+    Neural network with custom weight constraints and adaptive loss functions.
+    Implements railway-style error handling for robust execution. 
+    """
     
     def __init__(self, input_shape: Tuple[int], output_shape: int, config: Dict[str, Any]):
         self.input_shape, self.output_shape  = input_shape, output_shape
@@ -45,6 +32,8 @@ class AdvancedNeuralNetwork:
         self.performance_tracker = self._init_performance_tracker()
         # Build model
         self.model, self.epoch_count = self._build_model(), 0
+        # Data pipeline state
+        self.data_pipeline_info = None
         
     def _init_binary_changes(self):
         """Initialize binary weight constraint for changes."""
@@ -76,7 +65,7 @@ class AdvancedNeuralNetwork:
     def _init_adaptive_loss(self):
         """Initialize adaptive loss function."""
         try:
-            return AdaptiveLossFunction(weighting_strategy=self.config.get('loss_weighting_strategy', 'epoch_based'))
+            return create_adaptive_loss_fn(strategy=self.config.get('loss_weighting_strategy', 'epoch_based'))
         except Exception as e:
             self.errors.append(f"Adaptive loss failed: {e}")
             return None
@@ -163,7 +152,7 @@ class AdvancedNeuralNetwork:
                 y_pred = self.model(X_batch, training=True)
                 if self.adaptive_loss:
                     loss_value = self.adaptive_loss(y_batch, y_pred)
-                    loss_strategy = self.adaptive_loss.get_current_strategy_info()
+                    loss_strategy = self.adaptive_loss.get_current_info()
                 else:
                     loss_value = tf.reduce_mean(tf.square(y_batch - y_pred))
                     loss_strategy = "mse_only"
@@ -186,7 +175,7 @@ class AdvancedNeuralNetwork:
         # Start training tracking
         training_config = {
             'epochs': epochs, 'batch_size': batch_size, 'model_architecture': self.config,
-            'adaptive_loss_strategy': self.adaptive_loss.weighting_strategy if self.adaptive_loss else 'none'}
+            'adaptive_loss_strategy': self.config.get('loss_weighting_strategy', 'none') if self.adaptive_loss else 'none'}
         if self.performance_tracker: self.performance_tracker.start_training(training_config)
         
         # Training history
@@ -217,12 +206,12 @@ class AdvancedNeuralNetwork:
             # Validation
             try:
                 val_pred = self.model.predict(X_val, verbose=0)
-                val_loss, val_mae, rmse, accuracy = calculate_regression_metrics(y_val, val_pred)     
+                val_loss, val_mae, rmse, accuracy = self.calculate_regression_metrics(y_val, val_pred)     
             except Exception as e:
                 val_loss, val_mae, accuracy = float(np.mean(epoch_losses)), float(np.mean(epoch_mae)), 0.0
             
             # Update adaptive loss function
-            if self.adaptive_loss: self.adaptive_loss.update_epoch(epoch, accuracy)
+            if self.adaptive_loss: self.adaptive_loss.update_state(epoch, accuracy)
             
             # Record metrics
             epoch_time = time.time() - epoch_start_time
@@ -254,7 +243,7 @@ class AdvancedNeuralNetwork:
         
         # Get adaptive loss history
         adaptive_loss_history = {}
-        if self.adaptive_loss: adaptive_loss_history = self.adaptive_loss.get_loss_history()
+        if self.adaptive_loss: adaptive_loss_history = self.adaptive_loss.get_history()
         return {'history': history, 'final_results': final_results, 'adaptive_loss_history': adaptive_loss_history, 'errors': self.errors,
             'successful_constraints': list(set([c for sublist in history['applied_constraints'] for c in sublist]))}
     
@@ -266,11 +255,15 @@ class AdvancedNeuralNetwork:
             if self.performance_tracker: inference_time = self.performance_tracker.measure_inference_time(self.model, X_test, num_runs=10)
             # Make predictions, calculate metrics
             y_pred = self.model.predict(X_test, verbose=0)
-            mse, mae, rmse, r2_score = calculate_regression_metrics(y_test, y_pred)     
+            mse, mae, rmse, r2_score = self.calculate_regression_metrics(y_test, y_pred)     
             return {'mse': mse, 'mae': mae, 'rmse': rmse, 'r2_score': r2_score, 'inference_time': inference_time} 
         except Exception as e:
             self.errors.append(f"Model evaluation failed: {e}")
             return {'mse': float('inf'), 'mae': float('inf'), 'rmse': float('inf'), 'r2_score': -1.0, 'inference_time': 0.0}
+    
+    def get_data_info(self) -> Dict[str, Any]:
+        """Get information about the loaded data pipeline."""
+        return self.data_pipeline_info or {'status': 'No data loaded yet'}
     
     def get_error_summary(self) -> Dict[str, Any]:
         """Get a summary of all errors encountered."""
@@ -279,3 +272,19 @@ class AdvancedNeuralNetwork:
             error_type = error.split(':')[0] if ':' in error else 'general'
             error_counts[error_type] = error_counts.get(error_type, 0) + 1
         return {'total_errors': len(self.errors), 'error_breakdown': error_counts, 'recent_errors': self.errors[-5:] if self.errors else [],'all_errors': self.errors}
+    
+    @staticmethod
+    def calculate_regression_metrics(y_test, y_pred):
+        """Calculate MSE, MAE, RMSE, and R² score efficiently."""
+        from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+        
+        # Convert to numpy arrays
+        y_test, y_pred = np.asarray(y_test, dtype=np.float32), np.asarray(y_pred, dtype=np.float32)
+        
+        # Calculate metrics
+        mse = float(mean_squared_error(y_test, y_pred))
+        mae = float(mean_absolute_error(y_test, y_pred))
+        rmse = float(np.sqrt(mse))
+        r2 = float(r2_score(y_test, y_pred)) if len(y_test) > 1 else 0.0
+        
+        return mse, mae, rmse, r2
