@@ -5,9 +5,9 @@ This module implements custom weight constraint classes that manage binary preci
 of neural network weights and prevent oscillations during training.
 """
 
-import numpy as np
-from typing import List
 import struct
+from typing import List
+import numpy as np
 
 
 class BinaryWeightConstraintChanges:
@@ -29,7 +29,6 @@ class BinaryWeightConstraintChanges:
             
             sign = "-" if value < 0 else ""
             abs_value = abs(value)
-            
             integer_part = int(abs_value)
             fractional_part = abs_value - integer_part
             
@@ -43,6 +42,7 @@ class BinaryWeightConstraintChanges:
             
             while fractional_part > 0 and len(fractional_binary) < max_fractional_digits:
                 fractional_part *= 2
+
                 if fractional_part >= 1:
                     fractional_binary += "1"
                     fractional_part -= 1
@@ -71,11 +71,11 @@ class BinaryWeightConstraintChanges:
                 fractional_part = ""
             
             integer_part = integer_part.lstrip('0')
+
             if not integer_part:
                 integer_part = "0"
             
             fractional_part = fractional_part.rstrip('0')
-            
             significant_digits = len(integer_part) + len(fractional_part)
             
             if significant_digits == 0:
@@ -90,10 +90,8 @@ class BinaryWeightConstraintChanges:
         try:
             current_binary = self._float_to_binary_repr(current_weight)
             previous_binary = self._float_to_binary_repr(previous_weight)
-            
             current_digits = self._count_significant_binary_digits(current_binary)
             previous_digits = self._count_significant_binary_digits(previous_binary)
-            
             max_allowed_digits = previous_digits + self.max_additional_digits
             
             if current_digits <= max_allowed_digits:
@@ -103,7 +101,6 @@ class BinaryWeightConstraintChanges:
             reduction_factor = current_digits - max_allowed_digits
             magnitude = 10 ** (-reduction_factor)
             constrained_weight = round(current_weight / magnitude) * magnitude
-            
             return constrained_weight
         except Exception:
             self.error_count += 1
@@ -129,7 +126,8 @@ class BinaryWeightConstraintChanges:
             elif len(weights.shape) == 2:
                 for i in range(weights.shape[0]):
                     for j in range(weights.shape[1]):
-                        constrained_weights[i, j] = self._constrain_weight_change(weights[i, j], self.previous_weights[i, j])
+                        constrained_weights[i, j] = self._constrain_weight_change(weights[i, j], 
+                                                                                  self.previous_weights[i, j])
             else:
                 # Higher dimensional arrays
                 flat_weights = weights.flatten()
@@ -145,8 +143,10 @@ class BinaryWeightConstraintChanges:
             return constrained_weights
         except Exception:
             self.error_count += 1
+
             if self.previous_weights is None or self.previous_weights.shape != weights.shape:
                 self.previous_weights = weights.copy()
+            
             return weights
     
     def get_error_count(self) -> int:
@@ -175,7 +175,6 @@ class BinaryWeightConstraintMax:
             
             sign = "-" if value < 0 else ""
             abs_value = abs(value)
-            
             integer_part = int(abs_value)
             fractional_part = abs_value - integer_part
             
@@ -189,6 +188,7 @@ class BinaryWeightConstraintMax:
             
             while fractional_part > 0 and len(fractional_binary) < max_fractional_digits:
                 fractional_part *= 2
+
                 if fractional_part >= 1:
                     fractional_binary += "1"
                     fractional_part -= 1
@@ -217,11 +217,11 @@ class BinaryWeightConstraintMax:
                 fractional_part = ""
             
             integer_part = integer_part.lstrip('0')
+
             if not integer_part:
                 integer_part = "0"
             
             fractional_part = fractional_part.rstrip('0')
-            
             significant_digits = len(integer_part) + len(fractional_part)
             
             if significant_digits == 0:
@@ -244,7 +244,6 @@ class BinaryWeightConstraintMax:
             reduction_factor = current_digits - self.max_binary_digits
             magnitude = 10 ** (-reduction_factor)
             constrained_weight = round(weight / magnitude) * magnitude
-            
             return constrained_weight
         except Exception:
             self.error_count += 1
@@ -266,8 +265,10 @@ class BinaryWeightConstraintMax:
                 # Higher dimensional arrays
                 flat_weights = weights.flatten()
                 flat_constrained = np.zeros_like(flat_weights)
+
                 for i in range(len(flat_weights)):
                     flat_constrained[i] = self._constrain_weight_max(flat_weights[i])
+                
                 constrained_weights = flat_constrained.reshape(weights.shape)
             
             return constrained_weights
@@ -308,10 +309,8 @@ class OscillationDampener:
             
             # Check for up-down-up pattern
             up_down_up = (values[0] < values[1] > values[2])
-            
             # Check for down-up-down pattern  
             down_up_down = (values[0] > values[1] < values[2])
-            
             return up_down_up or down_up_down
         except Exception:
             return False
@@ -339,11 +338,9 @@ class OscillationDampener:
             # Clear the least significant bit
             lsb_position = (bits & -bits).bit_length() - 1
             bits &= ~(1 << lsb_position)
-            
             # Convert back to float
             modified_packed = struct.pack('I', bits)
             modified_weight = struct.unpack('f', modified_packed)[0]
-            
             return sign * modified_weight
         except Exception:
             self.error_count += 1
@@ -365,6 +362,7 @@ class OscillationDampener:
                     
                     if len(weight_sequence) >= self.window_size:
                         recent_values = weight_sequence[-self.window_size:]
+
                         if self._detect_oscillation_pattern(recent_values):
                             dampened_weights[i] = self._set_smallest_binary_digit_to_zero(current_weights[i])
                             
@@ -377,6 +375,7 @@ class OscillationDampener:
                         
                         if len(weight_sequence) >= self.window_size:
                             recent_values = weight_sequence[-self.window_size:]
+
                             if self._detect_oscillation_pattern(recent_values):
                                 dampened_weights[i, j] = self._set_smallest_binary_digit_to_zero(current_weights[i, j])
             else:
@@ -386,13 +385,16 @@ class OscillationDampener:
                 
                 for i in range(len(flat_current)):
                     weight_sequence = []
+
                     for hist_weights in self.weight_history:
                         if hist_weights.shape == current_weights.shape:
                             weight_sequence.append(hist_weights.flatten()[i])
+
                     weight_sequence.append(flat_current[i])
                     
                     if len(weight_sequence) >= self.window_size:
                         recent_values = weight_sequence[-self.window_size:]
+                        
                         if self._detect_oscillation_pattern(recent_values):
                             flat_dampened[i] = self._set_smallest_binary_digit_to_zero(flat_current[i])
                 

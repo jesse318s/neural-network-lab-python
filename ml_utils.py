@@ -1,5 +1,5 @@
 """
-Consolidated ML Utilities for Neural Network Training
+ML Utilities for Neural Network Training
 
 This module combines adaptive loss functions and data processing utilities into a 
 comprehensive, compact ML utility suite for the advanced neural network project.
@@ -8,12 +8,12 @@ comprehensive, compact ML utility suite for the advanced neural network project.
 import os
 import json
 import math
+from typing import Dict, Tuple, Optional, Any
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from typing import Dict, Tuple, Optional, Any
 
 
 # ============================================================================
@@ -40,8 +40,7 @@ def compute_loss_weights(strategy: str, epoch: int = 0, accuracy: float = 0.5,
             elif epoch < 30:
                 progress = (epoch - 10) / 20
                 return 0.3 + 0.4 * progress, 0.7 - 0.4 * progress
-            else: return 0.8, 0.2
-                
+            else: return 0.8, 0.2      
         elif strategy == 'accuracy_based':
             if accuracy < 0.3: return 0.2, 0.8
             elif accuracy < 0.6:
@@ -51,15 +50,14 @@ def compute_loss_weights(strategy: str, epoch: int = 0, accuracy: float = 0.5,
                 progress = (accuracy - 0.6) / 0.25
                 return 0.5 + 0.3 * progress, 0.5 - 0.3 * progress
             else: return 0.9, 0.1
-                
         elif strategy == 'loss_based':
             log_loss = math.log(max(prev_loss, 1e-8))
+
             if log_loss > 0: return 0.3, 0.7
             elif log_loss > -2:
                 progress = (log_loss + 2) / 2
                 return 0.3 + 0.4 * progress, 0.7 - 0.4 * progress
-            else: return 0.8, 0.2
-                
+            else: return 0.8, 0.2       
         elif strategy == 'combined':
             # Get weights from each strategy
             epoch_mse, epoch_mae = compute_loss_weights('epoch_based', epoch, accuracy, prev_loss)
@@ -76,9 +74,7 @@ def compute_loss_weights(strategy: str, epoch: int = 0, accuracy: float = 0.5,
             final_mae = weights[0] * epoch_mae + weights[1] * acc_mae + weights[2] * loss_mae
             total = final_mse + final_mae
             return (final_mse / total, final_mae / total) if total > 0 else (0.5, 0.5)
-            
-        else: return 0.5, 0.5
-            
+        else: return 0.5, 0.5       
     except Exception as e:
         print(f"Warning: Error computing loss weights ({strategy}): {e}")
         return 0.5, 0.5
@@ -96,7 +92,6 @@ def create_adaptive_loss_fn(strategy: str = 'epoch_based'):
     """
     # State variables (using mutable default to maintain state)
     state = {'epoch': 0, 'accuracy': 0.5, 'prev_loss': 1.0, 'history': [], 'error_count': 0}
-    
     # Create loss functions
     mse_loss = tf.keras.losses.MeanSquaredError()
     mae_loss = tf.keras.losses.MeanAbsoluteError()
@@ -108,7 +103,6 @@ def create_adaptive_loss_fn(strategy: str = 'epoch_based'):
             mae = mae_loss(y_true, y_pred)
             mse_weight, mae_weight = compute_loss_weights(strategy, state['epoch'], state['accuracy'], state['prev_loss'])
             combined_loss = mse_weight * mse + mae_weight * mae
-            
             # Record history
             loss_info = {
                 'epoch': state['epoch'], 'mse': float(mse.numpy()) if hasattr(mse, 'numpy') else float(mse),
@@ -116,6 +110,7 @@ def create_adaptive_loss_fn(strategy: str = 'epoch_based'):
                 'mse_weight': mse_weight, 'mae_weight': mae_weight,
                 'combined_loss': float(combined_loss.numpy()) if hasattr(combined_loss, 'numpy') else float(combined_loss)
             }
+
             state['history'].append(loss_info)
             return combined_loss
             
@@ -127,7 +122,9 @@ def create_adaptive_loss_fn(strategy: str = 'epoch_based'):
     def update_state(epoch: int, accuracy: Optional[float] = None):
         """Update loss function state."""
         state['epoch'] = epoch
+
         if accuracy is not None: state['accuracy'] = accuracy
+
         if state['history']: state['prev_loss'] = state['history'][-1]['combined_loss']
     
     def get_current_info() -> str:
@@ -143,7 +140,6 @@ def create_adaptive_loss_fn(strategy: str = 'epoch_based'):
     adaptive_loss.update_state = update_state
     adaptive_loss.get_current_info = get_current_info
     adaptive_loss.get_history = get_history
-    
     return adaptive_loss
 
 
@@ -164,7 +160,6 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
     """
     try:
         np.random.seed(42)
-        
         # Generate input parameters
         data = {
             'particle_id': range(1, num_particles + 1),
@@ -177,9 +172,9 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
             'magnetic_field_strength': np.random.uniform(0.1, 2.0, num_particles),
             'simulation_time': np.random.uniform(1.0, 10.0, num_particles)
         }
-        
         # Calculate physics outputs
         outputs = []
+
         for i in range(num_particles):
             t, vx0, vy0, x0, y0, m, q, B = [data[k][i] for k in 
                 ['simulation_time', 'initial_velocity_x', 'initial_velocity_y',
@@ -201,7 +196,6 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
             vy_final += np.random.normal(0, noise * abs(vy_final))
             x_final += np.random.normal(0, noise * abs(x_final))
             y_final += np.random.normal(0, noise * abs(y_final))
-            
             outputs.append([vx_final, vy_final, x_final, y_final,
                            0.5 * m * (vx_final**2 + vy_final**2),  # kinetic energy
                            np.sqrt((x_final - x0)**2 + (y_final - y0)**2)])  # trajectory length
@@ -209,6 +203,7 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
         # Add outputs to data
         output_names = ['final_velocity_x', 'final_velocity_y', 'final_position_x',
                        'final_position_y', 'kinetic_energy', 'trajectory_length']
+        
         for i, name in enumerate(output_names):
             data[name] = [row[i] for row in outputs]
         
@@ -221,8 +216,7 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
             except Exception as e:
                 print(f"Warning: Could not save particle data: {e}")
         
-        return df
-        
+        return df  
     except Exception as e:
         print(f"Error generating particle data: {e}")
         # Return minimal fallback data
@@ -253,15 +247,16 @@ def load_and_validate_data(csv_path: str = 'particle_data.csv') -> Tuple[pd.Data
         
         # Validate data integrity
         validation = {'is_valid': True, 'issues': [], 'recommendations': []}
-        
         # Check for missing values
         missing = df.isnull().sum()
+
         if missing.any():
             validation['issues'].append(f"Missing values: {missing.to_dict()}")
             validation['recommendations'].append("Fill or remove missing values")
         
         # Check physical constraints
         numeric_cols = df.select_dtypes(include=[np.number]).columns
+
         for col in numeric_cols:
             if col == 'mass' and (df[col] <= 0).any():
                 validation['issues'].append(f"Non-positive mass values found")
@@ -276,8 +271,7 @@ def load_and_validate_data(csv_path: str = 'particle_data.csv') -> Tuple[pd.Data
                 validation['recommendations'].append(f"Consider scaling {col}")
         
         validation['is_valid'] = len(validation['issues']) == 0
-        return df, validation
-        
+        return df, validation 
     except Exception as e:
         print(f"Error loading/validating data: {e}")
         return generate_particle_data(save_to_file=True), {'is_valid': False, 'issues': [str(e)], 'recommendations': []}
@@ -299,13 +293,12 @@ def create_data_summary(df: pd.DataFrame) -> Dict[str, Any]:
                          'initial_position_y', 'charge', 'magnetic_field_strength', 'simulation_time']
         output_features = ['final_velocity_x', 'final_velocity_y', 'final_position_x',
                           'final_position_y', 'kinetic_energy', 'trajectory_length']
-        
         # Filter available features
         available_inputs = [f for f in input_features if f in df.columns]
-        available_outputs = [f for f in output_features if f in df.columns]
-        
+        available_outputs = [f for f in output_features if f in df.columns]   
         # Calculate statistics
         stats = {}
+
         for feature in available_inputs + available_outputs:
             if df[feature].dtype in ['int64', 'float64']:
                 stats[feature] = {
@@ -328,7 +321,6 @@ def create_data_summary(df: pd.DataFrame) -> Dict[str, Any]:
             print(f"Warning: Could not save data summary: {e}")
         
         return summary
-        
     except Exception as e:
         print(f"Error creating data summary: {e}")
         return {'num_particles': 0, 'input_features': [], 'output_features': [], 'data_statistics': {}, 'error': str(e)}
@@ -354,7 +346,6 @@ def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: 
                          'initial_position_y', 'charge', 'magnetic_field_strength', 'simulation_time']
         output_features = ['final_velocity_x', 'final_velocity_y', 'final_position_x',
                           'final_position_y', 'kinetic_energy', 'trajectory_length']
-        
         # Filter available features
         available_inputs = [f for f in input_features if f in df.columns]
         available_outputs = [f for f in output_features if f in df.columns]
@@ -373,8 +364,8 @@ def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: 
         
         # Split data
         X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
-        X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, test_size=val_size, random_state=random_state)
-        
+        X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, 
+                                                          test_size=val_size, random_state=random_state)
         # Scale features
         scaler_X, scaler_y = StandardScaler(), StandardScaler()
         X_train_scaled = scaler_X.fit_transform(X_train)
@@ -394,9 +385,7 @@ def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: 
         print(f"Data preprocessing completed: Train={X_train_scaled.shape[0]}, "
               f"Val={X_val_scaled.shape[0]}, Test={X_test_scaled.shape[0]}, "
               f"Features={X_train_scaled.shape[1]}→{y_train_scaled.shape[1]}")
-        
-        return X_train_scaled, X_val_scaled, X_test_scaled, y_train_scaled, y_val_scaled, y_test_scaled
-        
+        return X_train_scaled, X_val_scaled, X_test_scaled, y_train_scaled, y_val_scaled, y_test_scaled  
     except Exception as e:
         print(f"Error in data preprocessing: {e}")
         # Return dummy data as fallback
@@ -422,7 +411,6 @@ def complete_data_pipeline(csv_path: str = 'particle_data.csv',
     """
     try:
         print("=== ML Utils Data Pipeline ===")
-        
         # Load and validate data
         df, validation = load_and_validate_data(csv_path)
         
@@ -433,10 +421,8 @@ def complete_data_pipeline(csv_path: str = 'particle_data.csv',
         
         # Create summary
         summary = create_data_summary(df)
-        
         # Preprocess for training
         data_splits = preprocess_for_training(df)
-        
         # Compile pipeline information
         pipeline_info = {
             'data_summary': summary, 'validation': validation,
@@ -445,10 +431,8 @@ def complete_data_pipeline(csv_path: str = 'particle_data.csv',
             'test_samples': data_splits[2].shape[0], 'input_features': data_splits[0].shape[1],
             'output_features': data_splits[3].shape[1]
         }
-        
         print("Data pipeline completed successfully!")
-        return data_splits, pipeline_info
-        
+        return data_splits, pipeline_info 
     except Exception as e:
         print(f"Error in data pipeline: {e}")
         # Return fallback data

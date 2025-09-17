@@ -68,7 +68,7 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ├── main.py                      # Main training script
 ├── advanced_neural_network.py   # Core neural network implementation
 ├── weight_constraints.py        # Binary weight management
-├── ml_utils.py                  # Consolidated ML utilities (adaptive loss, data processing, & metrics)
+├── ml_utils.py                  # ML utilities (adaptive loss, data processing, & metrics)
 ├── performance_tracker.py       # Metrics tracking and CSV output
 ├── test_main.py                 # Test suite
 ├── requirements.txt             # Dependencies
@@ -106,10 +106,9 @@ Implements graceful degradation - training continues even when individual compon
 
 ```bash
 python test_main.py              # Run standard tests
-python test_main.py --comprehensive  # Run detailed test suite
 ```
 
-Tests cover weight constraints, adaptive loss functions, performance tracking, and error handling.
+Tests cover weight constraints, adaptive loss functions, performance tracking, regression metrics, and error handling.
 
 ## Configuration
 

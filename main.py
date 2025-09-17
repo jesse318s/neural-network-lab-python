@@ -7,8 +7,8 @@ for particle physics simulations.
 """
 
 import os
-import numpy as np
 from typing import Dict, Tuple, Any, Optional
+import numpy as np
 
 # Import custom modules
 from advanced_neural_network import AdvancedNeuralNetwork
@@ -20,8 +20,8 @@ def create_model(input_shape: Tuple[int], output_shape: int = 6, config: Optiona
     if config is None:
         config = { 'hidden_layers': [64, 32, 16],
             'activation': 'relu', 'dropout_rate': 0.2, 'optimizer': 'adam', 'learning_rate': 0.001,
-            'max_binary_digits': 5, 'max_additional_binary_digits': 1, 'oscillation_window': 3, 'loss_weighting_strategy': 'epoch_based',
-            'output_dir': 'training_output'}
+            'max_binary_digits': 5, 'max_additional_binary_digits': 1, 'oscillation_window': 3, 
+            'loss_weighting_strategy': 'epoch_based', 'output_dir': 'training_output'}
 
     return AdvancedNeuralNetwork(input_shape, output_shape, config)
 
@@ -103,8 +103,8 @@ def main():
     print("=" * 40)
     # Create model with configuration
     model_config = {'hidden_layers': [64, 32, 16], 'activation': 'relu', 'dropout_rate': 0.2, 'optimizer': 'adam',
-        'learning_rate': 0.001, 'max_binary_digits': 5, 'max_additional_binary_digits': 1,
-        'oscillation_window': 3, 'loss_weighting_strategy': 'combined', 'output_dir': 'training_output','enable_weight_constraints': True} 
+        'learning_rate': 0.001, 'max_binary_digits': 5, 'max_additional_binary_digits': 1, 'oscillation_window': 3,
+        'loss_weighting_strategy': 'combined', 'output_dir': 'training_output', 'enable_weight_constraints': True}
     
     try:
         model = create_model( input_shape=(X_train.shape[1],),  output_shape=y_train.shape[1], config=model_config)
