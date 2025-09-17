@@ -107,7 +107,7 @@ def main():
         'loss_weighting_strategy': 'combined', 'output_dir': 'training_output', 'enable_weight_constraints': True}
     
     try:
-        model = create_model( input_shape=(X_train.shape[1],),  output_shape=y_train.shape[1], config=model_config)
+        model = create_model(input_shape=(X_train.shape[1],), output_shape=y_train.shape[1], config=model_config)
         print("✓ Neural network created successfully") 
     except Exception as e:
         print(f"✗ Model creation failed: {e}")
