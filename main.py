@@ -12,8 +12,7 @@ from typing import Dict, Tuple, Any, Optional
 
 # Import custom modules
 from advanced_neural_network import AdvancedNeuralNetwork
-from weight_constraints import BinaryWeightConstraintChanges, BinaryWeightConstraintMax, OscillationDampener
-from ml_utils import complete_data_pipeline, compute_loss_weights  
+from ml_utils import complete_data_pipeline
 
 
 def create_model(input_shape: Tuple[int], output_shape: int = 6, config: Optional[Dict[str, Any]] = None) -> AdvancedNeuralNetwork:
@@ -31,7 +30,6 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
                        X_train: np.ndarray, X_val: np.ndarray, X_test: np.ndarray, y_train: np.ndarray, 
                        y_val: np.ndarray, y_test: np.ndarray, config: Dict[str, Any]) -> Dict[str, Any]:
     """Complete training with comprehensive tracking."""
-    
     # Compile model
     try:
         model.compile_model()
@@ -76,7 +74,8 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
     # Get error summary
     error_summary = model.get_error_summary()
     return {'training': training_results, 'test': test_results,
-        'performance_summary': model.performance_tracker.get_summary() if model.performance_tracker else {}, 'error_summary': error_summary}
+        'performance_summary': model.performance_tracker.get_summary() if model.performance_tracker else {}, 
+        'error_summary': error_summary}
 
 
 def main():
@@ -102,7 +101,6 @@ def main():
     print("\n" + "=" * 40)
     print("CREATING AND TRAINING MODEL")
     print("=" * 40)
-    
     # Create model with configuration
     model_config = {'hidden_layers': [64, 32, 16], 'activation': 'relu', 'dropout_rate': 0.2, 'optimizer': 'adam',
         'learning_rate': 0.001, 'max_binary_digits': 5, 'max_additional_binary_digits': 1,
@@ -138,19 +136,18 @@ def main():
         performance_summary = results.get('performance_summary', {})
         test_results = results.get('test', {})
         error_summary = results.get('error_summary', {})
+
         print(f"📊 Performance Metrics:")
         print(f"  Final accuracy: {performance_summary.get('current_accuracy', 'N/A'):.4f}")
         print(f"  Best accuracy: {performance_summary.get('best_accuracy', 'N/A'):.4f} "
               f"at epoch {performance_summary.get('best_accuracy_epoch', 'N/A')}")
         print(f"  Average epoch time: {performance_summary.get('avg_epoch_time', 'N/A'):.2f}s")
-        print(f"  Peak memory: {performance_summary.get('peak_memory_mb', 'N/A'):.1f} MB")
-        
+        print(f"  Peak memory: {performance_summary.get('peak_memory_mb', 'N/A'):.1f} MB")    
         print(f"\n🧪 Test Results:")
         print(f"  MSE: {test_results.get('mse', 'N/A'):.4f}")
         print(f"  MAE: {test_results.get('mae', 'N/A'):.4f}")
         print(f"  R² Score: {test_results.get('r2_score', 'N/A'):.4f}")
         print(f"  Inference time: {test_results.get('inference_time', 'N/A'):.4f}s")
-        
         print(f"\n🔧 Weight Modifications:")
         weight_mods = performance_summary.get('weight_modifications_used', [])
 
@@ -192,9 +189,9 @@ def main():
     print("   • Comprehensive performance tracking")
     print("   • Railway-style error handling")
     print("   • CSV data processing for particle physics simulations")
-    
     # Final success/failure summary
     total_errors = results.get('error_summary', {}).get('total_errors', 0)
+
     if total_errors == 0:
         print("\n🏆 Lab completed with NO ERRORS!")
     else:
