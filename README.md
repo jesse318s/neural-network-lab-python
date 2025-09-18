@@ -32,7 +32,7 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 pip install -r requirements.txt
 ```
 
-**Dependencies**: TensorFlow, NumPy, Pandas, scikit-learn, matplotlib, psutil
+**Dependencies**: TensorFlow, NumPy, Pandas, scikit-learn, psutil
 
 ## Usage
 
