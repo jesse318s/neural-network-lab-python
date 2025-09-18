@@ -46,7 +46,6 @@ class PerformanceTracker:
         # Configuration tracking
         self.training_config = {}
         self.weight_modifications_used = []
-        self.adaptive_loss_strategy = "none"
         # Error tracking
         self.error_count = 0
         self.errors_log = []
@@ -63,7 +62,6 @@ class PerformanceTracker:
         try:
             self.training_start_time = time.time()
             self.training_config = config.copy()
-            self.adaptive_loss_strategy = config.get('adaptive_loss_strategy', 'none')
             print(f"Performance tracking started - Output: {self.output_dir}")  
         except Exception as e:
             self._handle_error(f"Error starting training tracking: {e}")
@@ -138,7 +136,7 @@ class PerformanceTracker:
                 'avg_epoch_time': self.avg_epoch_time,
                 'current_memory_mb': self.current_memory_mb,
                 'peak_memory_mb': self.peak_memory_mb,
-                'adaptive_loss_strategy': self.adaptive_loss_strategy,
+                'loss_weighting_strategy': self.training_config.get('loss_weighting_strategy', 'none'),
                 'weight_modifications_used': self.weight_modifications_used,
                 'error_count': self.error_count
             }   
@@ -224,6 +222,7 @@ class PerformanceTracker:
                 'total_training_time': self.total_training_time,
                 'current_memory_mb': self.current_memory_mb,
                 'peak_memory_mb': self.peak_memory_mb,
+                'loss_weighting_strategy': self.training_config.get('loss_weighting_strategy', 'none'),
                 'weight_modifications_used': self.weight_modifications_used,
                 'weight_file_sizes': self.weight_file_sizes,
                 'error_count': self.error_count,
@@ -288,7 +287,7 @@ class PerformanceTracker:
             csv_row = {
                 'config_id': config_id,
                 'timestamp': config_data['timestamp'],
-                'adaptive_loss_strategy': self.adaptive_loss_strategy,
+                'loss_weighting_strategy': self.training_config.get('loss_weighting_strategy', 'none'),
                 'weight_modifications_used': ', '.join(self.weight_modifications_used) if self.weight_modifications_used else 'none',
                 'final_accuracy': self.current_accuracy,
                 'best_accuracy': self.best_accuracy,
@@ -324,7 +323,6 @@ class PerformanceTracker:
                 for key, value in self.training_config.items():
                     logfile.write(f"{key}: {value}\n")
 
-                logfile.write(f"Adaptive loss strategy: {self.adaptive_loss_strategy}\n")
                 logfile.write(f"Weight modifications used: {', '.join(self.weight_modifications_used) if self.weight_modifications_used else 'none'}\n\n")
                 logfile.write("=== Performance Summary ===\n")
                 logfile.write(f"Final training accuracy: {self.current_accuracy:.4f}\n")
