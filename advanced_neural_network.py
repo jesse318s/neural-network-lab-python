@@ -218,7 +218,7 @@ class AdvancedNeuralNetwork:
             try:
                 val_pred = self.model.predict(X_val, verbose=0)
                 val_loss, val_mae, rmse, accuracy = self.calculate_regression_metrics(y_val, val_pred)     
-            except Exception as e:
+            except Exception:
                 val_loss, val_mae, accuracy = float(np.mean(epoch_losses)), float(np.mean(epoch_mae)), 0.0
             
             # Update adaptive loss function
@@ -244,7 +244,8 @@ class AdvancedNeuralNetwork:
 
                     if self.performance_tracker: self.performance_tracker.record_weight_file_size(weight_file)
                 except Exception:
-                    pass
+                    self.errors.append(f"Saving weights failed at epoch {epoch}")
+            
             # Print progress
             if epoch % 5 == 0 or epoch == epochs - 1:
                 print(f"Epoch {epoch:3d}/{epochs} - Loss: {epoch_loss:.4f}, "f"Val Loss: {val_loss:.4f}, Accuracy: {accuracy:.4f}")

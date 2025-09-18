@@ -241,8 +241,8 @@ class PerformanceTracker:
             
             if self.current_memory_mb > self.peak_memory_mb:
                 self.peak_memory_mb = self.current_memory_mb
-        except Exception:
-            pass
+        except Exception as e:
+            self._handle_error(f"Error updating memory usage: {e}")
     
     def _save_training_results_csv(self):
         """Save training results to CSV file."""
