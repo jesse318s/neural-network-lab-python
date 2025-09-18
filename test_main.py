@@ -1,5 +1,8 @@
 """
 Test Suite for Neural Network Lab
+
+This test suite verifies the functionality of various components in the neural network lab,
+including weight constraints, adaptive loss functions, performance tracking, and regression metrics.
 """
 
 import unittest
