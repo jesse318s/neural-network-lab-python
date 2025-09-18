@@ -144,6 +144,7 @@ class AdvancedNeuralNetwork:
                                     if 'oscillation_dampening' not in applied_constraints: applied_constraints.append('oscillation_dampening')
                                 except Exception:
                                     pass
+                        
                         modified_weights.append(current_weight)
                     layer.set_weights(modified_weights)
         except Exception as e:

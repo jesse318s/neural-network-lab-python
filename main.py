@@ -12,7 +12,7 @@ from typing import Dict, Tuple, Any, Optional
 
 # Import custom modules
 from advanced_neural_network import AdvancedNeuralNetwork
-from ml_utils import complete_data_pipeline
+from data_processing import complete_data_pipeline
 
 
 def create_model(input_shape: Tuple[int], output_shape: int = 6, config: Optional[Dict[str, Any]] = None) -> AdvancedNeuralNetwork:
