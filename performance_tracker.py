@@ -8,13 +8,11 @@ class PerformanceTracker:
         self.output_dir = output_dir
         self.training_start_time, self.training_end_time = None, None
         self.epoch_start_time = None
-        # Performance metrics, after 3 lines timing
+        # Performance metrics, after 3 lines timing and then memory metrics
         self.current_accuracy, self.best_accuracy = 0.0, 0.0
         self.best_accuracy_epoch, self.previous_accuracy  = 0, 0.0
         self.greatest_improvement, self.greatest_improvement_epoch = 0.0, 0
-        self.epoch_times = []
-        self.avg_epoch_time, self.total_training_time  = 0.0, 0.0
-        # Memory metrics
+        self.avg_epoch_time, self.total_training_time, self.epoch_times   = 0.0, 0.0, []
         self.current_memory_mb,self.peak_memory_mb = 0.0,0.0
         self.weight_file_sizes = {}
         # Configuration tracking, below error tracking, and below below output directory
@@ -124,11 +122,11 @@ class PerformanceTracker:
         try:
             return {'current_accuracy': self.current_accuracy,'best_accuracy': self.best_accuracy,
                 'best_accuracy_epoch': self.best_accuracy_epoch, 'greatest_improvement': self.greatest_improvement,
-                'greatest_improvement_epoch': self.greatest_improvement_epoch,
-                'avg_epoch_time': self.avg_epoch_time, 'total_training_time': self.total_training_time,
-                'current_memory_mb': self.current_memory_mb, 'peak_memory_mb': self.peak_memory_mb,
-                'adaptive_loss_strategy': self.adaptive_loss_strategy, 'weight_modifications_used': self.weight_modifications_used,
-                'weight_file_sizes': self.weight_file_sizes, 'error_count': self.error_count,'total_epochs': len(self.training_history)}
+                'greatest_improvement_epoch': self.greatest_improvement_epoch, 'avg_epoch_time': self.avg_epoch_time,
+                 'total_training_time': self.total_training_time, 'current_memory_mb': self.current_memory_mb,
+                 'peak_memory_mb': self.peak_memory_mb, 'adaptive_loss_strategy': self.adaptive_loss_strategy, 
+                'weight_modifications_used': self.weight_modifications_used, 'weight_file_sizes': self.weight_file_sizes, 
+                'error_count': self.error_count,'total_epochs': len(self.training_history)}
         except Exception as e:
             self._handle_error(f"Error getting summary: {e}")
             return {} 
@@ -157,13 +155,11 @@ class PerformanceTracker:
             # Create unique ID based on timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             config_id = f"training_config_{timestamp}"
-            config_data = { 'config_id': config_id, 'timestamp': datetime.now().isoformat(),
-                'training_config': self.training_config, 'adaptive_loss_strategy': self.adaptive_loss_strategy,
-                'weight_modifications_used': self.weight_modifications_used, 'performance_summary': self.get_summary(),
-                'weight_file_sizes': self.weight_file_sizes}
+            config_data = { 'config_id': config_id, 'timestamp': datetime.now().isoformat(), 'training_config': self.training_config,
+                 'adaptive_loss_strategy': self.adaptive_loss_strategy,  'weight_modifications_used': self.weight_modifications_used,
+                'performance_summary': self.get_summary(), 'weight_file_sizes': self.weight_file_sizes}
             json_file_path = os.path.join(self.output_dir, f"{config_id}.json")
-            with open(json_file_path, 'w', encoding='utf-8') as jsonfile: wijson.dump(config_data, jsonfile, indent=2)
-            # Save/append to CSV for easy comparison
+            with open(json_file_path, 'w', encoding='utf-8') as jsonfile: wijson.dump(config_data, jsonfile, indent=2)  # Save/append to CSV for easy comparison
             csv_file_path = os.path.join(self.output_dir, "configuration_log.csv")
             csv_row = { 'config_id': config_id, 'timestamp': config_data['timestamp'],
                 'adaptive_loss_strategy': self.adaptive_loss_strategy, 'weight_modifications_used': ',
@@ -200,6 +196,9 @@ class PerformanceTracker:
         except Exception as e:
             self._handle_error(f"Error saving training log: {e}")
     def _handle_error(self, error_message: str): """Handle and log errors."""
-        self.error_count += 1
-        self.errors_log.append(f"{datetime.now().isoformat()}: {error_message}")
+        self.error_count += 1; self.errors_log.append(f"{datetime.now().isoformat()}: {error_message}")
         print(f"Performance Tracker Error: {error_message}")
+
+
+
+
