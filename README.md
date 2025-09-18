@@ -50,7 +50,7 @@ python test_main.py
 
 ```python
 from main import create_model, train_with_tracking
-from ml_utils import complete_data_pipeline
+from data_processing import complete_data_pipeline
 
 # Load data and create model
 data_splits, pipeline_info = complete_data_pipeline(num_particles=1000)
@@ -65,13 +65,14 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ## Project Structure
 
 ```
-├── main.py                      # Main training script
 ├── advanced_neural_network.py   # Core neural network implementation
-├── weight_constraints.py        # Binary weight management
-├── ml_utils.py                  # ML utilities (adaptive loss, data processing, & metrics)
+├── data_processing.py           # Data processing functionality
+├── main.py                      # Main training script
+├── ml_utils.py                  # ML utilities (adaptive loss & regression metrics)
 ├── performance_tracker.py       # Metrics tracking and CSV output
-├── test_main.py                 # Test suite
 ├── requirements.txt             # Dependencies
+├── test_main.py                 # Test suite
+├── weight_constraints.py        # Binary weight management
 └── training_output/             # Generated results
     ├── training_results.csv
     ├── loss_history.csv
@@ -122,7 +123,3 @@ config = {
     'loss_weighting_strategy': 'combined'
 }
 ```
-
-## License
-
-This project is part of the Code Lab Assist educational framework.

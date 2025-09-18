@@ -118,7 +118,7 @@ def main():
     print(f"\nTraining configuration: {training_config}, \n🚀 Starting training...")
     
     try:
-        results = train_with_tracking( model, X_train, X_val, X_test, y_train, y_val, y_test, training_config)
+        results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_test, training_config)
         
         if 'error' in results:
             print(f"✗ Training failed: {results['error']}")
