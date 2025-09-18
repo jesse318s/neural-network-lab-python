@@ -10,6 +10,7 @@ import numpy as np
 from typing import List
 from abc import ABC, abstractmethod
 
+
 class BinaryWeightConstraint(ABC):
     """Base class for binary weight constraints."""
     

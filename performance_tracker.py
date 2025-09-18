@@ -99,6 +99,7 @@ class PerformanceTracker:
             # Track greatest improvement
             if epoch > 0:
                 improvement = current_accuracy - self.previous_accuracy
+
                 if improvement > self.greatest_improvement:
                     self.greatest_improvement = improvement
                     self.greatest_improvement_epoch = epoch
@@ -277,8 +278,7 @@ class PerformanceTracker:
                 'training_config': self.training_config,
                 'adaptive_loss_strategy': self.adaptive_loss_strategy,
                 'weight_modifications_used': self.weight_modifications_used,
-                'performance_summary': self.get_summary(),
-                'weight_file_sizes': self.weight_file_sizes
+                'performance_summary': self.get_summary()
             }
             # Save JSON file
             json_file_path = os.path.join(self.output_dir, f"{config_id}.json")

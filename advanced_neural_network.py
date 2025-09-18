@@ -127,12 +127,12 @@ class AdvancedNeuralNetwork:
                                     if 'binary_changes' not in applied_constraints: applied_constraints.append('binary_changes')
                                 except Exception:
                                     pass
+                            
                             if self.binary_constraint_max:
                                 try:
                                     current_weight = self.binary_constraint_max.apply_constraint(current_weight)
                                     
-                                    if 'binary_max' not in applied_constraints:
-                                        applied_constraints.append('binary_max')
+                                    if 'binary_max' not in applied_constraints: applied_constraints.append('binary_max')
                                 except Exception:
                                     pass
                             
