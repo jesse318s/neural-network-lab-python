@@ -224,7 +224,6 @@ class PerformanceTracker:
                 'total_training_time': self.total_training_time,
                 'current_memory_mb': self.current_memory_mb,
                 'peak_memory_mb': self.peak_memory_mb,
-                'adaptive_loss_strategy': self.adaptive_loss_strategy,
                 'weight_modifications_used': self.weight_modifications_used,
                 'weight_file_sizes': self.weight_file_sizes,
                 'error_count': self.error_count,
@@ -276,8 +275,6 @@ class PerformanceTracker:
                 'config_id': config_id,
                 'timestamp': datetime.now().isoformat(),
                 'training_config': self.training_config,
-                'adaptive_loss_strategy': self.adaptive_loss_strategy,
-                'weight_modifications_used': self.weight_modifications_used,
                 'performance_summary': self.get_summary()
             }
             # Save JSON file
