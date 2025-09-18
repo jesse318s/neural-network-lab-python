@@ -1,4 +1,22 @@
-    def _save_training_log(self): """Save detailed training log to text file."""
+class PerformanceTracker:
+    def __init__(self, output_dir: str = "training_output"):
+        self.output_dir = output_dir
+        self.training_start_time, self.training_end_time = None, None
+        self.epoch_start_time = None
+        # Performance metrics, after 3 lines timing and then memory metrics
+        self.current_accuracy, self.best_accuracy = 0.0, 0.0
+        self.best_accuracy_epoch, self.previous_accuracy  = 0, 0.0
+        self.greatest_improvement, self.greatest_improvement_epoch = 0.0, 0
+        self.avg_epoch_time, self.total_training_time, self.epoch_times   = 0.0, 0.0, []
+        self.current_memory_mb,self.peak_memory_mb = 0.0,0.0
+        self.weight_file_sizes = {}
+        # Configuration tracking, below error tracking, and below below output directory
+        self.training_history = []
+        self.training_config, self.weight_modifications_used = {}, []
+        self.adaptive_loss_strategy = "none"
+        self.error_count, self.errors_log = 0, []
+
+def _save_training_log(self): """Save detailed training log to text file."""
         try:
             file_path = os.path.join(self.output_dir, "training_log.txt")
             with open(file_path, 'w', encoding='utf-8') as logfile:
