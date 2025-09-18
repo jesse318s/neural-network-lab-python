@@ -6,8 +6,8 @@ of neural network weights and prevent oscillations during training.
 """
 
 import struct
-from typing import List
 import numpy as np
+from typing import List
 
 
 class BinaryWeightConstraintChanges:

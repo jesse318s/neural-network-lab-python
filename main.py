@@ -7,8 +7,8 @@ for particle physics simulations.
 """
 
 import os
-from typing import Dict, Tuple, Any, Optional
 import numpy as np
+from typing import Dict, Tuple, Any, Optional
 
 # Import custom modules
 from advanced_neural_network import AdvancedNeuralNetwork

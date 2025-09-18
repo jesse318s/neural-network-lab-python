@@ -1,7 +1,7 @@
 import os
 import time
-from typing import Dict, List, Tuple, Any
 import numpy as np
+from typing import Dict, List, Tuple, Any
 
 # Suppress TensorFlow warnings
 os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')

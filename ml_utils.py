@@ -8,10 +8,10 @@ comprehensive, compact ML utility suite for the advanced neural network project.
 import os
 import json
 import math
-from typing import Dict, Tuple, Optional, Any
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from typing import Dict, Tuple, Optional, Any
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 

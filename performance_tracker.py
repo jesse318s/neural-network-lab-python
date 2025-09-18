@@ -10,10 +10,9 @@ import time
 import csv
 import json
 import psutil
+import numpy as np
 from datetime import datetime
 from typing import Dict, List, Any, Optional
-
-import numpy as np
 
 
 class PerformanceTracker:
