@@ -266,7 +266,7 @@ def complete_data_pipeline(csv_path: str = 'particle_data.csv',
         Tuple of ((X_train, X_val, X_test, y_train, y_val, y_test), pipeline_info)
     """
     try:
-        print("=== ML Utils Data Pipeline ===")
+        print("=== Data Pipeline ===")
         # Load and validate data
         df, validation = load_and_validate_data(csv_path)
         
