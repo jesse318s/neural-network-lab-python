@@ -10,6 +10,7 @@ import numpy as np
 from typing import List
 from abc import ABC, abstractmethod
 
+
 class BinaryWeightConstraint(ABC):
     """Base class for binary weight constraints."""
     
@@ -64,7 +65,7 @@ class BinaryWeightConstraint(ABC):
             significant_digits = len(integer_part) + len(fractional_part)
             return max(significant_digits, 1)
         except Exception:
-            return 1
+            return 0
     
     def _apply_to_weights(self, weights: np.ndarray, constraint_func) -> np.ndarray:
         """Apply constraint function to weights array of any shape."""

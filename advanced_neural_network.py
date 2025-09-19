@@ -127,12 +127,12 @@ class AdvancedNeuralNetwork:
                                     if 'binary_changes' not in applied_constraints: applied_constraints.append('binary_changes')
                                 except Exception:
                                     pass
+                            
                             if self.binary_constraint_max:
                                 try:
                                     current_weight = self.binary_constraint_max.apply_constraint(current_weight)
                                     
-                                    if 'binary_max' not in applied_constraints:
-                                        applied_constraints.append('binary_max')
+                                    if 'binary_max' not in applied_constraints: applied_constraints.append('binary_max')
                                 except Exception:
                                     pass
                             
@@ -179,10 +179,8 @@ class AdvancedNeuralNetwork:
     def train_with_custom_constraints(self, X_train: np.ndarray, y_train: np.ndarray, X_val: np.ndarray, y_val: np.ndarray,
                                     epochs: int = 50, batch_size: int = 32) -> Dict[str, Any]:
         """Train the model with custom weight constraints and adaptive loss."""
-        # Start training tracking
-        training_config = {
-            'epochs': epochs, 'batch_size': batch_size, 'model_architecture': self.config,
-            'adaptive_loss_strategy': self.config.get('loss_weighting_strategy', 'none') if self.adaptive_loss else 'none'}
+        # Start training tracking - merge training config with model config
+        training_config = {'epochs': epochs, 'batch_size': batch_size, **self.config}
         
         if self.performance_tracker: self.performance_tracker.start_training(training_config)
         
@@ -220,7 +218,7 @@ class AdvancedNeuralNetwork:
             try:
                 val_pred = self.model.predict(X_val, verbose=0)
                 val_loss, val_mae, rmse, accuracy = self.calculate_regression_metrics(y_val, val_pred)     
-            except Exception as e:
+            except Exception:
                 val_loss, val_mae, accuracy = float(np.mean(epoch_losses)), float(np.mean(epoch_mae)), 0.0
             
             # Update adaptive loss function
@@ -246,7 +244,8 @@ class AdvancedNeuralNetwork:
 
                     if self.performance_tracker: self.performance_tracker.record_weight_file_size(weight_file)
                 except Exception:
-                    pass
+                    self.errors.append(f"Saving weights failed at epoch {epoch}")
+            
             # Print progress
             if epoch % 5 == 0 or epoch == epochs - 1:
                 print(f"Epoch {epoch:3d}/{epochs} - Loss: {epoch_loss:.4f}, "f"Val Loss: {val_loss:.4f}, Accuracy: {accuracy:.4f}")

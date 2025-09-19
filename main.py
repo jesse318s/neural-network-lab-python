@@ -156,9 +156,9 @@ def main():
                 print(f"  ✓ {mod}")
         else: print(f"  None applied")
         
-        print(f"\n📈 Adaptive Loss Strategy:")
-        adaptive_strategy = performance_summary.get('adaptive_loss_strategy', 'none')
-        print(f"  Strategy: {adaptive_strategy}")
+        print(f"\n📈 Loss Weighting Strategy:")
+        loss_strategy = performance_summary.get('loss_weighting_strategy', 'none')
+        print(f"  Strategy: {loss_strategy}")
         print(f"\n⚠ Errors: {error_summary.get('total_errors', 0)}")
     except Exception as e:
         print(f"✗ Error displaying results: {e}")
