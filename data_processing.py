@@ -86,7 +86,7 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
             'kinetic_energy', 'trajectory_length']}).assign(particle_id=[1])
 
 
-def load_and_validate_data(csv_path: str = 'particle_data.csv') -> Tuple[pd.DataFrame, Dict[str, Any]]:
+def load_and_validate_data(csv_path: str = 'particle_data.csv') -> pd.DataFrame:
     """
     Load particle data from CSV with comprehensive validation.
     
@@ -94,7 +94,7 @@ def load_and_validate_data(csv_path: str = 'particle_data.csv') -> Tuple[pd.Data
         csv_path: Path to CSV file
         
     Returns:
-        Tuple of (DataFrame, validation_results)
+        DataFrame with loaded and validated data
     """
     try:
         # Load data
@@ -130,60 +130,10 @@ def load_and_validate_data(csv_path: str = 'particle_data.csv') -> Tuple[pd.Data
                 validation['issues'].append(f"Very large values in {col}")
                 validation['recommendations'].append(f"Consider scaling {col}")
         
-        validation['is_valid'] = len(validation['issues']) == 0
-        return df, validation 
+        return df
     except Exception as e:
         print(f"Error loading/validating data: {e}")
-        return generate_particle_data(save_to_file=True), {'is_valid': False, 'issues': [str(e)], 'recommendations': []}
-
-
-def create_data_summary(df: pd.DataFrame) -> Dict[str, Any]:
-    """
-    Create comprehensive data summary with statistics.
-    
-    Args:
-        df: DataFrame to summarize
-        
-    Returns:
-        Dictionary with data summary and statistics
-    """
-    try:
-        # Define feature categories
-        input_features = ['mass', 'initial_velocity_x', 'initial_velocity_y', 'initial_position_x',
-                         'initial_position_y', 'charge', 'magnetic_field_strength', 'simulation_time']
-        output_features = ['final_velocity_x', 'final_velocity_y', 'final_position_x',
-                          'final_position_y', 'kinetic_energy', 'trajectory_length']
-        # Filter available features
-        available_inputs = [f for f in input_features if f in df.columns]
-        available_outputs = [f for f in output_features if f in df.columns]   
-        # Calculate statistics
-        stats = {}
-
-        for feature in available_inputs + available_outputs:
-            if df[feature].dtype in ['int64', 'float64']:
-                stats[feature] = {
-                    'mean': float(df[feature].mean()), 'std': float(df[feature].std()),
-                    'min': float(df[feature].min()), 'max': float(df[feature].max()),
-                    'missing': int(df[feature].isnull().sum())
-                }
-        
-        summary = {
-            'num_particles': len(df), 'input_features': available_inputs,
-            'output_features': available_outputs, 'data_statistics': stats
-        }
-        
-        # Save summary
-        try:
-            with open('data_summary.json', 'w') as f:
-                json.dump(summary, f, indent=2)
-            print("Data summary saved to data_summary.json")
-        except Exception as e:
-            print(f"Warning: Could not save data summary: {e}")
-        
-        return summary
-    except Exception as e:
-        print(f"Error creating data summary: {e}")
-        return {'num_particles': 0, 'input_features': [], 'output_features': [], 'data_statistics': {}, 'error': str(e)}
+        return generate_particle_data(save_to_file=False)
 
 
 def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: float = 0.2,
@@ -251,7 +201,7 @@ def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: 
 
 
 def complete_data_pipeline(csv_path: str = 'particle_data.csv', 
-                          num_particles: int = 1000) -> Tuple[Tuple[np.ndarray, ...], Dict[str, Any]]:
+                          num_particles: int = 1000) -> Tuple[np.ndarray, ...]:
     """
     Execute complete data loading, validation, and preprocessing pipeline.
     
@@ -260,36 +210,74 @@ def complete_data_pipeline(csv_path: str = 'particle_data.csv',
         num_particles: Number of particles to generate if needed
         
     Returns:
-        Tuple of ((X_train, X_val, X_test, y_train, y_val, y_test), pipeline_info)
+        Tuple of (X_train, X_val, X_test, y_train, y_val, y_test)
     """
     try:
         print("=== Data Pipeline ===")
         # Load and validate data
-        df, validation = load_and_validate_data(csv_path)
+        df = load_and_validate_data(csv_path)
         
         # Generate more data if needed
         if len(df) < num_particles:
             print(f"Generating additional data to reach {num_particles} particles...")
             df = generate_particle_data(num_particles, save_to_file=True)
         
-        # Create summary
-        summary = create_data_summary(df)
         # Preprocess for training
         data_splits = preprocess_for_training(df)
-        # Compile pipeline information
-        pipeline_info = {
-            'data_summary': summary, 'validation': validation,
-            'preprocessing_complete': True, 'total_samples': len(df),
-            'train_samples': data_splits[0].shape[0], 'val_samples': data_splits[1].shape[0],
-            'test_samples': data_splits[2].shape[0], 'input_features': data_splits[0].shape[1],
-            'output_features': data_splits[3].shape[1]
-        }
         print("Data pipeline completed successfully")
-        return data_splits, pipeline_info 
+        return data_splits
     except Exception as e:
         print(f"Error in data pipeline: {e}")
         # Return fallback data
         dummy_X, dummy_y = np.random.randn(100, 8), np.random.randn(100, 6)
         fallback_splits = (dummy_X[:60], dummy_X[60:80], dummy_X[80:], dummy_y[:60], dummy_y[60:80], dummy_y[80:])
-        fallback_info = {'error': str(e), 'fallback_data': True, 'total_samples': 100}
-        return fallback_splits, fallback_info
+        return fallback_splits
+
+
+def create_data_summary(df: pd.DataFrame) -> Dict[str, Any]:
+    """
+    Create comprehensive data summary with statistics.
+    
+    Args:
+        df: DataFrame to summarize
+        
+    Returns:
+        Dictionary with data summary and statistics
+    """
+    try:
+        # Define feature categories
+        input_features = ['mass', 'initial_velocity_x', 'initial_velocity_y', 'initial_position_x',
+                         'initial_position_y', 'charge', 'magnetic_field_strength', 'simulation_time']
+        output_features = ['final_velocity_x', 'final_velocity_y', 'final_position_x',
+                          'final_position_y', 'kinetic_energy', 'trajectory_length']
+        # Filter available features
+        available_inputs = [f for f in input_features if f in df.columns]
+        available_outputs = [f for f in output_features if f in df.columns]   
+        # Calculate statistics
+        stats = {}
+
+        for feature in available_inputs + available_outputs:
+            if df[feature].dtype in ['int64', 'float64']:
+                stats[feature] = {
+                    'mean': float(df[feature].mean()), 'std': float(df[feature].std()),
+                    'min': float(df[feature].min()), 'max': float(df[feature].max()),
+                    'missing': int(df[feature].isnull().sum())
+                }
+        
+        summary = {
+            'num_particles': len(df), 'input_features': available_inputs,
+            'output_features': available_outputs, 'data_statistics': stats
+        }
+        
+        # Save summary
+        try:
+            with open('data_summary.json', 'w') as f:
+                json.dump(summary, f, indent=2)
+            print("Data summary saved to data_summary.json")
+        except Exception as e:
+            print(f"Warning: Could not save data summary: {e}")
+        
+        return summary
+    except Exception as e:
+        print(f"Error creating data summary: {e}")
+        return {'num_particles': 0, 'input_features': [], 'output_features': [], 'data_statistics': {}, 'error': str(e)}

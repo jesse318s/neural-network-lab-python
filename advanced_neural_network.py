@@ -32,8 +32,6 @@ class AdvancedNeuralNetwork:
         self.performance_tracker = self._init_performance_tracker()
         # Build model
         self.model, self.epoch_count = self._build_model(), 0
-        # Data pipeline state
-        self.data_pipeline_info = None
         
     def _init_binary_changes(self):
         """Initialize binary weight constraint for changes."""
@@ -166,12 +164,19 @@ class AdvancedNeuralNetwork:
                     loss_strategy = "mse_only"
             
             gradients = tape.gradient(loss_value, self.model.trainable_variables)
+
+            if gradients is None:
+                raise ValueError("Gradients computation returned None.")
+
             self.model.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
             mse, mae = tf.reduce_mean(tf.square(y_batch - y_pred)), tf.reduce_mean(tf.abs(y_batch - y_pred))
             return {'loss': float(loss_value.numpy()),
                 'mse': float(mse.numpy()),
                 'mae': float(mae.numpy()),
                 'loss_strategy': loss_strategy}
+        except ValueError as ve:
+            self.errors.append(f"Validation error in training step: {ve}")
+            return {'loss': 1.0, 'mse': 1.0, 'mae': 1.0, 'loss_strategy': 'error_fallback'}
         except Exception as e:
             self.errors.append(f"Training step failed: {e}")
             return {'loss': 1.0, 'mse': 1.0, 'mae': 1.0, 'loss_strategy': 'error_fallback'}
@@ -251,6 +256,7 @@ class AdvancedNeuralNetwork:
                 print(f"Epoch {epoch:3d}/{epochs} - Loss: {epoch_loss:.4f}, "f"Val Loss: {val_loss:.4f}, Accuracy: {accuracy:.4f}")
                 
                 if applied_constraints: print(f"    Constraints: {', '.join(applied_constraints)}")
+        
         # End training
         final_results = {}
 
@@ -264,6 +270,20 @@ class AdvancedNeuralNetwork:
         return {'history': history, 'final_results': final_results, 'adaptive_loss_history': adaptive_loss_history, 'errors': self.errors,
             'successful_constraints': list(set([c for sublist in history['applied_constraints'] for c in sublist]))}
     
+    @staticmethod
+    def calculate_regression_metrics(y_test, y_pred):
+        """Calculate MSE, MAE, RMSE, and R² score efficiently."""
+        from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+        
+        # Convert to numpy arrays
+        y_test, y_pred = np.asarray(y_test, dtype=np.float32), np.asarray(y_pred, dtype=np.float32)
+        # Calculate metrics
+        mse = float(mean_squared_error(y_test, y_pred))
+        mae = float(mean_absolute_error(y_test, y_pred))
+        rmse = float(np.sqrt(mse))
+        r2 = float(r2_score(y_test, y_pred)) if len(y_test) > 1 else 0.0
+        return mse, mae, rmse, r2
+
     def evaluate_model(self, X_test: np.ndarray, y_test: np.ndarray) -> Dict[str, float]:
         """Evaluate the trained model."""
         try:
@@ -279,11 +299,7 @@ class AdvancedNeuralNetwork:
         except Exception as e:
             self.errors.append(f"Model evaluation failed: {e}")
             return {'mse': float('inf'), 'mae': float('inf'), 'rmse': float('inf'), 'r2_score': -1.0, 'inference_time': 0.0}
-    
-    def get_data_info(self) -> Dict[str, Any]:
-        """Get information about the loaded data pipeline."""
-        return self.data_pipeline_info or {'status': 'No data loaded yet'}
-    
+
     def get_error_summary(self) -> Dict[str, Any]:
         """Get a summary of all errors encountered."""
         error_counts = {}
@@ -293,17 +309,3 @@ class AdvancedNeuralNetwork:
             error_counts[error_type] = error_counts.get(error_type, 0) + 1
 
         return {'total_errors': len(self.errors), 'error_breakdown': error_counts, 'recent_errors': self.errors[-5:] if self.errors else [],'all_errors': self.errors}
-    
-    @staticmethod
-    def calculate_regression_metrics(y_test, y_pred):
-        """Calculate MSE, MAE, RMSE, and R² score efficiently."""
-        from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-        
-        # Convert to numpy arrays
-        y_test, y_pred = np.asarray(y_test, dtype=np.float32), np.asarray(y_pred, dtype=np.float32)
-        # Calculate metrics
-        mse = float(mean_squared_error(y_test, y_pred))
-        mae = float(mean_absolute_error(y_test, y_pred))
-        rmse = float(np.sqrt(mse))
-        r2 = float(r2_score(y_test, y_pred)) if len(y_test) > 1 else 0.0
-        return mse, mae, rmse, r2

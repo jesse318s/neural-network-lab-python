@@ -123,7 +123,7 @@ def main():
 
     # Load and prepare data
     try:
-        data_splits, pipeline_info = complete_data_pipeline(num_particles=1000)
+        data_splits = complete_data_pipeline(num_particles=1000)
         X_train, X_val, X_test, y_train, y_val, y_test = data_splits
         print(f"✓ Data loaded successfully:")
         print(f"  Training: {X_train.shape[0]}, Validation: {X_val.shape[0]}, Test: {X_test.shape[0]}")

@@ -156,6 +156,9 @@ class PerformanceTracker:
     def measure_inference_time(self, model: Optional[Any], test_data: np.ndarray, num_runs: int = 10) -> float:
         """Measure model inference time."""
         try:
+            if model is None:
+                raise ValueError("Model is None, cannot measure inference time.")
+
             inference_times = []
             
             for _ in range(num_runs):
@@ -164,7 +167,10 @@ class PerformanceTracker:
                 end_time = time.time()
                 inference_times.append(end_time - start_time)
             
-            return float(np.mean(inference_times))  
+            return float(np.mean(inference_times))
+        except ValueError as ve:
+            self._handle_error(f"Validation error in inference timing: {ve}")
+            return 0.0
         except Exception as e:
             self._handle_error(f"Error measuring inference time: {e}")
             return 0.0
