@@ -204,8 +204,6 @@ class PerformanceTracker:
                 writer = csv.DictWriter(csvfile, fieldnames=sorted(all_keys))
                 writer.writeheader()
                 writer.writerows(loss_history)
-            
-            print(f"Loss history saved to {file_path}")
         except Exception as e:
             self._handle_error(f"Error creating loss history CSV: {e}")
     
