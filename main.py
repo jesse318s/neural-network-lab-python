@@ -181,14 +181,7 @@ def main():
     print("\n" + "=" * 60)
     print("🎉 ADVANCED TENSORFLOW LAB COMPLETED!")
     print("=" * 60)
-    print("📁 Check 'training_output' directory for detailed results.\n")
-    print("🔬 Lab demonstrated:")
-    print("   • Binary weight precision constraints")
-    print("   • Oscillation dampening for weight stability")
-    print("   • Adaptive loss function combinations")
-    print("   • Comprehensive performance tracking")
-    print("   • Railway-style error handling")
-    print("   • CSV data processing for particle physics simulations")
+    print("📁 Check 'training_output' directory for detailed results.")
     # Final success/failure summary
     total_errors = results.get('error_summary', {}).get('total_errors', 0)
 
