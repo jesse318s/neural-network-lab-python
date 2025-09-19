@@ -61,7 +61,7 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
         except Exception as e:
             print(f"⚠ Failed to save loss history: {e}")
 
-    # Save final model
+    # Save final model weights
     try:
         model.model.save_weights('model_weights.weights.h5')
 
@@ -76,6 +76,40 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
     return {'training': training_results, 'test': test_results,
         'performance_summary': model.performance_tracker.get_summary() if model.performance_tracker else {}, 
         'error_summary': error_summary}
+
+
+def display_results(results: Dict[str, Any]) -> None:
+    """Display a summary of training and evaluation results."""
+    try:
+        performance_summary = results.get('performance_summary', {})
+        test_results = results.get('test', {})
+        error_summary = results.get('error_summary', {})
+
+        print(f"📊 Performance Metrics:")
+        print(f"  Final accuracy: {performance_summary.get('current_accuracy', 'N/A'):.4f}")
+        print(f"  Best accuracy: {performance_summary.get('best_accuracy', 'N/A'):.4f} "
+              f"at epoch {performance_summary.get('best_accuracy_epoch', 'N/A')}")
+        print(f"  Average epoch time: {performance_summary.get('avg_epoch_time', 'N/A'):.2f}s")
+        print(f"  Peak memory: {performance_summary.get('peak_memory_mb', 'N/A'):.1f} MB")    
+        print(f"\n🧪 Test Results:")
+        print(f"  MSE: {test_results.get('mse', 'N/A'):.4f}")
+        print(f"  MAE: {test_results.get('mae', 'N/A'):.4f}")
+        print(f"  R² Score: {test_results.get('r2_score', 'N/A'):.4f}")
+        print(f"  Inference time: {test_results.get('inference_time', 'N/A'):.4f}s")
+        print(f"\n🔧 Weight Modifications:")
+        weight_mods = performance_summary.get('weight_modifications_used', [])
+
+        if weight_mods:
+            for mod in weight_mods:
+                print(f"  ✓ {mod}")
+        else: print(f"  None applied")
+        
+        print(f"\n📈 Loss Weighting Strategy:")
+        loss_strategy = performance_summary.get('loss_weighting_strategy', 'none')
+        print(f"  Strategy: {loss_strategy}")
+        print(f"\n⚠ Errors: {error_summary.get('total_errors', 0)}")
+    except Exception as e:
+        print(f"✗ Error displaying results: {e}")
 
 
 def main():
@@ -113,7 +147,7 @@ def main():
         print(f"✗ Model creation failed: {e}")
         return
     
-    # Training configuration
+    # Train model with configuration
     training_config = {'epochs': 30, 'batch_size': 16}
     print(f"\nTraining configuration: {training_config}, \n🚀 Starting training...")
     
@@ -123,6 +157,8 @@ def main():
         if 'error' in results:
             print(f"✗ Training failed: {results['error']}")
             return
+        
+        print("✓ Training completed successfully")
     except Exception as e:
         print(f"✗ Training pipeline failed: {e}")
         return
@@ -130,39 +166,8 @@ def main():
     print("\n" + "=" * 40)
     print("RESULTS SUMMARY")
     print("=" * 40)
-
     # Display results
-    try:
-        performance_summary = results.get('performance_summary', {})
-        test_results = results.get('test', {})
-        error_summary = results.get('error_summary', {})
-
-        print(f"📊 Performance Metrics:")
-        print(f"  Final accuracy: {performance_summary.get('current_accuracy', 'N/A'):.4f}")
-        print(f"  Best accuracy: {performance_summary.get('best_accuracy', 'N/A'):.4f} "
-              f"at epoch {performance_summary.get('best_accuracy_epoch', 'N/A')}")
-        print(f"  Average epoch time: {performance_summary.get('avg_epoch_time', 'N/A'):.2f}s")
-        print(f"  Peak memory: {performance_summary.get('peak_memory_mb', 'N/A'):.1f} MB")    
-        print(f"\n🧪 Test Results:")
-        print(f"  MSE: {test_results.get('mse', 'N/A'):.4f}")
-        print(f"  MAE: {test_results.get('mae', 'N/A'):.4f}")
-        print(f"  R² Score: {test_results.get('r2_score', 'N/A'):.4f}")
-        print(f"  Inference time: {test_results.get('inference_time', 'N/A'):.4f}s")
-        print(f"\n🔧 Weight Modifications:")
-        weight_mods = performance_summary.get('weight_modifications_used', [])
-
-        if weight_mods:
-            for mod in weight_mods:
-                print(f"  ✓ {mod}")
-        else: print(f"  None applied")
-        
-        print(f"\n📈 Loss Weighting Strategy:")
-        loss_strategy = performance_summary.get('loss_weighting_strategy', 'none')
-        print(f"  Strategy: {loss_strategy}")
-        print(f"\n⚠ Errors: {error_summary.get('total_errors', 0)}")
-    except Exception as e:
-        print(f"✗ Error displaying results: {e}")
-
+    display_results(results)
     print("\n" + "=" * 40)
     print("OUTPUT FILES")
     print("=" * 40)
@@ -181,22 +186,14 @@ def main():
     print("\n" + "=" * 60)
     print("🎉 ADVANCED TENSORFLOW LAB COMPLETED!")
     print("=" * 60)
-    print("📁 Check 'training_output' directory for detailed results.")
-    # Final success/failure summary
-    total_errors = results.get('error_summary', {}).get('total_errors', 0)
-
-    if total_errors == 0:
-        print("\n🏆 Lab completed with NO ERRORS!")
-    else:
-        print(f"\n⚠ Lab completed with {total_errors} minor errors")
 
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n🛑 Training interrupted by user")
+        print("\n\n🛑 Training interrupted by user\n\n")
     except Exception as e:
-        print(f"\n\n💥 Fatal error: {e}")
+        print(f"\n\n💥 Fatal error: {e}\n\n")
     finally:
-        print("\nThank you for using the Advanced TensorFlow Lab! 🧪🔬")
+        print("Thank you for using the Advanced TensorFlow Lab! 🧪🔬")

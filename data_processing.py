@@ -242,9 +242,6 @@ def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: 
         except (ImportError, Exception) as e:
             print(f"Warning: Could not save scalers: {e}")
         
-        print(f"Data preprocessing completed: Train={X_train_scaled.shape[0]}, "
-              f"Val={X_val_scaled.shape[0]}, Test={X_test_scaled.shape[0]}, "
-              f"Features={X_train_scaled.shape[1]}→{y_train_scaled.shape[1]}")
         return X_train_scaled, X_val_scaled, X_test_scaled, y_train_scaled, y_val_scaled, y_test_scaled  
     except Exception as e:
         print(f"Error in data preprocessing: {e}")
@@ -287,7 +284,7 @@ def complete_data_pipeline(csv_path: str = 'particle_data.csv',
             'test_samples': data_splits[2].shape[0], 'input_features': data_splits[0].shape[1],
             'output_features': data_splits[3].shape[1]
         }
-        print("Data pipeline completed successfully!")
+        print("Data pipeline completed successfully")
         return data_splits, pipeline_info 
     except Exception as e:
         print(f"Error in data pipeline: {e}")
