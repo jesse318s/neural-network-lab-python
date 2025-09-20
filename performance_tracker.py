@@ -29,7 +29,6 @@ class PerformanceTracker:
         try:
             self.training_start_time = time.time()
             self.training_config = config.copy()
-            self.adaptive_loss_strategy = config.get('adaptive_loss_strategy', 'none')
             print(f"Performance tracking started - Output: {self.output_dir}")  
         except Exception as e:
             self._handle_error(f"Error starting training tracking: {e}")
@@ -84,6 +83,9 @@ class PerformanceTracker:
             self._handle_error(f"Error recording weight file size for {file_path}: {e}")
     def measure_inference_time(self, model: Optional[Any], test_data: np.ndarray, num_runs: int = 10) -> float: """Measure model inference time."""
         try:
+            if model is None:
+                raise ValueError("Model is None, cannot measure inference time.")
+
             inference_times = []
             for _ in range(num_runs):
                 start_time = time.time()

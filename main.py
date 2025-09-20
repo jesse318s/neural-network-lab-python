@@ -61,7 +61,7 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
         except Exception as e:
             print(f"⚠ Failed to save loss history: {e}")
 
-    # Save final model
+    # Save final model weights
     try:
         model.model.save_weights('model_weights.weights.h5')
 
@@ -78,60 +78,8 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
         'error_summary': error_summary}
 
 
-def main():
-    """Main function to run the complete TensorFlow lab."""
-    print("=" * 60)
-    print("ADVANCED TENSORFLOW LAB")
-    print("=" * 60)
-    print("\n" + "=" * 40)
-    print("LOADING PARTICLE DATA")
-    print("=" * 40)
-
-    # Load and prepare data
-    try:
-        data_splits, pipeline_info = complete_data_pipeline(num_particles=1000)
-        X_train, X_val, X_test, y_train, y_val, y_test = data_splits
-        print(f"✓ Data loaded successfully:")
-        print(f"  Training: {X_train.shape[0]}, Validation: {X_val.shape[0]}, Test: {X_test.shape[0]}")
-        print(f"  Features: {X_train.shape[1]} -> {y_train.shape[1]}")
-    except Exception as e:
-        print(f"✗ Data loading failed: {e}")
-        return
-    
-    print("\n" + "=" * 40)
-    print("CREATING AND TRAINING MODEL")
-    print("=" * 40)
-    # Create model with configuration
-    model_config = {'hidden_layers': [64, 32, 16], 'activation': 'relu', 'dropout_rate': 0.2, 'optimizer': 'adam',
-        'learning_rate': 0.001, 'max_binary_digits': 5, 'max_additional_binary_digits': 1, 'oscillation_window': 3,
-        'loss_weighting_strategy': 'combined', 'output_dir': 'training_output', 'enable_weight_constraints': True}
-    
-    try:
-        model = create_model(input_shape=(X_train.shape[1],), output_shape=y_train.shape[1], config=model_config)
-        print("✓ Neural network created successfully") 
-    except Exception as e:
-        print(f"✗ Model creation failed: {e}")
-        return
-    
-    # Training configuration
-    training_config = {'epochs': 30, 'batch_size': 16}
-    print(f"\nTraining configuration: {training_config}, \n🚀 Starting training...")
-    
-    try:
-        results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_test, training_config)
-        
-        if 'error' in results:
-            print(f"✗ Training failed: {results['error']}")
-            return
-    except Exception as e:
-        print(f"✗ Training pipeline failed: {e}")
-        return
-    
-    print("\n" + "=" * 40)
-    print("RESULTS SUMMARY")
-    print("=" * 40)
-
-    # Display results
+def display_results(results: Dict[str, Any]) -> None:
+    """Display a summary of training and evaluation results."""
     try:
         performance_summary = results.get('performance_summary', {})
         test_results = results.get('test', {})
@@ -156,13 +104,70 @@ def main():
                 print(f"  ✓ {mod}")
         else: print(f"  None applied")
         
-        print(f"\n📈 Adaptive Loss Strategy:")
-        adaptive_strategy = performance_summary.get('adaptive_loss_strategy', 'none')
-        print(f"  Strategy: {adaptive_strategy}")
+        print(f"\n📈 Loss Weighting Strategy:")
+        loss_strategy = performance_summary.get('loss_weighting_strategy', 'none')
+        print(f"  Strategy: {loss_strategy}")
         print(f"\n⚠ Errors: {error_summary.get('total_errors', 0)}")
     except Exception as e:
         print(f"✗ Error displaying results: {e}")
 
+
+def main():
+    """Main function to run the complete TensorFlow lab."""
+    print("=" * 60)
+    print("ADVANCED TENSORFLOW LAB")
+    print("=" * 60)
+    print("\n" + "=" * 40)
+    print("LOADING PARTICLE DATA")
+    print("=" * 40)
+
+    # Load and prepare data
+    try:
+        data_splits = complete_data_pipeline(num_particles=1000)
+        X_train, X_val, X_test, y_train, y_val, y_test = data_splits
+        print(f"✓ Data loaded successfully:")
+        print(f"  Training: {X_train.shape[0]}, Validation: {X_val.shape[0]}, Test: {X_test.shape[0]}")
+        print(f"  Features: {X_train.shape[1]} -> {y_train.shape[1]}")
+    except Exception as e:
+        print(f"✗ Data loading failed: {e}")
+        return
+    
+    print("\n" + "=" * 40)
+    print("CREATING AND TRAINING MODEL")
+    print("=" * 40)
+    # Create model with configuration
+    model_config = {'hidden_layers': [64, 32, 16], 'activation': 'relu', 'dropout_rate': 0.2, 'optimizer': 'adam',
+        'learning_rate': 0.001, 'max_binary_digits': 5, 'max_additional_binary_digits': 1, 'oscillation_window': 3,
+        'loss_weighting_strategy': 'combined', 'output_dir': 'training_output', 'enable_weight_constraints': True}
+    
+    try:
+        model = create_model(input_shape=(X_train.shape[1],), output_shape=y_train.shape[1], config=model_config)
+        print("✓ Neural network created successfully") 
+    except Exception as e:
+        print(f"✗ Model creation failed: {e}")
+        return
+    
+    # Train model with configuration
+    training_config = {'epochs': 30, 'batch_size': 16}
+    print(f"\nTraining configuration: {training_config}, \n🚀 Starting training...")
+    
+    try:
+        results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_test, training_config)
+        
+        if 'error' in results:
+            print(f"✗ Training failed: {results['error']}")
+            return
+        
+        print("✓ Training completed successfully")
+    except Exception as e:
+        print(f"✗ Training pipeline failed: {e}")
+        return
+    
+    print("\n" + "=" * 40)
+    print("RESULTS SUMMARY")
+    print("=" * 40)
+    # Display results
+    display_results(results)
     print("\n" + "=" * 40)
     print("OUTPUT FILES")
     print("=" * 40)
@@ -181,29 +186,14 @@ def main():
     print("\n" + "=" * 60)
     print("🎉 ADVANCED TENSORFLOW LAB COMPLETED!")
     print("=" * 60)
-    print("📁 Check 'training_output' directory for detailed results.\n")
-    print("🔬 Lab demonstrated:")
-    print("   • Binary weight precision constraints")
-    print("   • Oscillation dampening for weight stability")
-    print("   • Adaptive loss function combinations")
-    print("   • Comprehensive performance tracking")
-    print("   • Railway-style error handling")
-    print("   • CSV data processing for particle physics simulations")
-    # Final success/failure summary
-    total_errors = results.get('error_summary', {}).get('total_errors', 0)
-
-    if total_errors == 0:
-        print("\n🏆 Lab completed with NO ERRORS!")
-    else:
-        print(f"\n⚠ Lab completed with {total_errors} minor errors")
 
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n🛑 Training interrupted by user")
+        print("\n\n🛑 Training interrupted by user\n\n")
     except Exception as e:
-        print(f"\n\n💥 Fatal error: {e}")
+        print(f"\n\n💥 Fatal error: {e}\n\n")
     finally:
-        print("\nThank you for using the Advanced TensorFlow Lab! 🧪🔬")
+        print("Thank you for using the Advanced TensorFlow Lab! 🧪🔬")
