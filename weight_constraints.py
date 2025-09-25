@@ -70,8 +70,8 @@ class BinaryWeightConstraint(ABC):
 
 
 class BinaryWeightConstraintChanges(BinaryWeightConstraint):
-    """Manages binary precision of weight changes, allowing only one additional 
-    significant figure in binary format compared to previous weights."""
+    """Manages binary precision of weight changes, limiting additional 
+    significant digits in binary format compared to previous weights."""
     
     def __init__(self, max_additional_digits: int = 1):
         super().__init__()
@@ -79,7 +79,7 @@ class BinaryWeightConstraintChanges(BinaryWeightConstraint):
         self.previous_weights = None
 
     def _constrain_weight_change(self, current_weight: float, previous_weight: float) -> float:
-        """Constrain a single weight to have at most one additional significant binary digit."""
+        """Constrain a single weight to have at most max_additional_digits more"""
         try:
             current_binary = self._float_to_binary_repr(current_weight)
             previous_binary = self._float_to_binary_repr(previous_weight)
