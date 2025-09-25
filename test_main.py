@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Import modules with error handling
 try:
-    from weight_constraints import BinaryWeightConstraintMax, OscillationDampener
+    from weight_constraints import BinaryWeightConstraintMax, BinaryWeightConstraintChanges, OscillationDampener
     WEIGHT_CONSTRAINTS_AVAILABLE = True
 except ImportError:
     WEIGHT_CONSTRAINTS_AVAILABLE = False
@@ -50,23 +50,40 @@ class TestWeightConstraints(unittest.TestCase):
     
     def test_binary_weight_constraint_max(self):
         """Test binary weight constraint max functionality."""
-        constraint = BinaryWeightConstraintMax(max_binary_digits=3)
-        weights = np.array([[0.125, 0.875], [1.5, 0.75]])
+        constraint = BinaryWeightConstraintMax(max_binary_digits=8)
+        weights = np.array([[0.125344, -0.875444], [1.5444, 0.75444]])
         result = constraint.apply_constraint(weights)
         
         self.assertEqual(result.shape, weights.shape)
         self.assertIsInstance(result, np.ndarray)
+        self.assertLess(result[0,0], weights[0,0])
+
+    def test_binary_weight_constraint_changes(self):
+        """Test binary weight constraint changes functionality."""
+        constraint = BinaryWeightConstraintChanges(max_additional_digits=1)
+        weights = np.array([[99.5123123112313999999999, -0.75], [1.25, 0.125]])
+        constraint.previous_weights = np.array([[1, -0.7], [1.2, -1.4]])
+        result = constraint.apply_constraint(weights)
+
+        self.assertEqual(result.shape, weights.shape)
+        self.assertIsInstance(result, np.ndarray)
+        self.assertLess(result[0,0], weights[0,0])
     
     def test_oscillation_dampener(self):
         """Test oscillation dampener functionality."""
         dampener = OscillationDampener(window_size=3)
-        weights = np.array([[0.5]])
+        weights = np.array([[0.41]])
         dampener.add_weights(weights)
-        new_weights = np.array([[0.8]])
-        result = dampener.detect_and_dampen_oscillations(new_weights)
+        weights = np.array([[0.51]])
+        dampener.add_weights(weights)
+        weights = np.array([[0.31]])
+        dampener.add_weights(weights)
+        weights = np.array([[0.81]])
+        result = dampener.detect_and_dampen_oscillations(weights)
         
         self.assertIsInstance(result, np.ndarray)
-        self.assertEqual(result.shape, new_weights.shape)
+        self.assertEqual(result.shape, weights.shape)
+        self.assertLess(result[0,0], weights[0,0])
 
 
 class TestAdaptiveLoss(unittest.TestCase):

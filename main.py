@@ -136,9 +136,9 @@ def main():
     print("CREATING AND TRAINING MODEL")
     print("=" * 40)
     # Create model with configuration
-    model_config = {'hidden_layers': [64, 32, 16], 'activation': 'relu', 'dropout_rate': 0.2, 'optimizer': 'adam',
-        'learning_rate': 0.001, 'max_binary_digits': 5, 'max_additional_binary_digits': 1, 'oscillation_window': 3,
-        'loss_weighting_strategy': 'combined', 'output_dir': 'training_output', 'enable_weight_constraints': True}
+    model_config = {'hidden_layers': [64, 32, 16], 'activation': 'relu', 'dropout_rate': 0.001, 'optimizer': 'adam',
+        'learning_rate': 0.01, 'max_binary_digits': 24, 'max_additional_binary_digits': 12, 'oscillation_window': 3,
+        'loss_weighting_strategy': 'none', 'output_dir': 'training_output', 'enable_weight_constraints': True}
     
     try:
         model = create_model(input_shape=(X_train.shape[1],), output_shape=y_train.shape[1], config=model_config)
@@ -148,7 +148,7 @@ def main():
         return
     
     # Train model with configuration
-    training_config = {'epochs': 30, 'batch_size': 16}
+    training_config = {'epochs': 60, 'batch_size': 16}
     print(f"\nTraining configuration: {training_config}, \n🚀 Starting training...")
     
     try:

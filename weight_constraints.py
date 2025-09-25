@@ -22,60 +22,42 @@ class BinaryWeightConstraint(ABC):
         try:
             if value == 0.0: return "0"
             
-            sign = "-" if value < 0 else ""
-            abs_value = abs(value)
-            integer_part = int(abs_value)
-            fractional_part = abs_value - integer_part
-            integer_binary = "0" if integer_part == 0 else bin(integer_part)[2:]
-            fractional_binary = ""
-            max_fractional_digits = 20
-
-            while fractional_part > 0 and len(fractional_binary) < max_fractional_digits:
-                fractional_part *= 2
-
-                if fractional_part >= 1:
-                    fractional_binary += "1"
-                    fractional_part -= 1
-                else:
-                    fractional_binary += "0"
-            
-            result = f"{sign}{integer_binary}"
-
-            if fractional_binary: result += f".{fractional_binary}"
-
-            return result
+            # Convert float to its binary representation
+            res = struct.unpack('!I', struct.pack('!f', value))[0]
+            # Create and return a 32-bit binary string
+            binary_str = f"{res:032b}"
+            return binary_str
         except Exception:
             return "0"
     
     def _count_significant_binary_digits(self, binary_str: str) -> int:
-        """Count significant binary digits (excluding leading zeros and trailing zeros)."""
+        """Count significant binary digits."""
         try:
-            if binary_str.startswith('-'): binary_str = binary_str[1:]
-            
-            if '.' in binary_str:
-                integer_part, fractional_part = binary_str.split('.')
-            else:
-                integer_part, fractional_part = binary_str, ""
-            
-            integer_part = integer_part.lstrip('0')
+            if binary_str == "0": return 0
 
-            if not integer_part: integer_part = "0"
-
-            fractional_part = fractional_part.rstrip('0')
-            significant_digits = len(integer_part) + len(fractional_part)
-            return max(significant_digits, 1)
-        except Exception:
+            # Find the first and last significant '1'
+            first_one = binary_str.find('1')
+            last_one = binary_str.rfind('1')
+            # The significant part is the entire string between the first and last '1'
+            significant_part = binary_str[first_one : last_one]
+            # The count is the length of this part, excluding the binary point
+            return len(significant_part)
+        except (ValueError, TypeError):
             return 0
-    
-    def _apply_to_weights(self, weights: np.ndarray, constraint_func) -> np.ndarray:
-        """Apply constraint function to weights array of any shape."""
+        
+    def _binary_string_to_float(self, binary_str: str) -> float:
+        """Convert binary string representation back to float."""
         try:
-            flat_weights = weights.flatten()
-            flat_constrained = np.array([constraint_func(w) for w in flat_weights])
-            return flat_constrained.reshape(weights.shape)
+            if binary_str == "0": return 0.0
+
+            # Pad to 32 bits
+            padded_binary = binary_str.zfill(32)
+            # Convert binary string to integer
+            int_value = int(padded_binary, 2)
+            # Convert binary integer to float
+            return struct.unpack('!f', struct.pack('!I', int_value))[0]
         except Exception:
-            self.error_count += 1
-            return weights
+            return 0.0
     
     def get_error_count(self) -> int:
         """Get the number of errors encountered."""
@@ -95,7 +77,7 @@ class BinaryWeightConstraintChanges(BinaryWeightConstraint):
         super().__init__()
         self.max_additional_digits = max_additional_digits
         self.previous_weights = None
-        
+
     def _constrain_weight_change(self, current_weight: float, previous_weight: float) -> float:
         """Constrain a single weight to have at most one additional significant binary digit."""
         try:
@@ -104,13 +86,13 @@ class BinaryWeightConstraintChanges(BinaryWeightConstraint):
             current_digits = self._count_significant_binary_digits(current_binary)
             previous_digits = self._count_significant_binary_digits(previous_binary)
             max_allowed_digits = previous_digits + self.max_additional_digits
-            
+
             if current_digits <= max_allowed_digits: return current_weight
             
             # Reduce precision
             reduction_factor = current_digits - max_allowed_digits
-            magnitude = 10 ** (-reduction_factor)
-            return round(current_weight / magnitude) * magnitude
+            reduced_binary = current_binary[:-reduction_factor] + '0' * reduction_factor
+            return self._binary_string_to_float(reduced_binary)
         except Exception:
             self.error_count += 1
             return current_weight
@@ -123,20 +105,14 @@ class BinaryWeightConstraintChanges(BinaryWeightConstraint):
                 return weights
             
             flat_weights = weights.flatten()
-            flat_previous = self.previous_weights.flatten()
-            flat_constrained = np.array([
-                self._constrain_weight_change(w, p) 
-                for w, p in zip(flat_weights, flat_previous)
-            ])
+            previous_flat_weights = self.previous_weights.flatten()
+            flat_constrained = np.array([self._constrain_weight_change(w, pw) 
+                    for w, pw in zip(flat_weights, previous_flat_weights)])
             constrained_weights = flat_constrained.reshape(weights.shape)
             self.previous_weights = constrained_weights.copy()
             return constrained_weights
         except Exception:
             self.error_count += 1
-
-            if self.previous_weights is None or self.previous_weights.shape != weights.shape:
-                self.previous_weights = weights.copy()
-            
             return weights
     
     def reset(self):
@@ -161,15 +137,22 @@ class BinaryWeightConstraintMax(BinaryWeightConstraint):
             
             # Reduce precision
             reduction_factor = current_digits - self.max_binary_digits
-            magnitude = 10 ** (-reduction_factor)
-            return round(weight / magnitude) * magnitude
+            reduced_binary = binary_repr[:-reduction_factor] + '0' * reduction_factor
+            return self._binary_string_to_float(reduced_binary)
         except Exception:
             self.error_count += 1
             return weight
     
     def apply_constraint(self, weights: np.ndarray) -> np.ndarray:
         """Apply maximum binary precision constraint to weight matrix."""
-        return self._apply_to_weights(weights, self._constrain_weight_max)
+        try:
+            flat_weights = weights.flatten()
+            flat_constrained = np.array([self._constrain_weight_max(w) for w in flat_weights])
+            constrained_weights = flat_constrained.reshape(weights.shape)
+            return constrained_weights
+        except Exception:
+            self.error_count += 1
+            return weights
 
 
 class OscillationDampener:
@@ -204,22 +187,16 @@ class OscillationDampener:
         """Set the smallest non-zero binary digit to zero."""
         try:
             if weight == 0.0: return weight
-            
-            sign = -1 if weight < 0 else 1
-            abs_weight = abs(weight)    
+    
             # Use bit manipulation approach
-            packed = struct.pack('f', abs_weight)
+            packed = struct.pack('f', weight)
             bits = struct.unpack('I', packed)[0]
-            
-            if bits == 0: return weight
-            
-            # Clear the least significant bit
-            lsb_position = (bits & -bits).bit_length() - 1
-            bits &= ~(1 << lsb_position)
+            # Zero the least significant bit
+            bits &= bits - 1
             # Convert back to float
             modified_packed = struct.pack('I', bits)
             modified_weight = struct.unpack('f', modified_packed)[0]
-            return sign * modified_weight
+            return modified_weight
         except Exception:
             self.error_count += 1
             return weight * 0.99
@@ -236,8 +213,7 @@ class OscillationDampener:
                 weight_sequence = []
                 
                 for hist_weights in self.weight_history:
-                    if hist_weights.shape == current_weights.shape:
-                        weight_sequence.append(hist_weights.flatten()[i])
+                    weight_sequence.append(hist_weights.flatten()[i])
                 
                 weight_sequence.append(flat_current[i])
                 
