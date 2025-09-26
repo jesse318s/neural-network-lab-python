@@ -111,7 +111,7 @@ Implements graceful degradation - training continues even when individual compon
 python test_main.py # Run standard tests
 ```
 
-Tests cover weight constraints, adaptive loss functions, performance tracking, regression metrics, and error handling.
+Tests cover weight constraints, adaptive loss functions, performance tracking, and error handling.
 
 ## Configuration
 
