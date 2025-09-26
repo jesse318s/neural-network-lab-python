@@ -18,7 +18,7 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 
 ### Adaptive Loss Functions
 - **Epoch-Based**: Adjusts MSE/MAE ratio based on training progress
-- **Accuracy-Based**: Modifies weights based on validation accuracy
+- **R²-Based**: Modifies weights based on validation R² score
 - **Loss-Based**: Adapts based on previous loss values
 - **Combined Strategy**: Intelligently combines all strategies
 
@@ -108,7 +108,7 @@ Implements graceful degradation - training continues even when individual compon
 ## Testing
 
 ```bash
-python test_main.py              # Run standard tests
+python test_main.py # Run standard tests
 ```
 
 Tests cover weight constraints, adaptive loss functions, performance tracking, regression metrics, and error handling.

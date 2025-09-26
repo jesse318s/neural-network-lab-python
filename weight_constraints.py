@@ -69,6 +69,41 @@ class BinaryWeightConstraint(ABC):
         pass
 
 
+class BinaryWeightConstraintMax(BinaryWeightConstraint):
+    """Manages binary precision of weights with maximum binary digits allowed."""
+    
+    def __init__(self, max_binary_digits: int = 5):
+        super().__init__()
+        self.max_binary_digits = max_binary_digits
+    
+    def _constrain_weight_max(self, weight: float) -> float:
+        """Constrain a single weight to have at most max_binary_digits significant binary digits."""
+        try:
+            binary_repr = self._float_to_binary_repr(weight)
+            current_digits = self._count_significant_binary_digits(binary_repr)
+            
+            if current_digits <= self.max_binary_digits: return weight
+            
+            # Reduce precision
+            reduction_factor = current_digits - self.max_binary_digits
+            reduced_binary = binary_repr[:-reduction_factor] + '0' * reduction_factor
+            return self._binary_string_to_float(reduced_binary)
+        except Exception:
+            self.error_count += 1
+            return weight
+    
+    def apply_constraint(self, weights: np.ndarray) -> np.ndarray:
+        """Apply maximum binary precision constraint to weight matrix."""
+        try:
+            flat_weights = weights.flatten()
+            flat_constrained = np.array([self._constrain_weight_max(w) for w in flat_weights])
+            constrained_weights = flat_constrained.reshape(weights.shape)
+            return constrained_weights
+        except Exception:
+            self.error_count += 1
+            return weights
+
+
 class BinaryWeightConstraintChanges(BinaryWeightConstraint):
     """Manages binary precision of weight changes, limiting additional 
     significant digits in binary format compared to previous weights."""
@@ -120,49 +155,14 @@ class BinaryWeightConstraintChanges(BinaryWeightConstraint):
         self.error_count = 0
 
 
-class BinaryWeightConstraintMax(BinaryWeightConstraint):
-    """Manages binary precision of weights with maximum binary digits allowed."""
-    
-    def __init__(self, max_binary_digits: int = 5):
-        super().__init__()
-        self.max_binary_digits = max_binary_digits
-    
-    def _constrain_weight_max(self, weight: float) -> float:
-        """Constrain a single weight to have at most max_binary_digits significant binary digits."""
-        try:
-            binary_repr = self._float_to_binary_repr(weight)
-            current_digits = self._count_significant_binary_digits(binary_repr)
-            
-            if current_digits <= self.max_binary_digits: return weight
-            
-            # Reduce precision
-            reduction_factor = current_digits - self.max_binary_digits
-            reduced_binary = binary_repr[:-reduction_factor] + '0' * reduction_factor
-            return self._binary_string_to_float(reduced_binary)
-        except Exception:
-            self.error_count += 1
-            return weight
-    
-    def apply_constraint(self, weights: np.ndarray) -> np.ndarray:
-        """Apply maximum binary precision constraint to weight matrix."""
-        try:
-            flat_weights = weights.flatten()
-            flat_constrained = np.array([self._constrain_weight_max(w) for w in flat_weights])
-            constrained_weights = flat_constrained.reshape(weights.shape)
-            return constrained_weights
-        except Exception:
-            self.error_count += 1
-            return weights
-
-
-class OscillationDampener:
+class OscillationDampener(BinaryWeightConstraint):
     """Monitors weight changes and dampens oscillations by setting the smallest 
     non-zero binary digit to zero."""
     
     def __init__(self, window_size: int = 3):
+        super().__init__()
         self.window_size = window_size
         self.weight_history: List[np.ndarray] = []
-        self.error_count = 0
     
     def add_weights(self, weights: np.ndarray):
         """Add new weights to the history."""
@@ -201,12 +201,12 @@ class OscillationDampener:
             self.error_count += 1
             return weight * 0.99
     
-    def detect_and_dampen_oscillations(self, current_weights: np.ndarray) -> np.ndarray:
+    def apply_constraint(self, weights: np.ndarray) -> np.ndarray:
         """Detect oscillations and apply dampening."""
         try:
-            if len(self.weight_history) < self.window_size: return current_weights
+            if len(self.weight_history) < self.window_size: return weights
             
-            flat_current = current_weights.flatten()
+            flat_current = weights.flatten()
             flat_dampened = flat_current.copy()
             
             for i in range(len(flat_current)):
@@ -223,14 +223,10 @@ class OscillationDampener:
                     if self._detect_oscillation_pattern(recent_values):
                         flat_dampened[i] = self._set_smallest_binary_digit_to_zero(flat_current[i])
             
-            return flat_dampened.reshape(current_weights.shape)
+            return flat_dampened.reshape(weights.shape)
         except Exception:
             self.error_count += 1
-            return current_weights
-    
-    def get_error_count(self) -> int:
-        """Get the number of errors encountered."""
-        return self.error_count
+            return weights
     
     def reset(self):
         """Reset the history and error count."""

@@ -139,7 +139,7 @@ class AdvancedNeuralNetwork:
                             if self.oscillation_dampener:
                                 try:
                                     self.oscillation_dampener.add_weights(current_weight)
-                                    current_weight = self.oscillation_dampener.detect_and_dampen_oscillations(current_weight)
+                                    current_weight = self.oscillation_dampener.apply_constraint(current_weight)
                                     
                                     if 'oscillation_dampening' not in applied_constraints: 
                                         applied_constraints.append('oscillation_dampening')

@@ -226,7 +226,6 @@ class PerformanceTracker:
                 'total_training_time': self.total_training_time,
                 'current_memory_mb': self.current_memory_mb,
                 'peak_memory_mb': self.peak_memory_mb,
-                'loss_weighting_strategy': self.training_config.get('loss_weighting_strategy', 'none'),
                 'weight_modifications_used': self.weight_modifications_used,
                 'weight_file_sizes': self.weight_file_sizes,
                 'error_count': self.error_count,

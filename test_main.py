@@ -71,7 +71,7 @@ class TestWeightConstraints(unittest.TestCase):
         for val in dampener_weight_values:
             dampener.add_weights(np.array([[val]]))
 
-        result = dampener.detect_and_dampen_oscillations(unstable_weights)
+        result = dampener.apply_constraint(unstable_weights)
         self.assertIsInstance(result, np.ndarray)
         self.assertEqual(result.shape, unstable_weights.shape)
         self.assertLess(result[0,0], unstable_weights[0,0])
