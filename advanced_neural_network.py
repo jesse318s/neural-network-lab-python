@@ -162,9 +162,6 @@ class AdvancedNeuralNetwork:
                 if self.adaptive_loss:
                     loss_value = self.adaptive_loss(y_batch, y_pred)
                     loss_strategy = self.adaptive_loss.get_current_info()
-                else:
-                    loss_value = tf.reduce_mean(tf.square(y_batch - y_pred))
-                    loss_strategy = "mse_only"
             
             gradients = tape.gradient(loss_value, self.model.trainable_variables)
 

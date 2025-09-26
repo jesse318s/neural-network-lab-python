@@ -70,7 +70,7 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ├── advanced_neural_network.py   # Core neural network implementation
 ├── data_processing.py           # Data processing functionality
 ├── main.py                      # Main training script
-├── ml_utils.py                  # ML utilities (adaptive loss & regression metrics)
+├── ml_utils.py                  # ML utilities (adaptive loss)
 ├── performance_tracker.py       # Metrics tracking and CSV output
 ├── requirements.txt             # Dependencies
 ├── test_main.py                 # Test suite
@@ -100,7 +100,7 @@ Controls weight precision at the binary level, preventing explosive growth while
 Detects weight oscillation patterns across epochs and applies dampening to stabilize training.
 
 ### Adaptive Loss Functions
-Dynamically adjusts MSE/MAE weighting based on training progress, accuracy, and loss history.
+Dynamically adjusts MSE/MAE weighting based on training progress and loss history.
 
 ### Error Resilience
 Implements graceful degradation - training continues even when individual components encounter errors.
