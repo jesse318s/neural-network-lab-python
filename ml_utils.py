@@ -1,8 +1,7 @@
 """
 ML Utilities for Neural Network Training
 
-This module combines adaptive loss functions and data processing utilities into a 
-comprehensive, compact ML utility suite for the advanced neural network project.
+This module combines adaptive loss functions and state management to enhance model training.
 """
 
 import math

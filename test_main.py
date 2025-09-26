@@ -2,7 +2,7 @@
 Test Suite for Neural Network Lab
 
 This test suite verifies the functionality of various components in the neural network lab,
-including weight constraints, adaptive loss functions, performance tracking, and regression metrics.
+including weight constraints, adaptive loss functions, and performance tracking.
 """
 
 import unittest
@@ -91,6 +91,7 @@ class TestAdaptiveLoss(unittest.TestCase):
         self.assertTrue(callable(loss_fn))
         self.assertTrue(hasattr(loss_fn, 'update_state'))
         self.assertTrue(hasattr(loss_fn, 'get_current_info'))
+        self.assertTrue(hasattr(loss_fn, 'get_history'))
     
     def test_adaptive_loss_get_weights(self):
         """Test getting weights from compute_loss_weights function."""
@@ -98,7 +99,7 @@ class TestAdaptiveLoss(unittest.TestCase):
         
         self.assertGreater(mse_weight, 0)
         self.assertGreater(mae_weight, 0)
-        self.assertAlmostEqual(mse_weight + mae_weight, 1.0, places=3)
+        self.assertEqual(mse_weight + mae_weight, 1.0)
 
 
 class TestPerformanceTracker(unittest.TestCase):

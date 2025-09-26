@@ -162,8 +162,8 @@ def main():
     print("=" * 40)
     # Check for output files
     output_files = [
-        'training_output/training_results.csv', 'training_output/loss_history.csv',
-        'training_output/training_log.txt','training_output/configuration_log.csv',
+        f'{model_config["output_dir"]}/training_results.csv', f'{model_config["output_dir"]}/loss_history.csv',
+        f'{model_config["output_dir"]}/training_log.txt', f'{model_config["output_dir"]}/configuration_log.csv',
         'model_weights.weights.h5', 'particle_data.csv']
     
     for file_path in output_files:
