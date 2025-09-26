@@ -8,22 +8,11 @@ for particle physics simulations.
 
 import os
 import numpy as np
-from typing import Dict, Tuple, Any, Optional
+from typing import Dict, Any
 
 # Import custom modules
 from advanced_neural_network import AdvancedNeuralNetwork
 from data_processing import complete_data_pipeline
-
-
-def create_model(input_shape: Tuple[int], output_shape: int = 6, config: Optional[Dict[str, Any]] = None) -> AdvancedNeuralNetwork:
-    """Create a neural network model with custom constraints."""
-    if config is None:
-        config = { 'hidden_layers': [64, 32, 16],
-            'activation': 'relu', 'dropout_rate': 0.2, 'optimizer': 'adam', 'learning_rate': 0.001,
-            'max_binary_digits': 5, 'max_additional_binary_digits': 1, 'oscillation_window': 3, 
-            'loss_weighting_strategy': 'epoch_based', 'output_dir': 'training_output'}
-
-    return AdvancedNeuralNetwork(input_shape, output_shape, config)
 
 
 def train_with_tracking(model: AdvancedNeuralNetwork, 
@@ -38,11 +27,11 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
        
     # Train with custom constraints
     training_results = model.train_with_custom_constraints(X_train, y_train, X_val, y_val,
-        epochs=config.get('epochs', 50),
-        batch_size=config.get('batch_size', 32))
-    # Evaluate on test set and save results
+        epochs=config.get('epochs', 30), batch_size=config.get('batch_size', 16))
+    # Evaluate on test set
     test_results = model.evaluate_model(X_test, y_test)
 
+    # Save training results
     if model.performance_tracker:
         try:
             model.performance_tracker.save_results()
@@ -86,9 +75,9 @@ def display_results(results: Dict[str, Any]) -> None:
         error_summary = results.get('error_summary', {})
 
         print(f"📊 Performance Metrics:")
-        print(f"  Final accuracy: {performance_summary.get('current_accuracy', 'N/A'):.4f}")
-        print(f"  Best accuracy: {performance_summary.get('best_accuracy', 'N/A'):.4f} "
-              f"at epoch {performance_summary.get('best_accuracy_epoch', 'N/A')}")
+        print(f"  Final R²: {performance_summary.get('current_r2', 'N/A'):.4f}")
+        print(f"  Best R²: {performance_summary.get('best_r2', 'N/A'):.4f} "
+              f"at epoch {performance_summary.get('best_r2_epoch', 'N/A')}")
         print(f"  Average epoch time: {performance_summary.get('avg_epoch_time', 'N/A'):.2f}s")
         print(f"  Peak memory: {performance_summary.get('peak_memory_mb', 'N/A'):.1f} MB")    
         print(f"\n🧪 Test Results:")
@@ -141,7 +130,7 @@ def main():
         'loss_weighting_strategy': 'none', 'output_dir': 'training_output', 'enable_weight_constraints': True}
     
     try:
-        model = create_model(input_shape=(X_train.shape[1],), output_shape=y_train.shape[1], config=model_config)
+        model = AdvancedNeuralNetwork((X_train.shape[1],), y_train.shape[1], model_config)
         print("✓ Neural network created successfully") 
     except Exception as e:
         print(f"✗ Model creation failed: {e}")

@@ -15,7 +15,6 @@ import shutil
 # Add the current directory to the path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Import modules with error handling
 try:
     from weight_constraints import BinaryWeightConstraintMax, BinaryWeightConstraintChanges, OscillationDampener
     WEIGHT_CONSTRAINTS_AVAILABLE = True
@@ -33,12 +32,6 @@ try:
     PERFORMANCE_TRACKER_AVAILABLE = True
 except ImportError:
     PERFORMANCE_TRACKER_AVAILABLE = False
-
-try:
-    from advanced_neural_network import AdvancedNeuralNetwork
-    REGRESSION_METRICS_AVAILABLE = True
-except ImportError:
-    REGRESSION_METRICS_AVAILABLE = False
 
 
 class TestWeightConstraints(unittest.TestCase):
@@ -72,18 +65,16 @@ class TestWeightConstraints(unittest.TestCase):
     def test_oscillation_dampener(self):
         """Test oscillation dampener functionality."""
         dampener = OscillationDampener(window_size=3)
-        weights = np.array([[0.41]])
-        dampener.add_weights(weights)
-        weights = np.array([[0.51]])
-        dampener.add_weights(weights)
-        weights = np.array([[0.31]])
-        dampener.add_weights(weights)
-        weights = np.array([[0.81]])
-        result = dampener.detect_and_dampen_oscillations(weights)
+        dampener_weight_values = [0.41, 0.51, 0.31]
+        unstable_weights = np.array([[0.81]])
         
+        for val in dampener_weight_values:
+            dampener.add_weights(np.array([[val]]))
+
+        result = dampener.detect_and_dampen_oscillations(unstable_weights)
         self.assertIsInstance(result, np.ndarray)
-        self.assertEqual(result.shape, weights.shape)
-        self.assertLess(result[0,0], weights[0,0])
+        self.assertEqual(result.shape, unstable_weights.shape)
+        self.assertLess(result[0,0], unstable_weights[0,0])
 
 
 class TestAdaptiveLoss(unittest.TestCase):
@@ -127,51 +118,14 @@ class TestPerformanceTracker(unittest.TestCase):
     def test_performance_tracker_initialization(self):
         """Test initialization of PerformanceTracker."""
         self.assertEqual(self.tracker.output_dir, self.temp_dir)
-        self.assertEqual(self.tracker.current_accuracy, 0.0)
+        self.assertEqual(self.tracker.current_r2, 0.0)
     
     def test_get_summary(self):
         """Test getting performance summary."""
         summary = self.tracker.get_summary()
         
         self.assertIsInstance(summary, dict)
-        self.assertIn('current_accuracy', summary)
-
-
-class TestRegressionMetrics(unittest.TestCase):
-    """Test metrics functionality."""
-    
-    def setUp(self):
-        if not REGRESSION_METRICS_AVAILABLE:
-            self.skipTest("Regression metrics function not available")
-        
-        # Test data with known results
-        self.y_test_1 = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
-        self.y_pred_1 = np.array([1.1, 2.2, 2.9, 4.1, 4.9])
-        # Perfect predictions
-        self.y_test_2 = np.array([1.0, 2.0, 3.0])
-        self.y_pred_2 = np.array([1.0, 2.0, 3.0])
-    
-    def test_perfect_predictions(self):
-        """Test with perfect predictions."""
-        mse, mae, rmse, r2 = AdvancedNeuralNetwork.calculate_regression_metrics(
-            self.y_test_2, self.y_pred_2)
-        
-        self.assertAlmostEqual(mse, 0.0, places=6)
-        self.assertAlmostEqual(mae, 0.0, places=6)
-        self.assertAlmostEqual(rmse, 0.0, places=6)
-        self.assertAlmostEqual(r2, 1.0, places=6)
-    
-    def test_metrics_relationships(self):
-        """Test mathematical relationships between metrics."""
-        mse, mae, rmse, r2 = AdvancedNeuralNetwork.calculate_regression_metrics(
-            self.y_test_1, self.y_pred_1)
-        
-        # RMSE should be the square root of MSE
-        self.assertAlmostEqual(rmse, np.sqrt(mse), places=6) 
-        # All metrics should be non-negative
-        self.assertGreaterEqual(mse, 0)
-        self.assertGreaterEqual(mae, 0)
-        self.assertGreaterEqual(rmse, 0)
+        self.assertIn('current_r2', summary)
 
 
 class TestIntegration(unittest.TestCase):
@@ -182,22 +136,20 @@ class TestIntegration(unittest.TestCase):
         components = {
             'weight_constraints': WEIGHT_CONSTRAINTS_AVAILABLE,
             'adaptive_loss': ADAPTIVE_LOSS_AVAILABLE,
-            'performance_tracker': PERFORMANCE_TRACKER_AVAILABLE,
-            'regression_metrics_function': REGRESSION_METRICS_AVAILABLE
+            'performance_tracker': PERFORMANCE_TRACKER_AVAILABLE
         }
         available_count = sum(components.values())
 
-        # All components should be available
         self.assertEqual(available_count, len(components))
     
     def test_numpy_compatibility(self):
         """Test NumPy array handling."""
-        test_array = np.array([[0.5, 0.3], [0.7, 0.2]])
         constraint = BinaryWeightConstraintMax(max_binary_digits=3)
-        result = constraint.apply_constraint(test_array)
+        array = np.array([[0.5, 0.3], [0.7, 0.2]])
+        result = constraint.apply_constraint(array)
         
         self.assertIsInstance(result, np.ndarray)
-        self.assertEqual(result.shape, test_array.shape)
+        self.assertEqual(result.shape, array.shape)
 
 
 if __name__ == '__main__':

@@ -23,7 +23,7 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 - **Combined Strategy**: Intelligently combines all strategies
 
 ### Performance Tracking
-- Training metrics and accuracy tracking
+- Training metrics and result tracking
 - Memory usage and timing measurements
 - CSV export with comprehensive logging
 
@@ -50,16 +50,17 @@ python test_main.py
 ### Basic Example
 
 ```python
-from main import create_model, train_with_tracking
 from data_processing import complete_data_pipeline
+from advanced_neural_network import AdvancedNeuralNetwork
+from main import train_with_tracking
 
 # Load data and create model
-data_splits, pipeline_info = complete_data_pipeline(num_particles=1000)
+data_splits = complete_data_pipeline(num_particles=1000)
 X_train, X_val, X_test, y_train, y_val, y_test = data_splits
-model = create_model(input_shape=(X_train.shape[1],), output_shape=y_train.shape[1])
+config = {'epochs': 50, 'batch_size': 32, 'learning_rate': 0.001}
+model = AdvancedNeuralNetwork((X_train.shape[1],), y_train.shape[1], config)
 
 # Train with tracking
-config = {'epochs': 50, 'batch_size': 32, 'learning_rate': 0.001}
 results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_test, config)
 ```
 
@@ -118,9 +119,10 @@ Key configuration options:
 
 ```python
 config = {
-    'hidden_layers': [64, 32, 16],
     'max_binary_digits': 5,
+    'max_additional_binary_digits': 2,
     'oscillation_window': 3,
+    'enable_weight_constraints': True,
     'loss_weighting_strategy': 'combined'
 }
 ```
