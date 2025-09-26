@@ -17,7 +17,7 @@ from typing import Dict, List, Any, Optional
 
 class PerformanceTracker:
     """
-    Tracks and logs training metrics including accuracy, loss, memory usage,
+    Tracks and logs training metrics including R², loss, memory usage,
     and comprehensive performance data with CSV output capabilities.
     """
     
@@ -27,12 +27,12 @@ class PerformanceTracker:
         self.training_end_time = None
         self.epoch_start_time = None
         # Performance metrics
-        self.current_accuracy = 0.0
-        self.best_accuracy = 0.0
-        self.best_accuracy_epoch = 0
+        self.current_r2 = 0.0
+        self.best_r2 = 0.0
+        self.best_r2_epoch = 0
         self.greatest_improvement = 0.0
         self.greatest_improvement_epoch = 0
-        self.previous_accuracy = 0.0
+        self.previous_r2 = 0.0
         # Timing metrics
         self.epoch_times = []
         self.avg_epoch_time = 0.0
@@ -85,24 +85,24 @@ class PerformanceTracker:
             else:
                 epoch_time = 0.0
             
-            # Update accuracy metrics
-            current_accuracy = logs.get('accuracy', logs.get('val_accuracy', 0.0))
-            self.current_accuracy = current_accuracy
+            # Update r2 metrics
+            current_r2 = logs.get('r2_score', logs.get('val_r2', 0.0))
+            self.current_r2 = current_r2
             
-            # Track best accuracy
-            if current_accuracy > self.best_accuracy:
-                self.best_accuracy = current_accuracy
-                self.best_accuracy_epoch = epoch
+            # Track best r2
+            if current_r2 > self.best_r2:
+                self.best_r2 = current_r2
+                self.best_r2_epoch = epoch
             
             # Track greatest improvement
             if epoch > 0:
-                improvement = current_accuracy - self.previous_accuracy
+                improvement = current_r2 - self.previous_r2
 
                 if improvement > self.greatest_improvement:
                     self.greatest_improvement = improvement
                     self.greatest_improvement_epoch = epoch
             
-            self.previous_accuracy = current_accuracy
+            self.previous_r2 = current_r2
             # Update memory usage
             self._update_memory_usage()    
             # Record training history
@@ -128,9 +128,9 @@ class PerformanceTracker:
             self._update_memory_usage()
             return {
                 'total_training_time': self.total_training_time,
-                'current_accuracy': self.current_accuracy,
-                'best_accuracy': self.best_accuracy,
-                'best_accuracy_epoch': self.best_accuracy_epoch,
+                'current_r2': self.current_r2,
+                'best_r2': self.best_r2,
+                'best_r2_epoch': self.best_r2_epoch,
                 'greatest_improvement': self.greatest_improvement,
                 'greatest_improvement_epoch': self.greatest_improvement_epoch,
                 'avg_epoch_time': self.avg_epoch_time,
@@ -156,6 +156,9 @@ class PerformanceTracker:
     def measure_inference_time(self, model: Optional[Any], test_data: np.ndarray, num_runs: int = 10) -> float:
         """Measure model inference time."""
         try:
+            if model is None:
+                raise ValueError("Model is None, cannot measure inference time.")
+
             inference_times = []
             
             for _ in range(num_runs):
@@ -164,7 +167,10 @@ class PerformanceTracker:
                 end_time = time.time()
                 inference_times.append(end_time - start_time)
             
-            return float(np.mean(inference_times))  
+            return float(np.mean(inference_times))
+        except ValueError as ve:
+            self._handle_error(f"Validation error in inference timing: {ve}")
+            return 0.0
         except Exception as e:
             self._handle_error(f"Error measuring inference time: {e}")
             return 0.0
@@ -204,8 +210,6 @@ class PerformanceTracker:
                 writer = csv.DictWriter(csvfile, fieldnames=sorted(all_keys))
                 writer.writeheader()
                 writer.writerows(loss_history)
-            
-            print(f"Loss history saved to {file_path}")
         except Exception as e:
             self._handle_error(f"Error creating loss history CSV: {e}")
     
@@ -213,16 +217,15 @@ class PerformanceTracker:
         """Get a summary of all performance metrics."""
         try:
             return {
-                'current_accuracy': self.current_accuracy,
-                'best_accuracy': self.best_accuracy,
-                'best_accuracy_epoch': self.best_accuracy_epoch,
+                'current_r2': self.current_r2,
+                'best_r2': self.best_r2,
+                'best_r2_epoch': self.best_r2_epoch,
                 'greatest_improvement': self.greatest_improvement,
                 'greatest_improvement_epoch': self.greatest_improvement_epoch,
                 'avg_epoch_time': self.avg_epoch_time,
                 'total_training_time': self.total_training_time,
                 'current_memory_mb': self.current_memory_mb,
                 'peak_memory_mb': self.peak_memory_mb,
-                'loss_weighting_strategy': self.training_config.get('loss_weighting_strategy', 'none'),
                 'weight_modifications_used': self.weight_modifications_used,
                 'weight_file_sizes': self.weight_file_sizes,
                 'error_count': self.error_count,
@@ -289,8 +292,8 @@ class PerformanceTracker:
                 'timestamp': config_data['timestamp'],
                 'loss_weighting_strategy': self.training_config.get('loss_weighting_strategy', 'none'),
                 'weight_modifications_used': ', '.join(self.weight_modifications_used) if self.weight_modifications_used else 'none',
-                'final_accuracy': self.current_accuracy,
-                'best_accuracy': self.best_accuracy,
+                'final_r2': self.current_r2,
+                'best_r2': self.best_r2,
                 'total_training_time': self.total_training_time,
                 'avg_epoch_time': self.avg_epoch_time,
                 'peak_memory_mb': self.peak_memory_mb,
@@ -325,9 +328,9 @@ class PerformanceTracker:
 
                 logfile.write(f"Weight modifications used: {', '.join(self.weight_modifications_used) if self.weight_modifications_used else 'none'}\n\n")
                 logfile.write("=== Performance Summary ===\n")
-                logfile.write(f"Final training accuracy: {self.current_accuracy:.4f}\n")
-                logfile.write(f"Best accuracy: {self.best_accuracy:.4f} at epoch {self.best_accuracy_epoch}\n")
-                logfile.write(f"Greatest accuracy improvement: {self.greatest_improvement:.4f} at epoch {self.greatest_improvement_epoch}\n")
+                logfile.write(f"Final training R²: {self.current_r2:.4f}\n")
+                logfile.write(f"Best R²: {self.best_r2:.4f} at epoch {self.best_r2_epoch}\n")
+                logfile.write(f"Greatest R² improvement: {self.greatest_improvement:.4f} at epoch {self.greatest_improvement_epoch}\n")
                 logfile.write(f"Average epoch time: {self.avg_epoch_time:.2f} seconds\n")
                 logfile.write(f"Peak memory usage: {self.peak_memory_mb:.1f} MB\n\n")
                 logfile.write("=== Weight File Sizes ===\n")
