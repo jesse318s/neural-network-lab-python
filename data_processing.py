@@ -1,6 +1,5 @@
 import os
-import json
-from typing import Dict, Tuple, Any
+from typing import Tuple
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -20,6 +19,7 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
     """
     try:
         np.random.seed(42)
+        
         # Generate input parameters
         data = {
             'particle_id': range(1, num_particles + 1),
@@ -40,25 +40,44 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
                 ['simulation_time', 'initial_velocity_x', 'initial_velocity_y',
                  'initial_position_x', 'initial_position_y', 'mass', 'charge', 'magnetic_field_strength']]
             
-            if q != 0:  # Charged particle - circular motion
-                omega = q * B / m
-                vx_final = vx0 * np.cos(omega * t) - vy0 * np.sin(omega * t)
-                vy_final = vx0 * np.sin(omega * t) + vy0 * np.cos(omega * t)
-                x_final = x0 + (vx0 * np.sin(omega * t) + vy0 * (np.cos(omega * t) - 1)) / omega
-                y_final = y0 + (-vx0 * (np.cos(omega * t) - 1) + vy0 * np.sin(omega * t)) / omega
-            else:  # Neutral particle - linear motion
+            if q != 0 and m != 0 and abs(q * B / m) > 1e-10:  # Charged particle with significant magnetic field
+                # Cyclotron frequency (using appropriate scaling)
+                omega = (q * B) / m
+                omega_t = omega * t
+                # Correct cyclotron motion equations
+                cos_wt = np.cos(omega_t)
+                sin_wt = np.sin(omega_t)
+                # Final velocities (rotation of initial velocity vector)
+                vx_final = vx0 * cos_wt - vy0 * sin_wt
+                vy_final = vx0 * sin_wt + vy0 * cos_wt
+                
+                # Final positions (cycloid trajectory)
+                if abs(omega) > 1e-10:
+                    x_final = x0 + (vx0 * sin_wt - vy0 * (cos_wt - 1)) / omega
+                    y_final = y0 + (vx0 * (cos_wt - 1) + vy0 * sin_wt) / omega
+                else:
+                    # Fallback to linear motion if omega is too small
+                    x_final = x0 + vx0 * t
+                    y_final = y0 + vy0 * t          
+            else:  # Neutral particle or negligible magnetic field - linear motion
                 vx_final, vy_final = vx0, vy0
                 x_final, y_final = x0 + vx0 * t, y0 + vy0 * t
             
-            # Add noise and calculate derived quantities
-            noise = 0.05
-            vx_final += np.random.normal(0, noise * abs(vx_final))
-            vy_final += np.random.normal(0, noise * abs(vy_final))
-            x_final += np.random.normal(0, noise * abs(x_final))
-            y_final += np.random.normal(0, noise * abs(y_final))
-            outputs.append([vx_final, vy_final, x_final, y_final,
-                           0.5 * m * (vx_final**2 + vy_final**2),  # kinetic energy
-                           np.sqrt((x_final - x0)**2 + (y_final - y0)**2)])  # trajectory length
+            # Add some noise to simulate measurement errors
+            noise_factor = 0.05
+            # Ensure we don't add noise to zero values
+            vx_noise = noise_factor * max(abs(vx_final), 0.1) * np.random.normal(0, 1)
+            vy_noise = noise_factor * max(abs(vy_final), 0.1) * np.random.normal(0, 1)
+            x_noise = noise_factor * max(abs(x_final), 0.1) * np.random.normal(0, 1)
+            y_noise = noise_factor * max(abs(y_final), 0.1) * np.random.normal(0, 1)
+            vx_final += vx_noise
+            vy_final += vy_noise
+            x_final += x_noise
+            y_final += y_noise
+            # Calculate derived quantities
+            kinetic_energy = 0.5 * m * (vx_final**2 + vy_final**2)
+            trajectory_length = np.sqrt((x_final - x0)**2 + (y_final - y0)**2)
+            outputs.append([vx_final, vy_final, x_final, y_final, kinetic_energy, trajectory_length])
         
         # Add outputs to data
         output_names = ['final_velocity_x', 'final_velocity_y', 'final_position_x',
@@ -76,7 +95,7 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
             except Exception as e:
                 print(f"Warning: Could not save particle data: {e}")
         
-        return df  
+        return df    
     except Exception as e:
         print(f"Error generating particle data: {e}")
         # Return minimal fallback data
@@ -121,7 +140,17 @@ def load_and_validate_data(csv_path: str = 'particle_data.csv') -> pd.DataFrame:
             if col == 'mass' and (df[col] <= 0).any():
                 validation['issues'].append(f"Non-positive mass values found")
                 validation['recommendations'].append("Mass values should be positive")
-            
+
+            # Energy conservation check
+            if 'kinetic_energy' in df.columns and 'mass' in df.columns:
+                if 'final_velocity_x' in df.columns and 'final_velocity_y' in df.columns:
+                    calculated_ke = 0.5 * df['mass'] * (df['final_velocity_x']**2 + df['final_velocity_y']**2)
+                    ke_diff = np.abs(df['kinetic_energy'] - calculated_ke)
+                    
+                    if (ke_diff > 0.1 * df['kinetic_energy']).any():  # 10% tolerance
+                        validation['issues'].append("Kinetic energy inconsistencies detected")
+                        validation['recommendations'].append("Check energy calculations")
+
             if np.isinf(df[col]).any():
                 validation['issues'].append(f"Infinite values in {col}")
                 validation['recommendations'].append(f"Replace infinite values in {col}")
@@ -186,6 +215,7 @@ def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: 
         # Save scalers
         try:
             import joblib
+
             joblib.dump(scaler_X, 'scaler_X.pkl')
             joblib.dump(scaler_y, 'scaler_y.pkl')
             print("Scalers saved to scaler_X.pkl and scaler_y.pkl")
@@ -196,6 +226,7 @@ def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: 
     except Exception as e:
         print(f"Error in data preprocessing: {e}")
         # Return dummy data as fallback
+        np.random.seed(42)
         dummy_X, dummy_y = np.random.randn(10, 8), np.random.randn(10, 6)
         return dummy_X[:6], dummy_X[6:8], dummy_X[8:], dummy_y[:6], dummy_y[6:8], dummy_y[8:]
 
@@ -232,52 +263,3 @@ def complete_data_pipeline(csv_path: str = 'particle_data.csv',
         dummy_X, dummy_y = np.random.randn(100, 8), np.random.randn(100, 6)
         fallback_splits = (dummy_X[:60], dummy_X[60:80], dummy_X[80:], dummy_y[:60], dummy_y[60:80], dummy_y[80:])
         return fallback_splits
-
-
-def create_data_summary(df: pd.DataFrame) -> Dict[str, Any]:
-    """
-    Create comprehensive data summary with statistics.
-    
-    Args:
-        df: DataFrame to summarize
-        
-    Returns:
-        Dictionary with data summary and statistics
-    """
-    try:
-        # Define feature categories
-        input_features = ['mass', 'initial_velocity_x', 'initial_velocity_y', 'initial_position_x',
-                         'initial_position_y', 'charge', 'magnetic_field_strength', 'simulation_time']
-        output_features = ['final_velocity_x', 'final_velocity_y', 'final_position_x',
-                          'final_position_y', 'kinetic_energy', 'trajectory_length']
-        # Filter available features
-        available_inputs = [f for f in input_features if f in df.columns]
-        available_outputs = [f for f in output_features if f in df.columns]   
-        # Calculate statistics
-        stats = {}
-
-        for feature in available_inputs + available_outputs:
-            if df[feature].dtype in ['int64', 'float64']:
-                stats[feature] = {
-                    'mean': float(df[feature].mean()), 'std': float(df[feature].std()),
-                    'min': float(df[feature].min()), 'max': float(df[feature].max()),
-                    'missing': int(df[feature].isnull().sum())
-                }
-        
-        summary = {
-            'num_particles': len(df), 'input_features': available_inputs,
-            'output_features': available_outputs, 'data_statistics': stats
-        }
-        
-        # Save summary
-        try:
-            with open('data_summary.json', 'w') as f:
-                json.dump(summary, f, indent=2)
-            print("Data summary saved to data_summary.json")
-        except Exception as e:
-            print(f"Warning: Could not save data summary: {e}")
-        
-        return summary
-    except Exception as e:
-        print(f"Error creating data summary: {e}")
-        return {'num_particles': 0, 'input_features': [], 'output_features': [], 'data_statistics': {}, 'error': str(e)}
