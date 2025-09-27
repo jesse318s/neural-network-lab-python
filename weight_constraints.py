@@ -3,6 +3,11 @@ Weight Constraint Classes for Advanced TensorFlow Training
 
 This module implements custom weight constraint classes that manage binary precision
 of neural network weights and prevent oscillations during training.
+The classes are:
+- BinaryWeightConstraint - abstract base class: Provides common methods for binary representation and counting significant digits.
+- BinaryWeightConstraintMax: Limits the number of significant binary digits in weights.
+- BinaryWeightConstraintChanges: Restricts additional significant binary digits in weight changes compared to previous weights.
+- OscillationDampener: Reduces oscillations by modifying the smallest non-zero binary digit in weights.
 """
 
 import struct

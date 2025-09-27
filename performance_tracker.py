@@ -1,8 +1,6 @@
 """
 Performance Tracking and Metrics Collection for Advanced TensorFlow Lab
-
-This module implements comprehensive performance tracking for the TensorFlow lab,
-including training metrics, CSV output, memory monitoring, and configuration logging.
+Implements railway-style error handling for robust execution.
 """
 
 import os
