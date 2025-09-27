@@ -142,7 +142,7 @@ class PerformanceTracker:
             self._handle_error(f"Error ending training: {e}")
             return {}
     
-    def record_weight_file_size(self, file_path: str):
+    def record_weight_file_size(self, file_path: str) -> None:
         """Record the size of a weight file."""
         try:
             if os.path.exists(file_path):
@@ -173,7 +173,7 @@ class PerformanceTracker:
             self._handle_error(f"Error measuring inference time: {e}")
             return 0.0
     
-    def add_weight_modification(self, modification_name: str):
+    def add_weight_modification(self, modification_name: str) -> None:
         """Record that a weight modification technique was used."""
         try:
             if modification_name not in self.weight_modifications_used:
@@ -181,7 +181,7 @@ class PerformanceTracker:
         except Exception as e:
             self._handle_error(f"Error adding weight modification {modification_name}: {e}")
     
-    def save_results(self):
+    def save_results(self) -> None:
         """Save all tracked results to CSV and JSON files."""
         try:
             self._save_training_results_csv()
@@ -191,7 +191,7 @@ class PerformanceTracker:
         except Exception as e:
             self._handle_error(f"Error saving results: {e}")
     
-    def create_loss_history_csv(self, loss_history: List[Dict[str, Any]]):
+    def create_loss_history_csv(self, loss_history: List[Dict[str, Any]]) -> None:
         """Create CSV file with loss history components."""
         try:
             file_path = os.path.join(self.output_dir, "loss_history.csv")
@@ -233,7 +233,7 @@ class PerformanceTracker:
             self._handle_error(f"Error getting summary: {e}")
             return {}
     
-    def _update_memory_usage(self):
+    def _update_memory_usage(self) -> None:
         """Update current memory usage metrics."""
         try:
             process = psutil.Process()
@@ -245,7 +245,7 @@ class PerformanceTracker:
         except Exception as e:
             self._handle_error(f"Error updating memory usage: {e}")
     
-    def _save_training_results_csv(self):
+    def _save_training_results_csv(self) -> None:
         """Save training results to CSV file."""
         try:
             file_path = os.path.join(self.output_dir, "training_results.csv")
@@ -265,7 +265,7 @@ class PerformanceTracker:
         except Exception as e:
             self._handle_error(f"Error saving training results CSV: {e}")
     
-    def _save_configuration_log(self):
+    def _save_configuration_log(self) -> None:
         """Save configuration and settings to JSON and CSV files."""
         try:
             # Create unique ID based on timestamp
@@ -309,7 +309,7 @@ class PerformanceTracker:
         except Exception as e:
             self._handle_error(f"Error saving configuration log: {e}")
     
-    def _save_training_log(self):
+    def _save_training_log(self) -> None:
         """Save detailed training log to text file."""
         try:
             file_path = os.path.join(self.output_dir, "training_log.txt")
@@ -345,7 +345,7 @@ class PerformanceTracker:
         except Exception as e:
             self._handle_error(f"Error saving training log: {e}")
     
-    def _handle_error(self, error_message: str):
+    def _handle_error(self, error_message: str) -> None:
         """Handle and log errors."""
         self.error_count += 1
         self.errors_log.append(f"{datetime.now().isoformat()}: {error_message}")

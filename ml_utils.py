@@ -62,7 +62,7 @@ def create_adaptive_loss_fn(strategy: str = 'r2_based'):
     mse_loss = tf.keras.losses.MeanSquaredError()
     mae_loss = tf.keras.losses.MeanAbsoluteError()
     
-    def adaptive_loss(y_true, y_pred):
+    def adaptive_loss(y_true: tf.Tensor, y_pred: tf.Tensor) -> tf.Tensor:
         """Compute adaptive loss with current weights."""
         try:
             mse = mse_loss(y_true, y_pred)
@@ -84,7 +84,7 @@ def create_adaptive_loss_fn(strategy: str = 'r2_based'):
             state['error_count'] += 1
             return mse_loss(y_true, y_pred)
     
-    def update_state(epoch: int, prev_r2: Optional[float] = None):
+    def update_state(epoch: int, prev_r2: Optional[float] = None) -> None:
         """Update loss function state."""
         state['epoch'] = epoch
 

@@ -296,12 +296,12 @@ class AdvancedNeuralNetwork:
                 'successful_constraints': list(set([c for sublist in history['applied_constraints'] for c in sublist]))}
     
     @staticmethod
-    def calculate_regression_metrics(y_test, y_pred):
+    def calculate_regression_metrics(y_test: np.ndarray, y_pred: np.ndarray) -> Tuple[float, float, float, float]:
         """Calculate MSE, MAE, RMSE, and R² score efficiently."""
         try:
             from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
             
-            # Convert to numpy arrays
+            # Convert to numpy arrays for safety
             y_test, y_pred = np.asarray(y_test, dtype=np.float32), np.asarray(y_pred, dtype=np.float32)
             # Calculate metrics
             mse = float(mean_squared_error(y_test, y_pred))

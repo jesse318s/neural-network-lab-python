@@ -169,7 +169,7 @@ class OscillationDampener(BinaryWeightConstraint):
         self.window_size = window_size
         self.weight_history: List[np.ndarray] = []
     
-    def add_weights(self, weights: np.ndarray):
+    def add_weights(self, weights: np.ndarray) -> None:
         """Add new weights to the history."""
         try:
             self.weight_history.append(weights.copy())
@@ -233,7 +233,7 @@ class OscillationDampener(BinaryWeightConstraint):
             self.error_count += 1
             return weights
     
-    def reset(self):
+    def reset(self) -> None:
         """Reset the history and error count."""
         self.weight_history = []
         self.error_count = 0
