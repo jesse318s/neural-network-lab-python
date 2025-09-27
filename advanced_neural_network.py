@@ -311,8 +311,8 @@ class AdvancedNeuralNetwork:
             
             return mse, mae, rmse, r2
         except Exception as e:
-            print(f"Metric calculation failed: {e}")
-            return float('inf'), float('inf'), float('inf'), -1.0
+            print(f"Regression metrics calculation failed: {e}")
+            raise e
 
     def evaluate_model(self, X_test: np.ndarray, y_test: np.ndarray) -> Dict[str, float]:
         """Evaluate the trained model."""
