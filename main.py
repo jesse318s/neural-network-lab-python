@@ -124,6 +124,10 @@ def main():
     print("\n" + "=" * 40)
     print("CREATING AND TRAINING MODEL")
     print("=" * 40)
+
+    model_config = {}
+    training_config = {}
+
     # Load model config and training config
     try:
         with open('ml_config/model_config.json', 'r') as f:
@@ -133,7 +137,6 @@ def main():
             training_config = json.load(f)
     except Exception as e:
         print(f"✗ Failed to load configuration: {e}")
-        return
 
     # Create model with configuration
     try:

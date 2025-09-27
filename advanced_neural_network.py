@@ -22,8 +22,8 @@ from ml_utils import create_adaptive_loss_fn
 
 class AdvancedNeuralNetwork:
     """ 
-    Neural network with custom weight constraints and adaptive loss functions.
-    Implements railway-style error handling for robust execution. 
+    Advanced Neural Network class with custom training loop.
+    Utilizes custom weight constraints and adaptive loss functions for training.
     """
     
     def __init__(self, input_shape: Tuple[int], output_shape: int, config: Dict[str, Any]):
