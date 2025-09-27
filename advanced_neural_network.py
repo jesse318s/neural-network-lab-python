@@ -109,7 +109,7 @@ class AdvancedNeuralNetwork:
         optimizer = optimizer_class(learning_rate=learning_rate)
         self.model.compile(optimizer=optimizer)
     
-    def apply_weight_constraints(self) -> List[str]:
+    def _apply_weight_constraints(self) -> List[str]:
         """Apply custom weight constraints to model weights."""
         applied_constraints = []
         try:
@@ -158,7 +158,7 @@ class AdvancedNeuralNetwork:
         
         return applied_constraints
     
-    def custom_training_step(self, X_batch: np.ndarray, y_batch: np.ndarray) -> Dict[str, Any]:
+    def _custom_training_step(self, X_batch: np.ndarray, y_batch: np.ndarray) -> Dict[str, Any]:
         """Perform a custom training step with adaptive loss."""
         try:
             with tf.GradientTape() as tape:
@@ -214,7 +214,7 @@ class AdvancedNeuralNetwork:
                 start_idx = batch_idx * batch_size
                 end_idx = min(start_idx + batch_size, len(X_train))
                 X_batch, y_batch = X_train_shuffled[start_idx:end_idx], y_train_shuffled[start_idx:end_idx]
-                metrics = self.custom_training_step(X_batch, y_batch)
+                metrics = self._custom_training_step(X_batch, y_batch)
                 epoch_losses.append(metrics['loss'])
                 epoch_mse.append(metrics['mse'])
                 epoch_mae.append(metrics['mae'])
@@ -225,7 +225,7 @@ class AdvancedNeuralNetwork:
             avg_train_mae = float(np.mean(epoch_mae))
             
             # Apply weight constraints
-            applied_constraints = self.apply_weight_constraints()
+            applied_constraints = self._apply_weight_constraints()
 
             # Update performance tracker
             for constraint in applied_constraints:
@@ -292,16 +292,20 @@ class AdvancedNeuralNetwork:
     @staticmethod
     def calculate_regression_metrics(y_test, y_pred):
         """Calculate MSE, MAE, RMSE, and R² score efficiently."""
-        from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-        
-        # Convert to numpy arrays
-        y_test, y_pred = np.asarray(y_test, dtype=np.float32), np.asarray(y_pred, dtype=np.float32)
-        # Calculate metrics
-        mse = float(mean_squared_error(y_test, y_pred))
-        mae = float(mean_absolute_error(y_test, y_pred))
-        rmse = float(np.sqrt(mse))
-        r2 = float(r2_score(y_test, y_pred)) if len(y_test) > 1 else 0.0
-        return mse, mae, rmse, r2
+        try:
+            from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+            
+            # Convert to numpy arrays
+            y_test, y_pred = np.asarray(y_test, dtype=np.float32), np.asarray(y_pred, dtype=np.float32)
+            # Calculate metrics
+            mse = float(mean_squared_error(y_test, y_pred))
+            mae = float(mean_absolute_error(y_test, y_pred))
+            rmse = float(np.sqrt(mse))
+            r2 = float(r2_score(y_test, y_pred)) if len(y_test) > 1 else 0.0
+            return mse, mae, rmse, r2
+        except Exception as e:
+            print(f"Metric calculation failed: {e}")
+            return float('inf'), float('inf'), float('inf'), -1.0
 
     def evaluate_model(self, X_test: np.ndarray, y_test: np.ndarray) -> Dict[str, float]:
         """Evaluate the trained model."""
