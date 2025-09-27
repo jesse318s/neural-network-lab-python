@@ -1,4 +1,4 @@
-# Neural Network Lab - Advanced Training Techniques
+# neural-network-lab-python
 
 A TensorFlow implementation featuring custom weight constraints, adaptive loss functions, and performance tracking for neural network training with particle physics simulation data.
 
