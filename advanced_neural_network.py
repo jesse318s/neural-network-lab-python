@@ -41,7 +41,9 @@ class AdvancedNeuralNetwork:
     def _init_binary_changes(self):
         """Initialize binary weight constraint for changes."""
         try:
-            if self.config.get('enable_weight_constraints', True): return BinaryWeightConstraintChanges(max_additional_digits=self.config.get('max_additional_binary_digits', 1))
+            if self.config.get('enable_weight_constraints', True): 
+                return BinaryWeightConstraintChanges(max_additional_digits=self.config.get('max_additional_binary_digits', 1))
+            
             return None
         except Exception as e:
             self.errors.append(f"Binary constraint changes failed: {e}")
@@ -50,7 +52,9 @@ class AdvancedNeuralNetwork:
     def _init_binary_max(self):
         """Initialize binary weight constraint for max precision."""
         try:
-            if self.config.get('enable_weight_constraints', True): return BinaryWeightConstraintMax(max_binary_digits=self.config.get('max_binary_digits', 5))
+            if self.config.get('enable_weight_constraints', True): 
+                return BinaryWeightConstraintMax(max_binary_digits=self.config.get('max_binary_digits', 5))
+            
             return None
         except Exception as e:
             self.errors.append(f"Binary constraint max failed: {e}")
@@ -59,7 +63,9 @@ class AdvancedNeuralNetwork:
     def _init_oscillation_dampener(self):
         """Initialize oscillation dampener."""
         try:
-            if self.config.get('enable_weight_constraints', True): return OscillationDampener(window_size=self.config.get('oscillation_window', 3))
+            if self.config.get('enable_weight_constraints', True): 
+                return OscillationDampener(window_size=self.config.get('oscillation_window', 3))
+            
             return None
         except Exception as e:
             self.errors.append(f"Oscillation dampener failed: {e}")
@@ -302,6 +308,7 @@ class AdvancedNeuralNetwork:
             mae = float(mean_absolute_error(y_test, y_pred))
             rmse = float(np.sqrt(mse))
             r2 = float(r2_score(y_test, y_pred)) if len(y_test) > 1 else 0.0
+            
             return mse, mae, rmse, r2
         except Exception as e:
             print(f"Metric calculation failed: {e}")
