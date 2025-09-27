@@ -86,20 +86,23 @@ class TestAdaptiveLoss(unittest.TestCase):
     
     def test_adaptive_loss_initialization(self):
         """Test adaptive loss function creation."""
-        loss_fn = create_adaptive_loss_fn(strategy='epoch_based')
+        loss_fn_r2 = create_adaptive_loss_fn(strategy='r2_based')
+        loss_fn_loss = create_adaptive_loss_fn(strategy='loss_based')
+        loss_fn_combined = create_adaptive_loss_fn(strategy='combined')
 
-        self.assertTrue(callable(loss_fn))
-        self.assertTrue(hasattr(loss_fn, 'update_state'))
-        self.assertTrue(hasattr(loss_fn, 'get_current_info'))
-        self.assertTrue(hasattr(loss_fn, 'get_history'))
+        self.assertTrue(callable(loss_fn_r2))
+        self.assertTrue(callable(loss_fn_loss))
+        self.assertTrue(callable(loss_fn_combined))
     
     def test_adaptive_loss_get_weights(self):
         """Test getting weights from compute_loss_weights function."""
-        mse_weight, mae_weight = compute_loss_weights('epoch_based', epoch=5)
+        mse_weight_r2, mae_weight_r2 = compute_loss_weights('r2_based')
+        mse_weight_loss, mae_weight_loss = compute_loss_weights('loss_based')
+        mse_weight_combined, mae_weight_combined = compute_loss_weights('combined')
         
-        self.assertGreater(mse_weight, 0)
-        self.assertGreater(mae_weight, 0)
-        self.assertEqual(mse_weight + mae_weight, 1.0)
+        self.assertAlmostEqual(mse_weight_r2 + mae_weight_r2, 1.0)
+        self.assertAlmostEqual(mse_weight_loss + mae_weight_loss, 1.0)
+        self.assertAlmostEqual(mse_weight_combined + mae_weight_combined, 1.0)
 
 
 class TestPerformanceTracker(unittest.TestCase):

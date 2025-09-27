@@ -63,7 +63,7 @@ class AdvancedNeuralNetwork:
     def _init_adaptive_loss(self):
         """Initialize adaptive loss function."""
         try:
-            return create_adaptive_loss_fn(strategy=self.config.get('loss_weighting_strategy', 'epoch_based'))
+            return create_adaptive_loss_fn(strategy=self.config.get('loss_weighting_strategy', 'r2_based'))
         except Exception as e:
             self.errors.append(f"Adaptive loss failed: {e}")
             return None
@@ -161,7 +161,8 @@ class AdvancedNeuralNetwork:
 
                 if self.adaptive_loss:
                     loss_value = self.adaptive_loss(y_batch, y_pred)
-                    loss_strategy = self.adaptive_loss.get_current_info()
+                else:
+                    loss_value = tf.reduce_mean(tf.math.squared_difference(y_batch, y_pred))
             
             gradients = tape.gradient(loss_value, self.model.trainable_variables)
 
@@ -170,14 +171,13 @@ class AdvancedNeuralNetwork:
 
             self.model.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
             mse, mae = tf.reduce_mean(tf.square(y_batch - y_pred)), tf.reduce_mean(tf.abs(y_batch - y_pred))
-            return {'loss': float(loss_value.numpy()), 'mse': float(mse.numpy()),
-                    'mae': float(mae.numpy()), 'loss_strategy': loss_strategy}
+            return {'loss': float(loss_value.numpy()), 'mse': float(mse.numpy()), 'mae': float(mae.numpy())}
         except ValueError as ve:
             self.errors.append(f"Validation error in training step: {ve}")
-            return {'loss': 1.0, 'mse': 1.0, 'mae': 1.0, 'loss_strategy': 'error_fallback'}
+            return {'loss': 1.0, 'mse': 1.0, 'mae': 1.0}
         except Exception as e:
             self.errors.append(f"Training step failed: {e}")
-            return {'loss': 1.0, 'mse': 1.0, 'mae': 1.0, 'loss_strategy': 'error_fallback'}
+            return {'loss': 1.0, 'mse': 1.0, 'mae': 1.0}
     
     def train_with_custom_constraints(self, X_train: np.ndarray, y_train: np.ndarray, X_val: np.ndarray, y_val: np.ndarray, 
                                       epochs: int = 50, batch_size: int = 32) -> Dict[str, Any]:
@@ -202,7 +202,7 @@ class AdvancedNeuralNetwork:
             # Shuffle training data
             indices = np.random.permutation(len(X_train))
             X_train_shuffled, y_train_shuffled = X_train[indices], y_train[indices]
-            epoch_losses, epoch_mse, epoch_mae, epoch_strategies = [], [], [], []
+            epoch_losses, epoch_mse, epoch_mae = [], [], []
            
             # Training loop
             for batch_idx in range(num_batches):
@@ -213,7 +213,6 @@ class AdvancedNeuralNetwork:
                 epoch_losses.append(metrics['loss'])
                 epoch_mse.append(metrics['mse'])
                 epoch_mae.append(metrics['mae'])
-                epoch_strategies.append(metrics['loss_strategy'])
             
             # Aggregate training metrics for the epoch
             avg_train_loss = float(np.mean(epoch_losses))

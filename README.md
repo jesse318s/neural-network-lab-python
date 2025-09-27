@@ -6,7 +6,7 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 
 - **Binary Weight Constraints**: Control binary precision of neural network weights
 - **Oscillation Dampening**: Prevent weight oscillations during training  
-- **Adaptive Loss Functions**: Dynamically combine MSE and MAE based on training progress
+- **Adaptive Loss Functions**: Dynamically adjusts MSE/MAE based on training
 - **Performance Tracking**: Comprehensive metrics collection with CSV export
 - **Error Resilience**: Graceful degradation on component failures
 
@@ -17,10 +17,9 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 - **Oscillation Dampening**: Detects and prevents weight oscillation patterns
 
 ### Adaptive Loss Functions
-- **Epoch-Based**: Adjusts MSE/MAE ratio based on training progress
 - **R²-Based**: Modifies weights based on validation R² score
 - **Loss-Based**: Adapts based on previous loss values
-- **Combined Strategy**: Intelligently combines all strategies
+- **Combined Strategy**: Intelligently combines both strategies
 
 ### Performance Tracking
 - Training metrics and result tracking
@@ -100,7 +99,7 @@ Controls weight precision at the binary level, preventing explosive growth while
 Detects weight oscillation patterns across epochs and applies dampening to stabilize training.
 
 ### Adaptive Loss Functions
-Dynamically adjusts MSE/MAE weighting based on training progress and loss history.
+Dynamically adjusts MSE/MAE weighting based on R2 and loss history.
 
 ### Error Resilience
 Implements graceful degradation - training continues even when individual components encounter errors.
