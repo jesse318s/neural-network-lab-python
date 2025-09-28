@@ -75,7 +75,6 @@ class PerformanceTracker:
     def end_epoch(self, epoch: int, logs: Dict[str, float]):
         """End epoch tracking and record metrics."""
         try:
-            # Calculate epoch time
             if self.epoch_start_time is not None:
                 epoch_time = time.time() - self.epoch_start_time
                 self.epoch_times.append(epoch_time)
@@ -83,16 +82,13 @@ class PerformanceTracker:
             else:
                 epoch_time = 0.0
             
-            # Update r2 metrics
             current_r2 = logs.get('r2_score', logs.get('val_r2', 0.0))
             self.current_r2 = current_r2
             
-            # Track best r2
             if current_r2 > self.best_r2:
                 self.best_r2 = current_r2
                 self.best_r2_epoch = epoch
             
-            # Track greatest improvement
             if epoch > 0:
                 improvement = current_r2 - self.previous_r2
 
@@ -101,9 +97,7 @@ class PerformanceTracker:
                     self.greatest_improvement_epoch = epoch
             
             self.previous_r2 = current_r2
-            # Update memory usage
             self._update_memory_usage()    
-            # Record training history
             history_entry = {
                 'epoch': epoch,
                 'timestamp': datetime.now().isoformat(),
@@ -268,7 +262,6 @@ class PerformanceTracker:
     def _save_configuration_log(self) -> None:
         """Save configuration and settings to JSON and CSV files."""
         try:
-            # Create unique ID based on timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             config_id = f"training_config_{timestamp}"
             config_data = {
@@ -277,13 +270,11 @@ class PerformanceTracker:
                 'training_config': self.training_config,
                 'performance_summary': self.get_summary()
             }
-            # Save JSON file
             json_file_path = os.path.join(self.output_dir, f"{config_id}.json")
 
             with open(json_file_path, 'w', encoding='utf-8') as jsonfile:
                 json.dump(config_data, jsonfile, indent=2)
             
-            # Save/append to CSV for easy comparison
             csv_file_path = os.path.join(self.output_dir, "configuration_log.csv")
             csv_row = {
                 'config_id': config_id,

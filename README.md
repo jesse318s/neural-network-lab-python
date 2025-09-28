@@ -102,7 +102,7 @@ Controls weight precision at the binary level, preventing explosive growth while
 Detects weight oscillation patterns across epochs and applies dampening to stabilize training.
 
 ### Adaptive Loss Functions
-Dynamically adjusts MSE/MAE weighting based on R2 and loss history.
+Dynamically adjusts MSE/MAE weighting based on R² and loss history.
 
 ### Error Resilience
 Implements graceful degradation - training continues even when individual components encounter errors.

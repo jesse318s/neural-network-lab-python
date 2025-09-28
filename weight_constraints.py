@@ -45,7 +45,7 @@ class BinaryWeightConstraint(ABC):
             last_one = binary_str.rfind('1')
             # The significant part is the entire string between the first and last '1'
             significant_part = binary_str[first_one : last_one]
-            # The count is the length of this part, excluding the binary point
+            # The count is the length of this part
             return len(significant_part)
         except (ValueError, TypeError):
             return 0

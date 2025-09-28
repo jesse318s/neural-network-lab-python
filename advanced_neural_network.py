@@ -229,7 +229,6 @@ class AdvancedNeuralNetwork:
             avg_train_loss = float(np.mean(epoch_losses))
             avg_train_mse = float(np.mean(epoch_mse))
             avg_train_mae = float(np.mean(epoch_mae))
-            
             # Apply weight constraints
             applied_constraints = self._apply_weight_constraints()
 
@@ -323,7 +322,7 @@ class AdvancedNeuralNetwork:
             if self.performance_tracker: 
                 inference_time = self.performance_tracker.measure_inference_time(self.model, X_test, num_runs=10)
             
-            # Make predictions, calculate metrics
+            # Make predictions and calculate metrics
             y_pred = self.model.predict(X_test, verbose=0)
             mse, mae, rmse, r2_score = self.calculate_regression_metrics(y_test, y_pred)     
             return {'mse': mse, 'mae': mae, 'rmse': rmse, 'r2_score': r2_score, 'inference_time': inference_time} 
