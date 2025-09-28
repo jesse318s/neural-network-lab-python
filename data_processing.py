@@ -130,7 +130,7 @@ def load_and_validate_data(csv_path: str = 'particle_data.csv') -> pd.DataFrame:
             df = generate_particle_data(save_to_file=True)
         
         # Validate data integrity
-        validation = {'is_valid': True, 'issues': [], 'recommendations': []}
+        validation = {'issues': [], 'recommendations': []}
         # Check for missing values
         missing = df.isnull().sum()
 
@@ -140,21 +140,17 @@ def load_and_validate_data(csv_path: str = 'particle_data.csv') -> pd.DataFrame:
         
         # Check physical constraints
         numeric_cols = df.select_dtypes(include=[np.number]).columns
-
+        calculated_ke = 0.5 * df['mass'] * (df['final_velocity_x']**2 + df['final_velocity_y']**2)
+        ke_diff = np.abs(df['kinetic_energy'] - calculated_ke)
+        
+        if (ke_diff > 0.1 * df['kinetic_energy']).any():  # 10% tolerance
+            validation['issues'].append("Kinetic energy inconsistencies detected")
+            validation['recommendations'].append("Check energy calculations")
+        
         for col in numeric_cols:
             if col == 'mass' and (df[col] <= 0).any():
                 validation['issues'].append(f"Non-positive mass values found")
                 validation['recommendations'].append("Mass values should be positive")
-
-            # Energy conservation check
-            if 'kinetic_energy' in df.columns and 'mass' in df.columns:
-                if 'final_velocity_x' in df.columns and 'final_velocity_y' in df.columns:
-                    calculated_ke = 0.5 * df['mass'] * (df['final_velocity_x']**2 + df['final_velocity_y']**2)
-                    ke_diff = np.abs(df['kinetic_energy'] - calculated_ke)
-                    
-                    if (ke_diff > 0.1 * df['kinetic_energy']).any():  # 10% tolerance
-                        validation['issues'].append("Kinetic energy inconsistencies detected")
-                        validation['recommendations'].append("Check energy calculations")
 
             if np.isinf(df[col]).any():
                 validation['issues'].append(f"Infinite values in {col}")
@@ -164,6 +160,14 @@ def load_and_validate_data(csv_path: str = 'particle_data.csv') -> pd.DataFrame:
                 validation['issues'].append(f"Very large values in {col}")
                 validation['recommendations'].append(f"Consider scaling {col}")
         
+        if validation['issues']: print("Data validation issues found:")
+
+        for issue in validation['issues']:
+            print(f"- {issue}")
+
+        for rec in validation['recommendations']:
+            print(f"  * Recommendation: {rec}")
+
         return df
     except Exception as e:
         print(f"Error loading/validating data: {e}")
