@@ -41,7 +41,7 @@ class AdvancedNeuralNetwork:
     def _init_binary_changes(self):
         """Initialize binary weight constraint for changes."""
         try:
-            if self.config.get('enable_weight_constraints', True): 
+            if self.config.get('enable_binary_change_max', False):
                 return BinaryWeightConstraintChanges(max_additional_digits=self.config.get('max_additional_binary_digits', 1))
             
             return None
@@ -52,7 +52,7 @@ class AdvancedNeuralNetwork:
     def _init_binary_max(self):
         """Initialize binary weight constraint for max precision."""
         try:
-            if self.config.get('enable_weight_constraints', True): 
+            if self.config.get('enable_binary_precision_max', False):
                 return BinaryWeightConstraintMax(max_binary_digits=self.config.get('max_binary_digits', 5))
             
             return None
@@ -63,7 +63,7 @@ class AdvancedNeuralNetwork:
     def _init_oscillation_dampener(self):
         """Initialize oscillation dampener."""
         try:
-            if self.config.get('enable_weight_constraints', True): 
+            if self.config.get('enable_weight_oscillation_dampener', False):
                 return OscillationDampener(window_size=self.config.get('oscillation_window', 3))
             
             return None
@@ -74,7 +74,7 @@ class AdvancedNeuralNetwork:
     def _init_adaptive_loss(self):
         """Initialize adaptive loss function."""
         try:
-            return create_adaptive_loss_fn(strategy=self.config.get('loss_weighting_strategy', 'r2_based'))
+            return create_adaptive_loss_fn(strategy=self.config.get('loss_weighting_strategy', 'none'))
         except Exception as e:
             self.errors.append(f"Adaptive loss failed: {e}")
             return None

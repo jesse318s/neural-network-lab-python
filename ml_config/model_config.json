@@ -4,10 +4,8 @@
   "dropout_rate": 0.001,
   "optimizer": "adam",
   "learning_rate": 0.01,
-  "max_binary_digits": 24,
-  "max_additional_binary_digits": 12,
   "oscillation_window": 3,
   "loss_weighting_strategy": "none",
   "output_dir": "training_output",
-  "enable_weight_constraints": true
+  "enable_weight_oscillation_dampener": true
 }
