@@ -71,7 +71,7 @@ class TestWeightConstraints(unittest.TestCase):
     
     def test_oscillation_dampener(self):
         """Test oscillation dampener functionality."""
-        dampener = OscillationDampener(window_size=3)
+        dampener = OscillationDampener()
         dampener_weight_values = [0.41, 0.51, 0.31]
         unstable_weights = np.array([[0.81]])
         

@@ -121,7 +121,6 @@ Key configuration options:
 
 ```python
 config = {
-    'oscillation_window': 3,
     'enable__weight_oscillation_dampener': True,
     'loss_weighting_strategy': 'none'
 }

@@ -64,7 +64,7 @@ class AdvancedNeuralNetwork:
         """Initialize oscillation dampener."""
         try:
             if self.config.get('enable_weight_oscillation_dampener', False):
-                return OscillationDampener(window_size=self.config.get('oscillation_window', 3))
+                return OscillationDampener()
             
             return None
         except Exception as e:

@@ -164,9 +164,8 @@ class OscillationDampener(BinaryWeightConstraint):
     """Monitors weight changes and dampens oscillations by setting the smallest 
     non-zero binary digits to zero when oscillation patterns are detected."""
     
-    def __init__(self, window_size: int = 3):
+    def __init__(self):
         super().__init__()
-        self.window_size = window_size
         self.weight_history: List[np.ndarray] = []
     
     def add_weights(self, weights: np.ndarray) -> None:
@@ -218,8 +217,6 @@ class OscillationDampener(BinaryWeightConstraint):
     def apply_constraint(self, weights: np.ndarray) -> np.ndarray:
         """Detect oscillations and apply dampening."""
         try:
-            if len(self.weight_history) < self.window_size: return weights
-            
             flat_current = weights.flatten()
             flat_dampened = flat_current.copy()
             
@@ -230,12 +227,10 @@ class OscillationDampener(BinaryWeightConstraint):
                     weight_sequence.append(hist_weights.flatten()[i])
                 
                 weight_sequence.append(flat_current[i])
-                
-                if len(weight_sequence) >= self.window_size:
-                    recent_values = weight_sequence[-self.window_size:]
+                recent_values = weight_sequence[-3:]
 
-                    if self._detect_oscillation_pattern(recent_values):
-                        flat_dampened[i] = self._set_smallest_binary_digits_to_zero(weight=flat_current[i])
+                if self._detect_oscillation_pattern(recent_values):
+                    flat_dampened[i] = self._set_smallest_binary_digits_to_zero(weight=flat_current[i])
             
             return flat_dampened.reshape(weights.shape)
         except Exception:
