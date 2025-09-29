@@ -7,6 +7,7 @@ including weight constraints, adaptive loss functions, and performance tracking.
 
 import unittest
 import numpy as np
+import pandas as pd
 import os
 import sys
 import tempfile
@@ -32,6 +33,12 @@ try:
     PERFORMANCE_TRACKER_AVAILABLE = True
 except ImportError:
     PERFORMANCE_TRACKER_AVAILABLE = False
+
+try:
+    from data_processing import generate_particle_data, load_and_validate_data, preprocess_for_training
+    DATA_PROCESSING_AVAILABLE = True
+except ImportError:
+    DATA_PROCESSING_AVAILABLE = False
 
 
 class TestWeightConstraints(unittest.TestCase):
@@ -132,6 +139,38 @@ class TestPerformanceTracker(unittest.TestCase):
         self.assertIn('current_r2', summary)
 
 
+class TestDataProcessing(unittest.TestCase):
+    """Test data processing functionality."""
+    
+    def setUp(self):
+        if not DATA_PROCESSING_AVAILABLE:
+            self.skipTest("Data processing module not available")
+    
+    def test_generate_particle_data(self):
+        """Test particle data generation."""
+        data = generate_particle_data()
+        
+        self.assertIsInstance(data, pd.DataFrame)
+        self.assertGreater(len(data), 0)
+        self.assertEqual(data.shape, (10, 15)) 
+    
+    def test_load_and_validate_data(self):
+        """Test loading and validating data."""
+        data = load_and_validate_data()
+        
+        self.assertIsInstance(data, pd.DataFrame)
+        self.assertGreater(len(data), 0)
+        self.assertEqual(data.shape, (10, 15))
+    
+    def test_preprocess_for_training(self):
+        """Test preprocessing data for training."""
+        dataframe = pd.DataFrame({'mass': [1.0], 'kinetic_energy': [1.0]})
+        processed_data = preprocess_for_training(dataframe)
+        
+        self.assertIsInstance(processed_data, tuple)
+        self.assertEqual(len(processed_data), 6)
+
+
 class TestIntegration(unittest.TestCase):
     """Basic integration tests."""
     
@@ -140,7 +179,8 @@ class TestIntegration(unittest.TestCase):
         components = {
             'weight_constraints': WEIGHT_CONSTRAINTS_AVAILABLE,
             'adaptive_loss': ADAPTIVE_LOSS_AVAILABLE,
-            'performance_tracker': PERFORMANCE_TRACKER_AVAILABLE
+            'performance_tracker': PERFORMANCE_TRACKER_AVAILABLE,
+            'data_processing': DATA_PROCESSING_AVAILABLE
         }
         available_count = sum(components.values())
 
