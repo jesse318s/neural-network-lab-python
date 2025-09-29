@@ -162,7 +162,7 @@ class BinaryWeightConstraintChanges(BinaryWeightConstraint):
 
 class OscillationDampener(BinaryWeightConstraint):
     """Monitors weight changes and dampens oscillations by setting the smallest 
-    non-zero binary digit to zero."""
+    non-zero binary digits to zero when oscillation patterns are detected."""
     
     def __init__(self, window_size: int = 3):
         super().__init__()
