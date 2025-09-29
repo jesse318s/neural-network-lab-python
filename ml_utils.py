@@ -1,67 +1,43 @@
 """
 ML Utilities for Neural Network Training
 
-This module combines adaptive loss functions and data processing utilities into a 
-comprehensive, compact ML utility suite for the advanced neural network project.
+This module combines adaptive loss functions and state management to enhance model training.
 """
 
-import math
 import tensorflow as tf
 from typing import Dict, Tuple, Optional, Any
 
 
-def compute_loss_weights(strategy: str, epoch: int = 0, accuracy: float = 0.5, 
-                        prev_loss: float = 1.0) -> Tuple[float, float]:
+def compute_loss_weights(strategy: str, prev_r2: float = 0.5, prev_loss: float = 1.0) -> Tuple[float, float]:
     """
     Compute adaptive loss function weights based on training progress.
     
     Args:
-        strategy: Weighting strategy ('epoch_based', 'accuracy_based', 'loss_based', 'combined')
-        epoch: Current training epoch
-        accuracy: Previous epoch's accuracy
+        strategy: Weighting strategy ('r2_based', 'loss_based', 'combined')
+        prev_r2: Previous epoch's R² score
         prev_loss: Previous epoch's loss value
         
     Returns:
         Tuple of (mse_weight, mae_weight)
     """
     try:
-        if strategy == 'epoch_based':
-            if epoch < 10: return 0.3, 0.7
-            elif epoch < 30:
-                progress = (epoch - 10) / 20
-                return 0.3 + 0.4 * progress, 0.7 - 0.4 * progress
-            else: return 0.8, 0.2      
-        elif strategy == 'accuracy_based':
-            if accuracy < 0.3: return 0.2, 0.8
-            elif accuracy < 0.6:
-                progress = (accuracy - 0.3) / 0.3
-                return 0.2 + 0.3 * progress, 0.8 - 0.3 * progress
-            elif accuracy < 0.85:
-                progress = (accuracy - 0.6) / 0.25
-                return 0.5 + 0.3 * progress, 0.5 - 0.3 * progress
-            else: return 0.9, 0.1
+        if strategy == 'r2_based':
+            # More MSE as R² improves
+            mse_weight = min(0.9, 0.2 + 0.7 * prev_r2)
+            mae_weight = max(0.1, 0.8 - 0.7 * prev_r2)
+            return mse_weight, mae_weight
         elif strategy == 'loss_based':
-            log_loss = math.log(max(prev_loss, 1e-8))
-
-            if log_loss > 0: return 0.3, 0.7
-            elif log_loss > -2:
-                progress = (log_loss + 2) / 2
-                return 0.3 + 0.4 * progress, 0.7 - 0.4 * progress
-            else: return 0.8, 0.2       
+            # More MSE as loss decreases
+            normalized_loss = min(1.0, max(0.0, prev_loss / 2.0))
+            mse_weight = min(0.9, 0.2 + 0.7 * (1 - normalized_loss))
+            mae_weight = max(0.1, 0.8 - 0.7 * (1 - normalized_loss))
+            return mse_weight, mae_weight       
         elif strategy == 'combined':
-            # Get weights from each strategy
-            epoch_mse, epoch_mae = compute_loss_weights('epoch_based', epoch, accuracy, prev_loss)
-            acc_mse, acc_mae = compute_loss_weights('accuracy_based', epoch, accuracy, prev_loss)
-            loss_mse, loss_mae = compute_loss_weights('loss_based', epoch, accuracy, prev_loss)
-            
-            # Weight strategies based on training progress
-            if epoch < 5: weights = [0.6, 0.2, 0.2]
-            elif epoch < 20: weights = [0.4, 0.4, 0.2]
-            else: weights = [0.2, 0.5, 0.3]
-            
-            # Combine and normalize
-            final_mse = weights[0] * epoch_mse + weights[1] * acc_mse + weights[2] * loss_mse
-            final_mae = weights[0] * epoch_mae + weights[1] * acc_mae + weights[2] * loss_mae
+            # Average the 2 strategies
+            r2_mse, r2_mae = compute_loss_weights('r2_based', prev_r2, prev_loss)
+            loss_mse, loss_mae = compute_loss_weights('loss_based', prev_r2, prev_loss)
+            final_mse = (r2_mse + loss_mse) / 2
+            final_mae = (r2_mae + loss_mae) / 2
             total = final_mse + final_mae
             return (final_mse / total, final_mae / total) if total > 0 else (0.5, 0.5)
         else: return 0.5, 0.5       
@@ -70,7 +46,7 @@ def compute_loss_weights(strategy: str, epoch: int = 0, accuracy: float = 0.5,
         return 0.5, 0.5
 
 
-def create_adaptive_loss_fn(strategy: str = 'epoch_based'):
+def create_adaptive_loss_fn(strategy: str = 'r2_based'):
     """
     Create an adaptive loss function with state management.
     
@@ -81,17 +57,17 @@ def create_adaptive_loss_fn(strategy: str = 'epoch_based'):
         Adaptive loss function with update capabilities
     """
     # State variables (using mutable default to maintain state)
-    state = {'epoch': 0, 'accuracy': 0.5, 'prev_loss': 1.0, 'history': [], 'error_count': 0}
+    state = {'epoch': 0, 'prev_r2': 0.5, 'prev_loss': 1.0, 'history': [], 'error_count': 0}
     # Create loss functions
     mse_loss = tf.keras.losses.MeanSquaredError()
     mae_loss = tf.keras.losses.MeanAbsoluteError()
     
-    def adaptive_loss(y_true, y_pred):
+    def adaptive_loss(y_true: tf.Tensor, y_pred: tf.Tensor) -> tf.Tensor:
         """Compute adaptive loss with current weights."""
         try:
             mse = mse_loss(y_true, y_pred)
             mae = mae_loss(y_true, y_pred)
-            mse_weight, mae_weight = compute_loss_weights(strategy, state['epoch'], state['accuracy'], state['prev_loss'])
+            mse_weight, mae_weight = compute_loss_weights(strategy, state['prev_r2'], state['prev_loss'])
             combined_loss = mse_weight * mse + mae_weight * mae
             # Record history
             loss_info = {
@@ -108,17 +84,17 @@ def create_adaptive_loss_fn(strategy: str = 'epoch_based'):
             state['error_count'] += 1
             return mse_loss(y_true, y_pred)
     
-    def update_state(epoch: int, accuracy: Optional[float] = None):
+    def update_state(epoch: int, prev_r2: Optional[float] = None) -> None:
         """Update loss function state."""
         state['epoch'] = epoch
 
-        if accuracy is not None: state['accuracy'] = accuracy
+        if prev_r2 is not None: state['prev_r2'] = prev_r2
 
         if state['history']: state['prev_loss'] = state['history'][-1]['combined_loss']
     
     def get_current_info() -> str:
         """Get current strategy information."""
-        mse_weight, mae_weight = compute_loss_weights(strategy, state['epoch'], state['accuracy'], state['prev_loss'])
+        mse_weight, mae_weight = compute_loss_weights(strategy, state['prev_r2'], state['prev_loss'])
         return f"{strategy} (MSE: {mse_weight:.3f}, MAE: {mae_weight:.3f})"
     
     def get_history() -> Dict[str, Any]:

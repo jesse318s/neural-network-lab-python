@@ -2,11 +2,12 @@
 Test Suite for Neural Network Lab
 
 This test suite verifies the functionality of various components in the neural network lab,
-including weight constraints, adaptive loss functions, performance tracking, and regression metrics.
+including weight constraints, adaptive loss functions, and performance tracking.
 """
 
 import unittest
 import numpy as np
+import pandas as pd
 import os
 import sys
 import tempfile
@@ -15,9 +16,8 @@ import shutil
 # Add the current directory to the path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Import modules with error handling
 try:
-    from weight_constraints import BinaryWeightConstraintMax, OscillationDampener
+    from weight_constraints import BinaryWeightConstraintMax, BinaryWeightConstraintChanges, OscillationDampener
     WEIGHT_CONSTRAINTS_AVAILABLE = True
 except ImportError:
     WEIGHT_CONSTRAINTS_AVAILABLE = False
@@ -35,10 +35,10 @@ except ImportError:
     PERFORMANCE_TRACKER_AVAILABLE = False
 
 try:
-    from advanced_neural_network import AdvancedNeuralNetwork
-    REGRESSION_METRICS_AVAILABLE = True
+    from data_processing import generate_particle_data, load_and_validate_data, preprocess_for_training
+    DATA_PROCESSING_AVAILABLE = True
 except ImportError:
-    REGRESSION_METRICS_AVAILABLE = False
+    DATA_PROCESSING_AVAILABLE = False
 
 
 class TestWeightConstraints(unittest.TestCase):
@@ -50,23 +50,38 @@ class TestWeightConstraints(unittest.TestCase):
     
     def test_binary_weight_constraint_max(self):
         """Test binary weight constraint max functionality."""
-        constraint = BinaryWeightConstraintMax(max_binary_digits=3)
-        weights = np.array([[0.125, 0.875], [1.5, 0.75]])
+        constraint = BinaryWeightConstraintMax(max_binary_digits=8)
+        weights = np.array([[0.125344, -0.875444], [1.5444, 0.75444]])
         result = constraint.apply_constraint(weights)
         
         self.assertEqual(result.shape, weights.shape)
         self.assertIsInstance(result, np.ndarray)
+        self.assertLess(result[0,0], weights[0,0])
+
+    def test_binary_weight_constraint_changes(self):
+        """Test binary weight constraint changes functionality."""
+        constraint = BinaryWeightConstraintChanges(max_additional_digits=1)
+        weights = np.array([[99.5123123112313999999999, -0.75], [1.25, 0.125]])
+        constraint.previous_weights = np.array([[1, -0.7], [1.2, -1.4]])
+        result = constraint.apply_constraint(weights)
+
+        self.assertEqual(result.shape, weights.shape)
+        self.assertIsInstance(result, np.ndarray)
+        self.assertLess(result[0,0], weights[0,0])
     
     def test_oscillation_dampener(self):
         """Test oscillation dampener functionality."""
         dampener = OscillationDampener(window_size=3)
-        weights = np.array([[0.5]])
-        dampener.add_weights(weights)
-        new_weights = np.array([[0.8]])
-        result = dampener.detect_and_dampen_oscillations(new_weights)
+        dampener_weight_values = [0.41, 0.51, 0.31]
+        unstable_weights = np.array([[0.81]])
         
+        for val in dampener_weight_values:
+            dampener.add_weights(np.array([[val]]))
+
+        result = dampener.apply_constraint(unstable_weights)
         self.assertIsInstance(result, np.ndarray)
-        self.assertEqual(result.shape, new_weights.shape)
+        self.assertEqual(result.shape, unstable_weights.shape)
+        self.assertLess(result[0,0], unstable_weights[0,0])
 
 
 class TestAdaptiveLoss(unittest.TestCase):
@@ -78,19 +93,23 @@ class TestAdaptiveLoss(unittest.TestCase):
     
     def test_adaptive_loss_initialization(self):
         """Test adaptive loss function creation."""
-        loss_fn = create_adaptive_loss_fn(strategy='epoch_based')
+        loss_fn_r2 = create_adaptive_loss_fn(strategy='r2_based')
+        loss_fn_loss = create_adaptive_loss_fn(strategy='loss_based')
+        loss_fn_combined = create_adaptive_loss_fn(strategy='combined')
 
-        self.assertTrue(callable(loss_fn))
-        self.assertTrue(hasattr(loss_fn, 'update_state'))
-        self.assertTrue(hasattr(loss_fn, 'get_current_info'))
+        self.assertTrue(callable(loss_fn_r2))
+        self.assertTrue(callable(loss_fn_loss))
+        self.assertTrue(callable(loss_fn_combined))
     
     def test_adaptive_loss_get_weights(self):
         """Test getting weights from compute_loss_weights function."""
-        mse_weight, mae_weight = compute_loss_weights('epoch_based', epoch=5)
+        mse_weight_r2, mae_weight_r2 = compute_loss_weights('r2_based')
+        mse_weight_loss, mae_weight_loss = compute_loss_weights('loss_based')
+        mse_weight_combined, mae_weight_combined = compute_loss_weights('combined')
         
-        self.assertGreater(mse_weight, 0)
-        self.assertGreater(mae_weight, 0)
-        self.assertAlmostEqual(mse_weight + mae_weight, 1.0, places=3)
+        self.assertAlmostEqual(mse_weight_r2 + mae_weight_r2, 1.0)
+        self.assertAlmostEqual(mse_weight_loss + mae_weight_loss, 1.0)
+        self.assertAlmostEqual(mse_weight_combined + mae_weight_combined, 1.0)
 
 
 class TestPerformanceTracker(unittest.TestCase):
@@ -110,51 +129,46 @@ class TestPerformanceTracker(unittest.TestCase):
     def test_performance_tracker_initialization(self):
         """Test initialization of PerformanceTracker."""
         self.assertEqual(self.tracker.output_dir, self.temp_dir)
-        self.assertEqual(self.tracker.current_accuracy, 0.0)
+        self.assertEqual(self.tracker.current_r2, 0.0)
     
     def test_get_summary(self):
         """Test getting performance summary."""
         summary = self.tracker.get_summary()
         
         self.assertIsInstance(summary, dict)
-        self.assertIn('current_accuracy', summary)
+        self.assertIn('current_r2', summary)
 
 
-class TestRegressionMetrics(unittest.TestCase):
-    """Test metrics functionality."""
+class TestDataProcessing(unittest.TestCase):
+    """Test data processing functionality."""
     
     def setUp(self):
-        if not REGRESSION_METRICS_AVAILABLE:
-            self.skipTest("Regression metrics function not available")
-        
-        # Test data with known results
-        self.y_test_1 = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
-        self.y_pred_1 = np.array([1.1, 2.2, 2.9, 4.1, 4.9])
-        # Perfect predictions
-        self.y_test_2 = np.array([1.0, 2.0, 3.0])
-        self.y_pred_2 = np.array([1.0, 2.0, 3.0])
+        if not DATA_PROCESSING_AVAILABLE:
+            self.skipTest("Data processing module not available")
     
-    def test_perfect_predictions(self):
-        """Test with perfect predictions."""
-        mse, mae, rmse, r2 = AdvancedNeuralNetwork.calculate_regression_metrics(
-            self.y_test_2, self.y_pred_2)
+    def test_generate_particle_data(self):
+        """Test particle data generation."""
+        data = generate_particle_data()
         
-        self.assertAlmostEqual(mse, 0.0, places=6)
-        self.assertAlmostEqual(mae, 0.0, places=6)
-        self.assertAlmostEqual(rmse, 0.0, places=6)
-        self.assertAlmostEqual(r2, 1.0, places=6)
+        self.assertIsInstance(data, pd.DataFrame)
+        self.assertGreater(len(data), 0)
+        self.assertEqual(data.shape, (10, 15)) 
     
-    def test_metrics_relationships(self):
-        """Test mathematical relationships between metrics."""
-        mse, mae, rmse, r2 = AdvancedNeuralNetwork.calculate_regression_metrics(
-            self.y_test_1, self.y_pred_1)
+    def test_load_and_validate_data(self):
+        """Test loading and validating data."""
+        data = load_and_validate_data()
         
-        # RMSE should be the square root of MSE
-        self.assertAlmostEqual(rmse, np.sqrt(mse), places=6) 
-        # All metrics should be non-negative
-        self.assertGreaterEqual(mse, 0)
-        self.assertGreaterEqual(mae, 0)
-        self.assertGreaterEqual(rmse, 0)
+        self.assertIsInstance(data, pd.DataFrame)
+        self.assertGreater(len(data), 0)
+        self.assertEqual(data.shape, (10, 15))
+    
+    def test_preprocess_for_training(self):
+        """Test preprocessing data for training."""
+        dataframe = pd.DataFrame({'mass': [1.0], 'kinetic_energy': [1.0]})
+        processed_data = preprocess_for_training(dataframe)
+        
+        self.assertIsInstance(processed_data, tuple)
+        self.assertEqual(len(processed_data), 6)
 
 
 class TestIntegration(unittest.TestCase):
@@ -166,21 +180,20 @@ class TestIntegration(unittest.TestCase):
             'weight_constraints': WEIGHT_CONSTRAINTS_AVAILABLE,
             'adaptive_loss': ADAPTIVE_LOSS_AVAILABLE,
             'performance_tracker': PERFORMANCE_TRACKER_AVAILABLE,
-            'regression_metrics_function': REGRESSION_METRICS_AVAILABLE
+            'data_processing': DATA_PROCESSING_AVAILABLE
         }
         available_count = sum(components.values())
 
-        # All components should be available
         self.assertEqual(available_count, len(components))
     
     def test_numpy_compatibility(self):
         """Test NumPy array handling."""
-        test_array = np.array([[0.5, 0.3], [0.7, 0.2]])
         constraint = BinaryWeightConstraintMax(max_binary_digits=3)
-        result = constraint.apply_constraint(test_array)
+        array = np.array([[0.5, 0.3], [0.7, 0.2]])
+        result = constraint.apply_constraint(array)
         
         self.assertIsInstance(result, np.ndarray)
-        self.assertEqual(result.shape, test_array.shape)
+        self.assertEqual(result.shape, array.shape)
 
 
 if __name__ == '__main__':

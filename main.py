@@ -6,24 +6,13 @@ oscillation dampening, adaptive loss functions, and performance tracking
 for particle physics simulations.
 """
 
-import os
+import json
 import numpy as np
-from typing import Dict, Tuple, Any, Optional
+from typing import Dict, Any
 
 # Import custom modules
 from advanced_neural_network import AdvancedNeuralNetwork
 from data_processing import complete_data_pipeline
-
-
-def create_model(input_shape: Tuple[int], output_shape: int = 6, config: Optional[Dict[str, Any]] = None) -> AdvancedNeuralNetwork:
-    """Create a neural network model with custom constraints."""
-    if config is None:
-        config = { 'hidden_layers': [64, 32, 16],
-            'activation': 'relu', 'dropout_rate': 0.2, 'optimizer': 'adam', 'learning_rate': 0.001,
-            'max_binary_digits': 5, 'max_additional_binary_digits': 1, 'oscillation_window': 3, 
-            'loss_weighting_strategy': 'epoch_based', 'output_dir': 'training_output'}
-
-    return AdvancedNeuralNetwork(input_shape, output_shape, config)
 
 
 def train_with_tracking(model: AdvancedNeuralNetwork, 
@@ -38,11 +27,11 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
        
     # Train with custom constraints
     training_results = model.train_with_custom_constraints(X_train, y_train, X_val, y_val,
-        epochs=config.get('epochs', 50),
-        batch_size=config.get('batch_size', 32))
-    # Evaluate on test set and save results
+        epochs=config.get('epochs', 30), batch_size=config.get('batch_size', 16))
+    # Evaluate on test set
     test_results = model.evaluate_model(X_test, y_test)
 
+    # Save training results
     if model.performance_tracker:
         try:
             model.performance_tracker.save_results()
@@ -61,7 +50,7 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
         except Exception as e:
             print(f"⚠ Failed to save loss history: {e}")
 
-    # Save final model
+    # Save final model weights
     try:
         model.model.save_weights('model_weights.weights.h5')
 
@@ -78,69 +67,17 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
         'error_summary': error_summary}
 
 
-def main():
-    """Main function to run the complete TensorFlow lab."""
-    print("=" * 60)
-    print("ADVANCED TENSORFLOW LAB")
-    print("=" * 60)
-    print("\n" + "=" * 40)
-    print("LOADING PARTICLE DATA")
-    print("=" * 40)
-
-    # Load and prepare data
-    try:
-        data_splits, pipeline_info = complete_data_pipeline(num_particles=1000)
-        X_train, X_val, X_test, y_train, y_val, y_test = data_splits
-        print(f"✓ Data loaded successfully:")
-        print(f"  Training: {X_train.shape[0]}, Validation: {X_val.shape[0]}, Test: {X_test.shape[0]}")
-        print(f"  Features: {X_train.shape[1]} -> {y_train.shape[1]}")
-    except Exception as e:
-        print(f"✗ Data loading failed: {e}")
-        return
-    
-    print("\n" + "=" * 40)
-    print("CREATING AND TRAINING MODEL")
-    print("=" * 40)
-    # Create model with configuration
-    model_config = {'hidden_layers': [64, 32, 16], 'activation': 'relu', 'dropout_rate': 0.2, 'optimizer': 'adam',
-        'learning_rate': 0.001, 'max_binary_digits': 5, 'max_additional_binary_digits': 1, 'oscillation_window': 3,
-        'loss_weighting_strategy': 'combined', 'output_dir': 'training_output', 'enable_weight_constraints': True}
-    
-    try:
-        model = create_model(input_shape=(X_train.shape[1],), output_shape=y_train.shape[1], config=model_config)
-        print("✓ Neural network created successfully") 
-    except Exception as e:
-        print(f"✗ Model creation failed: {e}")
-        return
-    
-    # Training configuration
-    training_config = {'epochs': 30, 'batch_size': 16}
-    print(f"\nTraining configuration: {training_config}, \n🚀 Starting training...")
-    
-    try:
-        results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_test, training_config)
-        
-        if 'error' in results:
-            print(f"✗ Training failed: {results['error']}")
-            return
-    except Exception as e:
-        print(f"✗ Training pipeline failed: {e}")
-        return
-    
-    print("\n" + "=" * 40)
-    print("RESULTS SUMMARY")
-    print("=" * 40)
-
-    # Display results
+def display_results(results: Dict[str, Any]) -> None:
+    """Display a summary of training and evaluation results."""
     try:
         performance_summary = results.get('performance_summary', {})
         test_results = results.get('test', {})
         error_summary = results.get('error_summary', {})
 
         print(f"📊 Performance Metrics:")
-        print(f"  Final accuracy: {performance_summary.get('current_accuracy', 'N/A'):.4f}")
-        print(f"  Best accuracy: {performance_summary.get('best_accuracy', 'N/A'):.4f} "
-              f"at epoch {performance_summary.get('best_accuracy_epoch', 'N/A')}")
+        print(f"  Final R²: {performance_summary.get('current_r2', 'N/A'):.4f}")
+        print(f"  Best R²: {performance_summary.get('best_r2', 'N/A'):.4f} "
+              f"at epoch {performance_summary.get('best_r2_epoch', 'N/A')}")
         print(f"  Average epoch time: {performance_summary.get('avg_epoch_time', 'N/A'):.2f}s")
         print(f"  Peak memory: {performance_summary.get('peak_memory_mb', 'N/A'):.1f} MB")    
         print(f"\n🧪 Test Results:")
@@ -163,47 +100,83 @@ def main():
     except Exception as e:
         print(f"✗ Error displaying results: {e}")
 
+
+def main():
+    """Main function to run the complete TensorFlow lab."""
+    print("=" * 60)
+    print("ADVANCED TENSORFLOW LAB")
+    print("=" * 60)
     print("\n" + "=" * 40)
-    print("OUTPUT FILES")
+    print("LOADING PARTICLE DATA")
     print("=" * 40)
-    # Check for output files
-    output_files = [
-        'training_output/training_results.csv', 'training_output/loss_history.csv',
-        'training_output/training_log.txt','training_output/configuration_log.csv',
-        'model_weights.weights.h5', 'particle_data.csv']
+
+    # Load and prepare data
+    try:
+        data_splits = complete_data_pipeline(num_particles=1000)
+        X_train, X_val, X_test, y_train, y_val, y_test = data_splits
+        print(f"✓ Data loaded successfully:")
+        print(f"  Training: {X_train.shape[0]}, Validation: {X_val.shape[0]}, Test: {X_test.shape[0]}")
+        print(f"  Features: {X_train.shape[1]} -> {y_train.shape[1]}")
+    except Exception as e:
+        print(f"✗ Data loading failed: {e}")
+        return
     
-    for file_path in output_files:
-        if os.path.exists(file_path):
-            file_size = os.path.getsize(file_path)
-            print(f"  ✓ {file_path} ({file_size:,} bytes)")
-        else: print(f"  ✗ {file_path} (not found)")
+    print("\n" + "=" * 40)
+    print("CREATING AND TRAINING MODEL")
+    print("=" * 40)
+
+    model_config = {}
+    training_config = {}
+
+    # Load model config and training config
+    try:
+        with open('ml_config/model_config.json', 'r') as f:
+            model_config = json.load(f)
+
+        with open('ml_config/training_config.json', 'r') as f:
+            training_config = json.load(f)
+    except Exception as e:
+        print(f"✗ Failed to load configuration: {e}")
+
+    # Create model with configuration
+    try:
+        model = AdvancedNeuralNetwork((X_train.shape[1],), y_train.shape[1], model_config)
+        print("✓ Neural network created successfully") 
+    except Exception as e:
+        print(f"✗ Model creation failed: {e}")
+        return
     
+    # Train model with configuration
+    print(f"\nTraining configuration: {training_config}, \n🚀 Starting training...")
+    
+    try:
+        results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_test, training_config)
+        
+        if 'error' in results:
+            print(f"✗ Training failed: {results['error']}")
+            return
+        
+        print("✓ Training completed successfully")
+    except Exception as e:
+        print(f"✗ Training pipeline failed: {e}")
+        return
+    
+    print("\n" + "=" * 40)
+    print("RESULTS SUMMARY")
+    print("=" * 40)
+    # Display results
+    display_results(results)  
     print("\n" + "=" * 60)
     print("🎉 ADVANCED TENSORFLOW LAB COMPLETED!")
     print("=" * 60)
-    print("📁 Check 'training_output' directory for detailed results.\n")
-    print("🔬 Lab demonstrated:")
-    print("   • Binary weight precision constraints")
-    print("   • Oscillation dampening for weight stability")
-    print("   • Adaptive loss function combinations")
-    print("   • Comprehensive performance tracking")
-    print("   • Railway-style error handling")
-    print("   • CSV data processing for particle physics simulations")
-    # Final success/failure summary
-    total_errors = results.get('error_summary', {}).get('total_errors', 0)
-
-    if total_errors == 0:
-        print("\n🏆 Lab completed with NO ERRORS!")
-    else:
-        print(f"\n⚠ Lab completed with {total_errors} minor errors")
 
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n🛑 Training interrupted by user")
+        print("\n\n🛑 Training interrupted by user\n\n")
     except Exception as e:
-        print(f"\n\n💥 Fatal error: {e}")
+        print(f"\n\n💥 Fatal error: {e}\n\n")
     finally:
-        print("\nThank you for using the Advanced TensorFlow Lab! 🧪🔬")
+        print("Thank you for using the Advanced TensorFlow Lab! 🧪🔬")

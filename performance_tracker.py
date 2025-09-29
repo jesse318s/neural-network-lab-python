@@ -1,8 +1,6 @@
 """
-Performance Tracking and Metrics Collection for Advanced TensorFlow Training
-
-This module implements comprehensive performance tracking for the TensorFlow lab,
-including training metrics, CSV output, memory monitoring, and configuration logging.
+Performance Tracking and Metrics Collection for Advanced TensorFlow Lab
+Implements railway-style error handling for robust execution.
 """
 
 import os
@@ -17,7 +15,7 @@ from typing import Dict, List, Any, Optional
 
 class PerformanceTracker:
     """
-    Tracks and logs training metrics including accuracy, loss, memory usage,
+    Tracks and logs training metrics including R², loss, memory usage,
     and comprehensive performance data with CSV output capabilities.
     """
     
@@ -27,12 +25,12 @@ class PerformanceTracker:
         self.training_end_time = None
         self.epoch_start_time = None
         # Performance metrics
-        self.current_accuracy = 0.0
-        self.best_accuracy = 0.0
-        self.best_accuracy_epoch = 0
+        self.current_r2 = 0.0
+        self.best_r2 = 0.0
+        self.best_r2_epoch = 0
         self.greatest_improvement = 0.0
         self.greatest_improvement_epoch = 0
-        self.previous_accuracy = 0.0
+        self.previous_r2 = 0.0
         # Timing metrics
         self.epoch_times = []
         self.avg_epoch_time = 0.0
@@ -77,7 +75,6 @@ class PerformanceTracker:
     def end_epoch(self, epoch: int, logs: Dict[str, float]):
         """End epoch tracking and record metrics."""
         try:
-            # Calculate epoch time
             if self.epoch_start_time is not None:
                 epoch_time = time.time() - self.epoch_start_time
                 self.epoch_times.append(epoch_time)
@@ -85,27 +82,22 @@ class PerformanceTracker:
             else:
                 epoch_time = 0.0
             
-            # Update accuracy metrics
-            current_accuracy = logs.get('accuracy', logs.get('val_accuracy', 0.0))
-            self.current_accuracy = current_accuracy
+            current_r2 = logs.get('r2_score', logs.get('val_r2', 0.0))
+            self.current_r2 = current_r2
             
-            # Track best accuracy
-            if current_accuracy > self.best_accuracy:
-                self.best_accuracy = current_accuracy
-                self.best_accuracy_epoch = epoch
+            if current_r2 > self.best_r2:
+                self.best_r2 = current_r2
+                self.best_r2_epoch = epoch
             
-            # Track greatest improvement
             if epoch > 0:
-                improvement = current_accuracy - self.previous_accuracy
+                improvement = current_r2 - self.previous_r2
 
                 if improvement > self.greatest_improvement:
                     self.greatest_improvement = improvement
                     self.greatest_improvement_epoch = epoch
             
-            self.previous_accuracy = current_accuracy
-            # Update memory usage
+            self.previous_r2 = current_r2
             self._update_memory_usage()    
-            # Record training history
             history_entry = {
                 'epoch': epoch,
                 'timestamp': datetime.now().isoformat(),
@@ -128,9 +120,9 @@ class PerformanceTracker:
             self._update_memory_usage()
             return {
                 'total_training_time': self.total_training_time,
-                'current_accuracy': self.current_accuracy,
-                'best_accuracy': self.best_accuracy,
-                'best_accuracy_epoch': self.best_accuracy_epoch,
+                'current_r2': self.current_r2,
+                'best_r2': self.best_r2,
+                'best_r2_epoch': self.best_r2_epoch,
                 'greatest_improvement': self.greatest_improvement,
                 'greatest_improvement_epoch': self.greatest_improvement_epoch,
                 'avg_epoch_time': self.avg_epoch_time,
@@ -144,7 +136,7 @@ class PerformanceTracker:
             self._handle_error(f"Error ending training: {e}")
             return {}
     
-    def record_weight_file_size(self, file_path: str):
+    def record_weight_file_size(self, file_path: str) -> None:
         """Record the size of a weight file."""
         try:
             if os.path.exists(file_path):
@@ -156,6 +148,9 @@ class PerformanceTracker:
     def measure_inference_time(self, model: Optional[Any], test_data: np.ndarray, num_runs: int = 10) -> float:
         """Measure model inference time."""
         try:
+            if model is None:
+                raise ValueError("Model is None, cannot measure inference time.")
+
             inference_times = []
             
             for _ in range(num_runs):
@@ -164,12 +159,15 @@ class PerformanceTracker:
                 end_time = time.time()
                 inference_times.append(end_time - start_time)
             
-            return float(np.mean(inference_times))  
+            return float(np.mean(inference_times))
+        except ValueError as ve:
+            self._handle_error(f"Validation error in inference timing: {ve}")
+            return 0.0
         except Exception as e:
             self._handle_error(f"Error measuring inference time: {e}")
             return 0.0
     
-    def add_weight_modification(self, modification_name: str):
+    def add_weight_modification(self, modification_name: str) -> None:
         """Record that a weight modification technique was used."""
         try:
             if modification_name not in self.weight_modifications_used:
@@ -177,7 +175,7 @@ class PerformanceTracker:
         except Exception as e:
             self._handle_error(f"Error adding weight modification {modification_name}: {e}")
     
-    def save_results(self):
+    def save_results(self) -> None:
         """Save all tracked results to CSV and JSON files."""
         try:
             self._save_training_results_csv()
@@ -187,7 +185,7 @@ class PerformanceTracker:
         except Exception as e:
             self._handle_error(f"Error saving results: {e}")
     
-    def create_loss_history_csv(self, loss_history: List[Dict[str, Any]]):
+    def create_loss_history_csv(self, loss_history: List[Dict[str, Any]]) -> None:
         """Create CSV file with loss history components."""
         try:
             file_path = os.path.join(self.output_dir, "loss_history.csv")
@@ -204,8 +202,6 @@ class PerformanceTracker:
                 writer = csv.DictWriter(csvfile, fieldnames=sorted(all_keys))
                 writer.writeheader()
                 writer.writerows(loss_history)
-            
-            print(f"Loss history saved to {file_path}")
         except Exception as e:
             self._handle_error(f"Error creating loss history CSV: {e}")
     
@@ -213,16 +209,15 @@ class PerformanceTracker:
         """Get a summary of all performance metrics."""
         try:
             return {
-                'current_accuracy': self.current_accuracy,
-                'best_accuracy': self.best_accuracy,
-                'best_accuracy_epoch': self.best_accuracy_epoch,
+                'current_r2': self.current_r2,
+                'best_r2': self.best_r2,
+                'best_r2_epoch': self.best_r2_epoch,
                 'greatest_improvement': self.greatest_improvement,
                 'greatest_improvement_epoch': self.greatest_improvement_epoch,
                 'avg_epoch_time': self.avg_epoch_time,
                 'total_training_time': self.total_training_time,
                 'current_memory_mb': self.current_memory_mb,
                 'peak_memory_mb': self.peak_memory_mb,
-                'loss_weighting_strategy': self.training_config.get('loss_weighting_strategy', 'none'),
                 'weight_modifications_used': self.weight_modifications_used,
                 'weight_file_sizes': self.weight_file_sizes,
                 'error_count': self.error_count,
@@ -232,7 +227,7 @@ class PerformanceTracker:
             self._handle_error(f"Error getting summary: {e}")
             return {}
     
-    def _update_memory_usage(self):
+    def _update_memory_usage(self) -> None:
         """Update current memory usage metrics."""
         try:
             process = psutil.Process()
@@ -244,7 +239,7 @@ class PerformanceTracker:
         except Exception as e:
             self._handle_error(f"Error updating memory usage: {e}")
     
-    def _save_training_results_csv(self):
+    def _save_training_results_csv(self) -> None:
         """Save training results to CSV file."""
         try:
             file_path = os.path.join(self.output_dir, "training_results.csv")
@@ -264,10 +259,9 @@ class PerformanceTracker:
         except Exception as e:
             self._handle_error(f"Error saving training results CSV: {e}")
     
-    def _save_configuration_log(self):
+    def _save_configuration_log(self) -> None:
         """Save configuration and settings to JSON and CSV files."""
         try:
-            # Create unique ID based on timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             config_id = f"training_config_{timestamp}"
             config_data = {
@@ -276,21 +270,19 @@ class PerformanceTracker:
                 'training_config': self.training_config,
                 'performance_summary': self.get_summary()
             }
-            # Save JSON file
             json_file_path = os.path.join(self.output_dir, f"{config_id}.json")
 
             with open(json_file_path, 'w', encoding='utf-8') as jsonfile:
                 json.dump(config_data, jsonfile, indent=2)
             
-            # Save/append to CSV for easy comparison
             csv_file_path = os.path.join(self.output_dir, "configuration_log.csv")
             csv_row = {
                 'config_id': config_id,
                 'timestamp': config_data['timestamp'],
                 'loss_weighting_strategy': self.training_config.get('loss_weighting_strategy', 'none'),
                 'weight_modifications_used': ', '.join(self.weight_modifications_used) if self.weight_modifications_used else 'none',
-                'final_accuracy': self.current_accuracy,
-                'best_accuracy': self.best_accuracy,
+                'final_r2': self.current_r2,
+                'best_r2': self.best_r2,
                 'total_training_time': self.total_training_time,
                 'avg_epoch_time': self.avg_epoch_time,
                 'peak_memory_mb': self.peak_memory_mb,
@@ -308,7 +300,7 @@ class PerformanceTracker:
         except Exception as e:
             self._handle_error(f"Error saving configuration log: {e}")
     
-    def _save_training_log(self):
+    def _save_training_log(self) -> None:
         """Save detailed training log to text file."""
         try:
             file_path = os.path.join(self.output_dir, "training_log.txt")
@@ -325,9 +317,9 @@ class PerformanceTracker:
 
                 logfile.write(f"Weight modifications used: {', '.join(self.weight_modifications_used) if self.weight_modifications_used else 'none'}\n\n")
                 logfile.write("=== Performance Summary ===\n")
-                logfile.write(f"Final training accuracy: {self.current_accuracy:.4f}\n")
-                logfile.write(f"Best accuracy: {self.best_accuracy:.4f} at epoch {self.best_accuracy_epoch}\n")
-                logfile.write(f"Greatest accuracy improvement: {self.greatest_improvement:.4f} at epoch {self.greatest_improvement_epoch}\n")
+                logfile.write(f"Final training R²: {self.current_r2:.4f}\n")
+                logfile.write(f"Best R²: {self.best_r2:.4f} at epoch {self.best_r2_epoch}\n")
+                logfile.write(f"Greatest R² improvement: {self.greatest_improvement:.4f} at epoch {self.greatest_improvement_epoch}\n")
                 logfile.write(f"Average epoch time: {self.avg_epoch_time:.2f} seconds\n")
                 logfile.write(f"Peak memory usage: {self.peak_memory_mb:.1f} MB\n\n")
                 logfile.write("=== Weight File Sizes ===\n")
@@ -344,7 +336,7 @@ class PerformanceTracker:
         except Exception as e:
             self._handle_error(f"Error saving training log: {e}")
     
-    def _handle_error(self, error_message: str):
+    def _handle_error(self, error_message: str) -> None:
         """Handle and log errors."""
         self.error_count += 1
         self.errors_log.append(f"{datetime.now().isoformat()}: {error_message}")
