@@ -193,13 +193,12 @@ class OscillationDampener(BinaryWeightConstraint):
 
             # Get half of the significant bit count (or 1 if only 1 digit total)
             bit_count = self._count_significant_binary_digits(self._float_to_binary_repr(weight))
-            half_bit_count_or_1 = bit_count // 2 if bit_count > 1 else 1
             # Calculate global mean of historical weights
             global_mean = np.mean([np.mean(hist_weights) for hist_weights in self.weight_history]) if self.weight_history else 0.0
             # Calculate shrinkage factor based on distance from mean
             shrinkage_factor = min(abs(weight - global_mean) / max(abs(global_mean), 1e-8), 1.0)
             # Determine number of digits to zero from all significant bits (at least 1)
-            digits_to_zero = max(1, int(1 + shrinkage_factor * (half_bit_count_or_1 - 1)))
+            digits_to_zero = max(1, int(1 + shrinkage_factor * (bit_count - 1)))
             # Zero out the specified number of least significant bits
             packed = struct.pack('f', weight)
             bits = struct.unpack('I', packed)[0]

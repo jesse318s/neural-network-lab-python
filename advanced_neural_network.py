@@ -193,9 +193,10 @@ class AdvancedNeuralNetwork:
                                       epochs: int = 50, batch_size: int = 32) -> Dict[str, Any]:
         """Train the model with custom weight constraints and adaptive loss."""
         # Start training tracking
+        model_config = self.config.copy()
         training_config = {'epochs': epochs, 'batch_size': batch_size}
         
-        if self.performance_tracker: self.performance_tracker.start_training(training_config)
+        if self.performance_tracker: self.performance_tracker.start_training(model_config, training_config)
         
         # Training history - separate training and validation metrics
         history = {
