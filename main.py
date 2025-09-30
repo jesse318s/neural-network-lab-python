@@ -50,16 +50,6 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
         except Exception as e:
             print(f"⚠ Failed to save loss history: {e}")
 
-    # Save final model weights
-    try:
-        model.model.save_weights('model_weights.weights.h5')
-
-        if model.performance_tracker: model.performance_tracker.record_weight_file_size('model_weights.weights.h5')
-        
-        print("✓ Final model weights saved")
-    except Exception as e:
-        print(f"⚠ Failed to save final model: {e}")
-
     # Get error summary
     error_summary = model.get_error_summary()
     return {'training': training_results, 'test': test_results,
