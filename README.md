@@ -119,9 +119,12 @@ Tests cover weight constraints, adaptive loss functions, performance tracking, a
 
 Key configuration options:
 
-```python
-config = {
-    'enable__weight_oscillation_dampener': True,
-    'loss_weighting_strategy': 'none'
+```json
+{
+    "enable_weight_oscillation_dampener": true,
+    "enable_binary_change_max": true,
+    "max_additional_binary_digits": 16,
+    "enable_binary_precision_max": true,
+    "max_binary_digits": 24
 }
 ```

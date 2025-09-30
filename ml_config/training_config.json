@@ -1,1 +1,1 @@
-{ "epochs": 60, "batch_size": 16 }
+{ "epochs": 500, "batch_size": 16 }

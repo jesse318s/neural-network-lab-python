@@ -3,6 +3,8 @@
   "activation": "relu",
   "optimizer": "adam",
   "learning_rate": 0.005,
-  "dropout_rate": 0.0,
-  "enable_weight_oscillation_dampener": true
+  "dropout_rate": 0.05,
+  "enable_weight_oscillation_dampener": true,
+  "enable_binary_change_max": true,
+  "max_additional_binary_digits": 16
 }
