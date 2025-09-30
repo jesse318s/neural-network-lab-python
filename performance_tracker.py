@@ -42,6 +42,7 @@ class PerformanceTracker:
         # Training history
         self.training_history = []
         # Configuration tracking
+        self.model_config = {}
         self.training_config = {}
         self.weight_modifications_used = []
         # Error tracking
@@ -55,11 +56,12 @@ class PerformanceTracker:
             print(f"Warning: Could not create output directory {self.output_dir}: {e}")
             self.output_dir = "."
     
-    def start_training(self, config: Dict[str, Any]):
+    def start_training(self, model_config, training_config: Dict[str, Any]):
         """Start training session and initialize tracking."""
         try:
             self.training_start_time = time.time()
-            self.training_config = config.copy()
+            self.model_config = model_config.copy()
+            self.training_config = training_config.copy()
             print(f"Performance tracking started - Output: {self.output_dir}")  
         except Exception as e:
             self._handle_error(f"Error starting training tracking: {e}")
@@ -267,6 +269,7 @@ class PerformanceTracker:
             config_data = {
                 'config_id': config_id,
                 'timestamp': datetime.now().isoformat(),
+                'model_config': self.model_config,
                 'training_config': self.training_config,
                 'performance_summary': self.get_summary()
             }
@@ -284,7 +287,6 @@ class PerformanceTracker:
                 'final_r2': self.current_r2,
                 'best_r2': self.best_r2,
                 'total_training_time': self.total_training_time,
-                'avg_epoch_time': self.avg_epoch_time,
                 'peak_memory_mb': self.peak_memory_mb,
                 'error_count': self.error_count
             }
@@ -309,8 +311,14 @@ class PerformanceTracker:
                 logfile.write("=== Advanced TensorFlow Lab Training Log ===\n\n")
                 logfile.write(f"Training started: {datetime.fromtimestamp(self.training_start_time).isoformat() if self.training_start_time else 'Unknown'}\n")
                 logfile.write(f"Training ended: {datetime.fromtimestamp(self.training_end_time).isoformat() if self.training_end_time else 'Unknown'}\n")
-                logfile.write(f"Total training time: {self.total_training_time:.2f} seconds\n\n")
+                logfile.write(f"Total training time: {self.total_training_time:.2f} seconds\n")
+                logfile.write(f"Total epochs: {len(self.training_history)}\n\n")
                 logfile.write("=== Configuration ===\n")
+
+                for key, value in self.model_config.items():
+                    logfile.write(f"{key}: {value}\n")
+
+                logfile.write("\n")
 
                 for key, value in self.training_config.items():
                     logfile.write(f"{key}: {value}\n")

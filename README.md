@@ -121,10 +121,7 @@ Key configuration options:
 
 ```python
 config = {
-    'max_binary_digits': 5,
-    'max_additional_binary_digits': 2,
-    'oscillation_window': 3,
-    'enable_weight_constraints': True,
-    'loss_weighting_strategy': 'combined'
+    'enable__weight_oscillation_dampener': True,
+    'loss_weighting_strategy': 'none'
 }
 ```

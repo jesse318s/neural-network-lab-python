@@ -162,20 +162,16 @@ class BinaryWeightConstraintChanges(BinaryWeightConstraint):
 
 class OscillationDampener(BinaryWeightConstraint):
     """Monitors weight changes and dampens oscillations by setting the smallest 
-    non-zero binary digit to zero."""
+    non-zero binary digits to zero when oscillation patterns are detected."""
     
-    def __init__(self, window_size: int = 3):
+    def __init__(self):
         super().__init__()
-        self.window_size = window_size
         self.weight_history: List[np.ndarray] = []
     
     def add_weights(self, weights: np.ndarray) -> None:
         """Add new weights to the history."""
         try:
             self.weight_history.append(weights.copy())
-
-            if len(self.weight_history) > self.window_size:
-                self.weight_history.pop(0)
         except Exception:
             self.error_count += 1
     
@@ -188,17 +184,28 @@ class OscillationDampener(BinaryWeightConstraint):
         except Exception:
             return False
     
-    def _set_smallest_binary_digit_to_zero(self, weight: float) -> float:
-        """Set the smallest non-zero binary digit to zero."""
+    def _set_smallest_binary_digits_to_zero(self, weight: float) -> float:
+        """Set a number of least significant binary digits to zero based on shrinkage from global mean.
+        The number of digits zeroed increases with the difference from the mean.
+        """
         try:
             if weight == 0.0: return weight
-    
-            # Use bit manipulation approach
+
+            # Get the significant bit count
+            bit_count = self._count_significant_binary_digits(self._float_to_binary_repr(weight))
+            # Calculate global mean of historical weights
+            global_mean = np.mean([np.mean(hist_weights) for hist_weights in self.weight_history]) if self.weight_history else 0.0
+            # Calculate shrinkage factor based on distance from mean
+            shrinkage_factor = min(abs(weight - global_mean) / max(abs(global_mean), 1e-8), 1.0)
+            # Determine number of digits to zero from all significant bits (at least 1)
+            digits_to_zero = max(1, int(1 + shrinkage_factor * (bit_count - 1)))
+            # Zero out the specified number of least significant bits
             packed = struct.pack('f', weight)
             bits = struct.unpack('I', packed)[0]
-            # Zero the least significant bit
-            bits &= bits - 1
-            # Convert back to float
+
+            for _ in range(digits_to_zero):
+                bits &= bits - 1
+
             modified_packed = struct.pack('I', bits)
             modified_weight = struct.unpack('f', modified_packed)[0]
             return modified_weight
@@ -209,8 +216,8 @@ class OscillationDampener(BinaryWeightConstraint):
     def apply_constraint(self, weights: np.ndarray) -> np.ndarray:
         """Detect oscillations and apply dampening."""
         try:
-            if len(self.weight_history) < self.window_size: return weights
-            
+            if len(self.weight_history) < 2: return weights 
+
             flat_current = weights.flatten()
             flat_dampened = flat_current.copy()
             
@@ -221,12 +228,10 @@ class OscillationDampener(BinaryWeightConstraint):
                     weight_sequence.append(hist_weights.flatten()[i])
                 
                 weight_sequence.append(flat_current[i])
-                
-                if len(weight_sequence) >= self.window_size:
-                    recent_values = weight_sequence[-self.window_size:]
+                recent_values = weight_sequence[-3:]
 
-                    if self._detect_oscillation_pattern(recent_values):
-                        flat_dampened[i] = self._set_smallest_binary_digit_to_zero(flat_current[i])
+                if self._detect_oscillation_pattern(recent_values):
+                    flat_dampened[i] = self._set_smallest_binary_digits_to_zero(weight=flat_current[i])
             
             return flat_dampened.reshape(weights.shape)
         except Exception:

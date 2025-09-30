@@ -57,10 +57,10 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
                 vy_final = vx0 * sin_wt + vy0 * cos_wt
                 
                 # Final positions (cycloid trajectory)
-                if abs(omega) > 1e-10:
+                if abs(omega) > 1e-10: #believe wrong
                     x_final = x0 + (vx0 * sin_wt - vy0 * (cos_wt - 1)) / omega
                     y_final = y0 + (vx0 * (cos_wt - 1) + vy0 * sin_wt) / omega
-                else:
+                else: #mayeb wrong
                     # Fallback to linear motion if omega is too small
                     x_final = x0 + vx0 * t
                     y_final = y0 + vy0 * t          
@@ -80,7 +80,7 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
             x_final += x_noise
             y_final += y_noise
             # Calculate derived quantities
-            kinetic_energy = 0.5 * m * (vx_final**2 + vy_final**2)
+            kinetic_energy = 0.5 * m * (vx_final**2 + vy_final**2) 
             trajectory_length = np.sqrt((x_final - x0)**2 + (y_final - y0)**2)
             outputs.append([vx_final, vy_final, x_final, y_final, kinetic_energy, trajectory_length])
         

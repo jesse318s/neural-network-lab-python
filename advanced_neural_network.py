@@ -41,7 +41,7 @@ class AdvancedNeuralNetwork:
     def _init_binary_changes(self):
         """Initialize binary weight constraint for changes."""
         try:
-            if self.config.get('enable_weight_constraints', True): 
+            if self.config.get('enable_binary_change_max', False):
                 return BinaryWeightConstraintChanges(max_additional_digits=self.config.get('max_additional_binary_digits', 1))
             
             return None
@@ -52,7 +52,7 @@ class AdvancedNeuralNetwork:
     def _init_binary_max(self):
         """Initialize binary weight constraint for max precision."""
         try:
-            if self.config.get('enable_weight_constraints', True): 
+            if self.config.get('enable_binary_precision_max', False):
                 return BinaryWeightConstraintMax(max_binary_digits=self.config.get('max_binary_digits', 5))
             
             return None
@@ -63,8 +63,8 @@ class AdvancedNeuralNetwork:
     def _init_oscillation_dampener(self):
         """Initialize oscillation dampener."""
         try:
-            if self.config.get('enable_weight_constraints', True): 
-                return OscillationDampener(window_size=self.config.get('oscillation_window', 3))
+            if self.config.get('enable_weight_oscillation_dampener', False):
+                return OscillationDampener()
             
             return None
         except Exception as e:
@@ -74,7 +74,7 @@ class AdvancedNeuralNetwork:
     def _init_adaptive_loss(self):
         """Initialize adaptive loss function."""
         try:
-            return create_adaptive_loss_fn(strategy=self.config.get('loss_weighting_strategy', 'r2_based'))
+            return create_adaptive_loss_fn(strategy=self.config.get('loss_weighting_strategy', 'none'))
         except Exception as e:
             self.errors.append(f"Adaptive loss failed: {e}")
             return None
@@ -127,35 +127,34 @@ class AdvancedNeuralNetwork:
                     for weight_matrix in weights:
                         current_weight = weight_matrix.copy()
 
-                        # Apply constraints only to 2D weight matrices (not bias vectors)
-                        if len(weight_matrix.shape) == 2:
-                            if self.binary_constraint_changes:
-                                try:
-                                    current_weight = self.binary_constraint_changes.apply_constraint(current_weight)
-                                    
-                                    if 'binary_changes' not in applied_constraints: 
-                                        applied_constraints.append('binary_changes')
-                                except Exception:
-                                    pass
-                            
-                            if self.binary_constraint_max:
-                                try:
-                                    current_weight = self.binary_constraint_max.apply_constraint(current_weight)
-                                    
-                                    if 'binary_max' not in applied_constraints: 
-                                        applied_constraints.append('binary_max')
-                                except Exception:
-                                    pass
-                            
-                            if self.oscillation_dampener:
-                                try:
-                                    self.oscillation_dampener.add_weights(current_weight)
-                                    current_weight = self.oscillation_dampener.apply_constraint(current_weight)
-                                    
-                                    if 'oscillation_dampening' not in applied_constraints: 
-                                        applied_constraints.append('oscillation_dampening')
-                                except Exception:
-                                    pass
+                        # Only apply Oscillation Dampener to bias vectors (1D arrays)
+                        if self.oscillation_dampener and current_weight.ndim == 1:
+                            try:
+                                self.oscillation_dampener.add_weights(current_weight)
+                                current_weight = self.oscillation_dampener.apply_constraint(current_weight)
+                                
+                                if 'oscillation_dampening' not in applied_constraints: 
+                                    applied_constraints.append('oscillation_dampening')
+                            except Exception:
+                                pass
+
+                        if self.binary_constraint_changes:
+                            try:
+                                current_weight = self.binary_constraint_changes.apply_constraint(current_weight)
+                                
+                                if 'binary_changes' not in applied_constraints: 
+                                    applied_constraints.append('binary_changes')
+                            except Exception:
+                                pass
+                        
+                        if self.binary_constraint_max:
+                            try:
+                                current_weight = self.binary_constraint_max.apply_constraint(current_weight)
+                                
+                                if 'binary_max' not in applied_constraints: 
+                                    applied_constraints.append('binary_max')
+                            except Exception:
+                                pass
                         
                         modified_weights.append(current_weight)
                     layer.set_weights(modified_weights)
@@ -193,10 +192,11 @@ class AdvancedNeuralNetwork:
     def train_with_custom_constraints(self, X_train: np.ndarray, y_train: np.ndarray, X_val: np.ndarray, y_val: np.ndarray, 
                                       epochs: int = 50, batch_size: int = 32) -> Dict[str, Any]:
         """Train the model with custom weight constraints and adaptive loss."""
-        # Start training tracking - merge training config with model config
-        training_config = {'epochs': epochs, 'batch_size': batch_size, **self.config}
+        # Start training tracking
+        model_config = self.config.copy()
+        training_config = {'epochs': epochs, 'batch_size': batch_size}
         
-        if self.performance_tracker: self.performance_tracker.start_training(training_config)
+        if self.performance_tracker: self.performance_tracker.start_training(model_config, training_config)
         
         # Training history - separate training and validation metrics
         history = {
