@@ -48,8 +48,4 @@
 			<output caption="Desired Outline">Plot loss_history.csv trends, scatter learning rates vs. final loss, and render residual histograms leveraging scaler outputs.</output>
 		</example>
 	</examples>
-
-	<qa questionCaption="Deliverable" answerCaption="Response" captionEnding="colon">
-		Detail the proposed notebook structure, helper utilities, visualization techniques, and hyperparameter tuning workflow so an engineer can implement the notebook without guesswork.
-	</qa>
 </poml>
