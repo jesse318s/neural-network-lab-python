@@ -127,35 +127,34 @@ class AdvancedNeuralNetwork:
                     for weight_matrix in weights:
                         current_weight = weight_matrix.copy()
 
-                        # Apply constraints only to 2D weight matrices (not bias vectors)
-                        if len(weight_matrix.shape) == 2:
-                            if self.binary_constraint_changes:
-                                try:
-                                    current_weight = self.binary_constraint_changes.apply_constraint(current_weight)
-                                    
-                                    if 'binary_changes' not in applied_constraints: 
-                                        applied_constraints.append('binary_changes')
-                                except Exception:
-                                    pass
-                            
-                            if self.binary_constraint_max:
-                                try:
-                                    current_weight = self.binary_constraint_max.apply_constraint(current_weight)
-                                    
-                                    if 'binary_max' not in applied_constraints: 
-                                        applied_constraints.append('binary_max')
-                                except Exception:
-                                    pass
-                            
-                            if self.oscillation_dampener:
-                                try:
-                                    self.oscillation_dampener.add_weights(current_weight)
-                                    current_weight = self.oscillation_dampener.apply_constraint(current_weight)
-                                    
-                                    if 'oscillation_dampening' not in applied_constraints: 
-                                        applied_constraints.append('oscillation_dampening')
-                                except Exception:
-                                    pass
+                        # Only apply Oscillation Dampener to bias vectors (1D arrays)
+                        if self.oscillation_dampener and current_weight.ndim == 1:
+                            try:
+                                self.oscillation_dampener.add_weights(current_weight)
+                                current_weight = self.oscillation_dampener.apply_constraint(current_weight)
+                                
+                                if 'oscillation_dampening' not in applied_constraints: 
+                                    applied_constraints.append('oscillation_dampening')
+                            except Exception:
+                                pass
+
+                        if self.binary_constraint_changes:
+                            try:
+                                current_weight = self.binary_constraint_changes.apply_constraint(current_weight)
+                                
+                                if 'binary_changes' not in applied_constraints: 
+                                    applied_constraints.append('binary_changes')
+                            except Exception:
+                                pass
+                        
+                        if self.binary_constraint_max:
+                            try:
+                                current_weight = self.binary_constraint_max.apply_constraint(current_weight)
+                                
+                                if 'binary_max' not in applied_constraints: 
+                                    applied_constraints.append('binary_max')
+                            except Exception:
+                                pass
                         
                         modified_weights.append(current_weight)
                     layer.set_weights(modified_weights)
