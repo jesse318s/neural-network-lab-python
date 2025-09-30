@@ -191,7 +191,7 @@ class OscillationDampener(BinaryWeightConstraint):
         try:
             if weight == 0.0: return weight
 
-            # Get half of the significant bit count (or 1 if only 1 digit total)
+            # Get the significant bit count
             bit_count = self._count_significant_binary_digits(self._float_to_binary_repr(weight))
             # Calculate global mean of historical weights
             global_mean = np.mean([np.mean(hist_weights) for hist_weights in self.weight_history]) if self.weight_history else 0.0
