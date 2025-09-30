@@ -77,6 +77,7 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ├── requirements.txt             # Dependencies
 ├── test_main.py                 # Test suite
 ├── weight_constraints.py        # Binary weight management
+├── saved_weights/               # Model weights generated during training 
 └── training_output/             # Generated results (name may vary based on config)
     ├── training_results.csv
     ├── loss_history.csv
