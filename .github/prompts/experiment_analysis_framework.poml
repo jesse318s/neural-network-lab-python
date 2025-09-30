@@ -3,7 +3,7 @@
     </role>
 
 	<task captionEnding="colon">
-		Prepare a detailed plan for adding a Jupyter notebook named experiment_analysis_framework.ipynb under neural-network-lab-python that loads prior training artifacts, visualizes metrics, and recommends hyperparameter refinements. Adopt a clean and concise coding style.
+		Prepare a detailed plan for adding a Jupyter notebook named experiment_analysis_framework.ipynb under neural-network-lab-python that loads prior training artifacts, visualizes metrics, and recommends hyperparameter refinements. Offer to complete the entire plan afterwards.
 	</task>
 
 	<stepwise-instructions>
@@ -13,6 +13,9 @@
 			<item>Outline hyperparameter tuning strategies using existing configuration ranges and observed losses.</item>
 			<item>Specify reusable helper functions for loading weights, scaling data, and benchmarking model variants.</item>
 			<item>Define validation steps that confirm the notebook runs end-to-end with minimal manual adjustments.</item>
+			<item>After completing the notebook plan, offer to implement the entire solution.</item>
+			<item>Adopt a clean and concise coding style during implementation.</item>
+			<item>Ensure clarity and completeness.</item>
 		</list>
 	</stepwise-instructions>
 
@@ -36,7 +39,6 @@
 	</section>
 
 	<introducer>Ensure the notebook adheres to the JSON cell format described below when created programmatically.</introducer>
-	<output-format captionEnding="colon">Follow the notebook format instructions: cells array, metadata.language per cell, preserve existing cell ids when editing, and avoid referencing cell ids in the summary.</output-format>
 
 	<examples captionStyle="header" captionEnding="colon">
 		<example>
