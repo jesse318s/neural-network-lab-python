@@ -217,6 +217,8 @@ class OscillationDampener(BinaryWeightConstraint):
     def apply_constraint(self, weights: np.ndarray) -> np.ndarray:
         """Detect oscillations and apply dampening."""
         try:
+            if len(self.weight_history) < 2: return weights 
+
             flat_current = weights.flatten()
             flat_dampened = flat_current.copy()
             
