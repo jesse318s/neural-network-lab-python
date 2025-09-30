@@ -268,10 +268,15 @@ class AdvancedNeuralNetwork:
             # Save weights periodically
             if epoch % 10 == 0 or epoch == epochs - 1:
                 try:
-                    weight_file = f"model_weights_epoch_{epoch}.weights.h5"
+                    weight_dir = "saved_weights"
+                    
+                    if not os.path.exists(weight_dir): os.makedirs(weight_dir)
+                    
+                    weight_file = os.path.join(weight_dir, f"model_weights_epoch_{epoch}.weights.h5")
                     self.model.save_weights(weight_file)
-
+                    
                     if self.performance_tracker: self.performance_tracker.record_weight_file_size(weight_file)
+                    
                 except Exception:
                     self.errors.append(f"Saving weights failed at epoch {epoch}")
 

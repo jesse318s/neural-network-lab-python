@@ -1,15 +1,10 @@
 # Python
 __pycache__/
 
-# Machine Learning Model Files
-*.h5
-*.weights.h5
-model_weights*.h5
+# Data and scaler files
+*.csv
 *.pkl
 
-# Data Files (if they're generated/temporary)
-*.csv
-data_summary.json
-
-# Training Output and Logs
+# Training output and logs
 training_output/
+saved_weights/
