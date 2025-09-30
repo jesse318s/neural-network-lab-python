@@ -1,4 +1,4 @@
-# Neural Network Lab - Advanced Training Techniques
+# neural-network-lab-python
 
 A TensorFlow implementation featuring custom weight constraints, adaptive loss functions, and performance tracking for neural network training with particle physics simulation data.
 
@@ -6,7 +6,7 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 
 - **Binary Weight Constraints**: Control binary precision of neural network weights
 - **Oscillation Dampening**: Prevent weight oscillations during training  
-- **Adaptive Loss Functions**: Dynamically combine MSE and MAE based on training progress
+- **Adaptive Loss Functions**: Dynamically adjusts MSE/MAE based on training
 - **Performance Tracking**: Comprehensive metrics collection with CSV export
 - **Error Resilience**: Graceful degradation on component failures
 
@@ -17,10 +17,9 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 - **Oscillation Dampening**: Detects and prevents weight oscillation patterns
 
 ### Adaptive Loss Functions
-- **Epoch-Based**: Adjusts MSE/MAE ratio based on training progress
 - **R²-Based**: Modifies weights based on validation R² score
 - **Loss-Based**: Adapts based on previous loss values
-- **Combined Strategy**: Intelligently combines all strategies
+- **Combined Strategy**: Intelligently combines both strategies
 
 ### Performance Tracking
 - Training metrics and result tracking
@@ -67,6 +66,9 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ## Project Structure
 
 ```
+├── ml_config/                   # ML configuration files
+|   ├── model_config.json
+|   └── training_config.json
 ├── advanced_neural_network.py   # Core neural network implementation
 ├── data_processing.py           # Data processing functionality
 ├── main.py                      # Main training script
@@ -75,7 +77,7 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ├── requirements.txt             # Dependencies
 ├── test_main.py                 # Test suite
 ├── weight_constraints.py        # Binary weight management
-└── training_output/             # Generated results
+└── training_output/             # Generated results (name may vary based on config)
     ├── training_results.csv
     ├── loss_history.csv
     ├── training_log.txt
@@ -100,7 +102,7 @@ Controls weight precision at the binary level, preventing explosive growth while
 Detects weight oscillation patterns across epochs and applies dampening to stabilize training.
 
 ### Adaptive Loss Functions
-Dynamically adjusts MSE/MAE weighting based on training progress and loss history.
+Dynamically adjusts MSE/MAE weighting based on R² and loss history.
 
 ### Error Resilience
 Implements graceful degradation - training continues even when individual components encounter errors.
@@ -119,10 +121,7 @@ Key configuration options:
 
 ```python
 config = {
-    'max_binary_digits': 5,
-    'max_additional_binary_digits': 2,
-    'oscillation_window': 3,
-    'enable_weight_constraints': True,
-    'loss_weighting_strategy': 'combined'
+    'enable__weight_oscillation_dampener': True,
+    'loss_weighting_strategy': 'none'
 }
 ```

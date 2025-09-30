@@ -1,3 +1,8 @@
+"""
+Data Processing Pipeline for Particle Simulation Data
+Implements railway-style error handling for robust execution.
+"""
+
 import os
 from typing import Tuple
 import numpy as np
@@ -79,7 +84,6 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
             trajectory_length = np.sqrt((x_final - x0)**2 + (y_final - y0)**2)
             outputs.append([vx_final, vy_final, x_final, y_final, kinetic_energy, trajectory_length])
         
-        # Add outputs to data
         output_names = ['final_velocity_x', 'final_velocity_y', 'final_position_x',
                        'final_position_y', 'kinetic_energy', 'trajectory_length']
         
@@ -98,7 +102,6 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
         return df    
     except Exception as e:
         print(f"Error generating particle data: {e}")
-        # Return minimal fallback data
         return pd.DataFrame({col: [1.0] for col in ['mass', 'initial_velocity_x', 'initial_velocity_y',
             'initial_position_x', 'initial_position_y', 'charge', 'magnetic_field_strength', 'simulation_time',
             'final_velocity_x', 'final_velocity_y', 'final_position_x', 'final_position_y', 
@@ -125,7 +128,7 @@ def load_and_validate_data(csv_path: str = 'particle_data.csv') -> pd.DataFrame:
             df = generate_particle_data(save_to_file=True)
         
         # Validate data integrity
-        validation = {'is_valid': True, 'issues': [], 'recommendations': []}
+        validation = {'issues': [], 'recommendations': []}
         # Check for missing values
         missing = df.isnull().sum()
 
@@ -135,21 +138,17 @@ def load_and_validate_data(csv_path: str = 'particle_data.csv') -> pd.DataFrame:
         
         # Check physical constraints
         numeric_cols = df.select_dtypes(include=[np.number]).columns
-
+        calculated_ke = 0.5 * df['mass'] * (df['final_velocity_x']**2 + df['final_velocity_y']**2)
+        ke_diff = np.abs(df['kinetic_energy'] - calculated_ke)
+        
+        if (ke_diff > 0.1 * df['kinetic_energy']).any():  # 10% tolerance
+            validation['issues'].append("Kinetic energy inconsistencies detected")
+            validation['recommendations'].append("Check energy calculations")
+        
         for col in numeric_cols:
             if col == 'mass' and (df[col] <= 0).any():
                 validation['issues'].append(f"Non-positive mass values found")
                 validation['recommendations'].append("Mass values should be positive")
-
-            # Energy conservation check
-            if 'kinetic_energy' in df.columns and 'mass' in df.columns:
-                if 'final_velocity_x' in df.columns and 'final_velocity_y' in df.columns:
-                    calculated_ke = 0.5 * df['mass'] * (df['final_velocity_x']**2 + df['final_velocity_y']**2)
-                    ke_diff = np.abs(df['kinetic_energy'] - calculated_ke)
-                    
-                    if (ke_diff > 0.1 * df['kinetic_energy']).any():  # 10% tolerance
-                        validation['issues'].append("Kinetic energy inconsistencies detected")
-                        validation['recommendations'].append("Check energy calculations")
 
             if np.isinf(df[col]).any():
                 validation['issues'].append(f"Infinite values in {col}")
@@ -159,6 +158,15 @@ def load_and_validate_data(csv_path: str = 'particle_data.csv') -> pd.DataFrame:
                 validation['issues'].append(f"Very large values in {col}")
                 validation['recommendations'].append(f"Consider scaling {col}")
         
+        # Report validation results
+        if validation['issues']: print("Data validation issues found:")
+
+        for issue in validation['issues']:
+            print(f"- {issue}")
+
+        for rec in validation['recommendations']:
+            print(f"  * Recommendation: {rec}")
+
         return df
     except Exception as e:
         print(f"Error loading/validating data: {e}")
@@ -193,14 +201,7 @@ def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: 
             raise ValueError(f"Insufficient features: inputs={len(available_inputs)}, outputs={len(available_outputs)}")
         
         # Extract and clean data
-        X, y = df[available_inputs].values, df[available_outputs].values
-        
-        # Handle missing values
-        if np.any(pd.isnull(X)) or np.any(pd.isnull(y)):
-            print("Warning: Filling missing values with column means...")
-            X = pd.DataFrame(X).fillna(pd.DataFrame(X).mean()).values
-            y = pd.DataFrame(y).fillna(pd.DataFrame(y).mean()).values
-        
+        X, y = df[available_inputs].values, df[available_outputs].values  
         # Split data
         X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
         X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, 
@@ -225,14 +226,12 @@ def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: 
         return X_train_scaled, X_val_scaled, X_test_scaled, y_train_scaled, y_val_scaled, y_test_scaled  
     except Exception as e:
         print(f"Error in data preprocessing: {e}")
-        # Return dummy data as fallback
         np.random.seed(42)
         dummy_X, dummy_y = np.random.randn(10, 8), np.random.randn(10, 6)
         return dummy_X[:6], dummy_X[6:8], dummy_X[8:], dummy_y[:6], dummy_y[6:8], dummy_y[8:]
 
 
-def complete_data_pipeline(csv_path: str = 'particle_data.csv', 
-                          num_particles: int = 1000) -> Tuple[np.ndarray, ...]:
+def complete_data_pipeline(csv_path: str = 'particle_data.csv', num_particles: int = 1000) -> Tuple[np.ndarray, ...]:
     """
     Execute complete data loading, validation, and preprocessing pipeline.
     
@@ -245,7 +244,6 @@ def complete_data_pipeline(csv_path: str = 'particle_data.csv',
     """
     try:
         print("=== Data Pipeline ===")
-        # Load and validate data
         df = load_and_validate_data(csv_path)
         
         # Generate more data if needed
@@ -253,13 +251,11 @@ def complete_data_pipeline(csv_path: str = 'particle_data.csv',
             print(f"Generating additional data to reach {num_particles} particles...")
             df = generate_particle_data(num_particles, save_to_file=True)
         
-        # Preprocess for training
         data_splits = preprocess_for_training(df)
         print("Data pipeline completed successfully")
         return data_splits
     except Exception as e:
         print(f"Error in data pipeline: {e}")
-        # Return fallback data
         dummy_X, dummy_y = np.random.randn(100, 8), np.random.randn(100, 6)
         fallback_splits = (dummy_X[:60], dummy_X[60:80], dummy_X[80:], dummy_y[:60], dummy_y[60:80], dummy_y[80:])
         return fallback_splits

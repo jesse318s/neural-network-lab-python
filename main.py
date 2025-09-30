@@ -6,7 +6,7 @@ oscillation dampening, adaptive loss functions, and performance tracking
 for particle physics simulations.
 """
 
-import os
+import json
 import numpy as np
 from typing import Dict, Any
 
@@ -49,16 +49,6 @@ def train_with_tracking(model: AdvancedNeuralNetwork,
                 print("✓ Loss history saved")
         except Exception as e:
             print(f"⚠ Failed to save loss history: {e}")
-
-    # Save final model weights
-    try:
-        model.model.save_weights('model_weights.weights.h5')
-
-        if model.performance_tracker: model.performance_tracker.record_weight_file_size('model_weights.weights.h5')
-        
-        print("✓ Final model weights saved")
-    except Exception as e:
-        print(f"⚠ Failed to save final model: {e}")
 
     # Get error summary
     error_summary = model.get_error_summary()
@@ -124,11 +114,21 @@ def main():
     print("\n" + "=" * 40)
     print("CREATING AND TRAINING MODEL")
     print("=" * 40)
+
+    model_config = {}
+    training_config = {}
+
+    # Load model config and training config
+    try:
+        with open('ml_config/model_config.json', 'r') as f:
+            model_config = json.load(f)
+
+        with open('ml_config/training_config.json', 'r') as f:
+            training_config = json.load(f)
+    except Exception as e:
+        print(f"✗ Failed to load configuration: {e}")
+
     # Create model with configuration
-    model_config = {'hidden_layers': [64, 32, 16], 'activation': 'relu', 'dropout_rate': 0.001, 'optimizer': 'adam',
-        'learning_rate': 0.01, 'max_binary_digits': 24, 'max_additional_binary_digits': 12, 'oscillation_window': 3,
-        'loss_weighting_strategy': 'none', 'output_dir': 'training_output', 'enable_weight_constraints': True}
-    
     try:
         model = AdvancedNeuralNetwork((X_train.shape[1],), y_train.shape[1], model_config)
         print("✓ Neural network created successfully") 
@@ -137,7 +137,6 @@ def main():
         return
     
     # Train model with configuration
-    training_config = {'epochs': 60, 'batch_size': 16}
     print(f"\nTraining configuration: {training_config}, \n🚀 Starting training...")
     
     try:
@@ -156,22 +155,7 @@ def main():
     print("RESULTS SUMMARY")
     print("=" * 40)
     # Display results
-    display_results(results)
-    print("\n" + "=" * 40)
-    print("OUTPUT FILES")
-    print("=" * 40)
-    # Check for output files
-    output_files = [
-        f'{model_config["output_dir"]}/training_results.csv', f'{model_config["output_dir"]}/loss_history.csv',
-        f'{model_config["output_dir"]}/training_log.txt', f'{model_config["output_dir"]}/configuration_log.csv',
-        'model_weights.weights.h5', 'particle_data.csv']
-    
-    for file_path in output_files:
-        if os.path.exists(file_path):
-            file_size = os.path.getsize(file_path)
-            print(f"  ✓ {file_path} ({file_size:,} bytes)")
-        else: print(f"  ✗ {file_path} (not found)")
-    
+    display_results(results)  
     print("\n" + "=" * 60)
     print("🎉 ADVANCED TENSORFLOW LAB COMPLETED!")
     print("=" * 60)

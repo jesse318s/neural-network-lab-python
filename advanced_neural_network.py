@@ -1,3 +1,8 @@
+"""
+Advanced Neural Network with Custom Weight Constraints and Adaptive Loss Functions
+Implements railway-style error handling for robust execution.
+"""
+
 import os
 import time
 import numpy as np
@@ -17,8 +22,8 @@ from ml_utils import create_adaptive_loss_fn
 
 class AdvancedNeuralNetwork:
     """ 
-    Neural network with custom weight constraints and adaptive loss functions.
-    Implements railway-style error handling for robust execution. 
+    Advanced Neural Network class with custom training loop.
+    Utilizes custom weight constraints and adaptive loss functions for training.
     """
     
     def __init__(self, input_shape: Tuple[int], output_shape: int, config: Dict[str, Any]):
@@ -36,7 +41,9 @@ class AdvancedNeuralNetwork:
     def _init_binary_changes(self):
         """Initialize binary weight constraint for changes."""
         try:
-            if self.config.get('enable_weight_constraints', True): return BinaryWeightConstraintChanges(max_additional_digits=self.config.get('max_additional_binary_digits', 1))
+            if self.config.get('enable_binary_change_max', False):
+                return BinaryWeightConstraintChanges(max_additional_digits=self.config.get('max_additional_binary_digits', 1))
+            
             return None
         except Exception as e:
             self.errors.append(f"Binary constraint changes failed: {e}")
@@ -45,7 +52,9 @@ class AdvancedNeuralNetwork:
     def _init_binary_max(self):
         """Initialize binary weight constraint for max precision."""
         try:
-            if self.config.get('enable_weight_constraints', True): return BinaryWeightConstraintMax(max_binary_digits=self.config.get('max_binary_digits', 5))
+            if self.config.get('enable_binary_precision_max', False):
+                return BinaryWeightConstraintMax(max_binary_digits=self.config.get('max_binary_digits', 5))
+            
             return None
         except Exception as e:
             self.errors.append(f"Binary constraint max failed: {e}")
@@ -54,7 +63,9 @@ class AdvancedNeuralNetwork:
     def _init_oscillation_dampener(self):
         """Initialize oscillation dampener."""
         try:
-            if self.config.get('enable_weight_constraints', True): return OscillationDampener(window_size=self.config.get('oscillation_window', 3))
+            if self.config.get('enable_weight_oscillation_dampener', False):
+                return OscillationDampener()
+            
             return None
         except Exception as e:
             self.errors.append(f"Oscillation dampener failed: {e}")
@@ -63,7 +74,7 @@ class AdvancedNeuralNetwork:
     def _init_adaptive_loss(self):
         """Initialize adaptive loss function."""
         try:
-            return create_adaptive_loss_fn(strategy=self.config.get('loss_weighting_strategy', 'epoch_based'))
+            return create_adaptive_loss_fn(strategy=self.config.get('loss_weighting_strategy', 'none'))
         except Exception as e:
             self.errors.append(f"Adaptive loss failed: {e}")
             return None
@@ -104,7 +115,7 @@ class AdvancedNeuralNetwork:
         optimizer = optimizer_class(learning_rate=learning_rate)
         self.model.compile(optimizer=optimizer)
     
-    def apply_weight_constraints(self) -> List[str]:
+    def _apply_weight_constraints(self) -> List[str]:
         """Apply custom weight constraints to model weights."""
         applied_constraints = []
         try:
@@ -116,35 +127,34 @@ class AdvancedNeuralNetwork:
                     for weight_matrix in weights:
                         current_weight = weight_matrix.copy()
 
-                        # Apply constraints only to 2D weight matrices (not bias vectors)
-                        if len(weight_matrix.shape) == 2:
-                            if self.binary_constraint_changes:
-                                try:
-                                    current_weight = self.binary_constraint_changes.apply_constraint(current_weight)
-                                    
-                                    if 'binary_changes' not in applied_constraints: 
-                                        applied_constraints.append('binary_changes')
-                                except Exception:
-                                    pass
-                            
-                            if self.binary_constraint_max:
-                                try:
-                                    current_weight = self.binary_constraint_max.apply_constraint(current_weight)
-                                    
-                                    if 'binary_max' not in applied_constraints: 
-                                        applied_constraints.append('binary_max')
-                                except Exception:
-                                    pass
-                            
-                            if self.oscillation_dampener:
-                                try:
-                                    self.oscillation_dampener.add_weights(current_weight)
-                                    current_weight = self.oscillation_dampener.apply_constraint(current_weight)
-                                    
-                                    if 'oscillation_dampening' not in applied_constraints: 
-                                        applied_constraints.append('oscillation_dampening')
-                                except Exception:
-                                    pass
+                        # Only apply Oscillation Dampener to bias vectors (1D arrays)
+                        if self.oscillation_dampener and current_weight.ndim == 1:
+                            try:
+                                self.oscillation_dampener.add_weights(current_weight)
+                                current_weight = self.oscillation_dampener.apply_constraint(current_weight)
+                                
+                                if 'oscillation_dampening' not in applied_constraints: 
+                                    applied_constraints.append('oscillation_dampening')
+                            except Exception:
+                                pass
+
+                        if self.binary_constraint_changes:
+                            try:
+                                current_weight = self.binary_constraint_changes.apply_constraint(current_weight)
+                                
+                                if 'binary_changes' not in applied_constraints: 
+                                    applied_constraints.append('binary_changes')
+                            except Exception:
+                                pass
+                        
+                        if self.binary_constraint_max:
+                            try:
+                                current_weight = self.binary_constraint_max.apply_constraint(current_weight)
+                                
+                                if 'binary_max' not in applied_constraints: 
+                                    applied_constraints.append('binary_max')
+                            except Exception:
+                                pass
                         
                         modified_weights.append(current_weight)
                     layer.set_weights(modified_weights)
@@ -153,7 +163,7 @@ class AdvancedNeuralNetwork:
         
         return applied_constraints
     
-    def custom_training_step(self, X_batch: np.ndarray, y_batch: np.ndarray) -> Dict[str, Any]:
+    def _custom_training_step(self, X_batch: np.ndarray, y_batch: np.ndarray) -> Dict[str, Any]:
         """Perform a custom training step with adaptive loss."""
         try:
             with tf.GradientTape() as tape:
@@ -161,7 +171,8 @@ class AdvancedNeuralNetwork:
 
                 if self.adaptive_loss:
                     loss_value = self.adaptive_loss(y_batch, y_pred)
-                    loss_strategy = self.adaptive_loss.get_current_info()
+                else:
+                    loss_value = tf.reduce_mean(tf.math.squared_difference(y_batch, y_pred))
             
             gradients = tape.gradient(loss_value, self.model.trainable_variables)
 
@@ -170,22 +181,22 @@ class AdvancedNeuralNetwork:
 
             self.model.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
             mse, mae = tf.reduce_mean(tf.square(y_batch - y_pred)), tf.reduce_mean(tf.abs(y_batch - y_pred))
-            return {'loss': float(loss_value.numpy()), 'mse': float(mse.numpy()),
-                    'mae': float(mae.numpy()), 'loss_strategy': loss_strategy}
+            return {'loss': float(loss_value.numpy()), 'mse': float(mse.numpy()), 'mae': float(mae.numpy())}
         except ValueError as ve:
             self.errors.append(f"Validation error in training step: {ve}")
-            return {'loss': 1.0, 'mse': 1.0, 'mae': 1.0, 'loss_strategy': 'error_fallback'}
+            return {'loss': 1.0, 'mse': 1.0, 'mae': 1.0}
         except Exception as e:
             self.errors.append(f"Training step failed: {e}")
-            return {'loss': 1.0, 'mse': 1.0, 'mae': 1.0, 'loss_strategy': 'error_fallback'}
+            return {'loss': 1.0, 'mse': 1.0, 'mae': 1.0}
     
     def train_with_custom_constraints(self, X_train: np.ndarray, y_train: np.ndarray, X_val: np.ndarray, y_val: np.ndarray, 
                                       epochs: int = 50, batch_size: int = 32) -> Dict[str, Any]:
         """Train the model with custom weight constraints and adaptive loss."""
-        # Start training tracking - merge training config with model config
-        training_config = {'epochs': epochs, 'batch_size': batch_size, **self.config}
+        # Start training tracking
+        model_config = self.config.copy()
+        training_config = {'epochs': epochs, 'batch_size': batch_size}
         
-        if self.performance_tracker: self.performance_tracker.start_training(training_config)
+        if self.performance_tracker: self.performance_tracker.start_training(model_config, training_config)
         
         # Training history - separate training and validation metrics
         history = {
@@ -202,26 +213,24 @@ class AdvancedNeuralNetwork:
             # Shuffle training data
             indices = np.random.permutation(len(X_train))
             X_train_shuffled, y_train_shuffled = X_train[indices], y_train[indices]
-            epoch_losses, epoch_mse, epoch_mae, epoch_strategies = [], [], [], []
+            epoch_losses, epoch_mse, epoch_mae = [], [], []
            
             # Training loop
             for batch_idx in range(num_batches):
                 start_idx = batch_idx * batch_size
                 end_idx = min(start_idx + batch_size, len(X_train))
                 X_batch, y_batch = X_train_shuffled[start_idx:end_idx], y_train_shuffled[start_idx:end_idx]
-                metrics = self.custom_training_step(X_batch, y_batch)
+                metrics = self._custom_training_step(X_batch, y_batch)
                 epoch_losses.append(metrics['loss'])
                 epoch_mse.append(metrics['mse'])
                 epoch_mae.append(metrics['mae'])
-                epoch_strategies.append(metrics['loss_strategy'])
             
             # Aggregate training metrics for the epoch
             avg_train_loss = float(np.mean(epoch_losses))
             avg_train_mse = float(np.mean(epoch_mse))
             avg_train_mae = float(np.mean(epoch_mae))
-            
             # Apply weight constraints
-            applied_constraints = self.apply_weight_constraints()
+            applied_constraints = self._apply_weight_constraints()
 
             # Update performance tracker
             for constraint in applied_constraints:
@@ -286,18 +295,23 @@ class AdvancedNeuralNetwork:
                 'successful_constraints': list(set([c for sublist in history['applied_constraints'] for c in sublist]))}
     
     @staticmethod
-    def calculate_regression_metrics(y_test, y_pred):
+    def calculate_regression_metrics(y_test: np.ndarray, y_pred: np.ndarray) -> Tuple[float, float, float, float]:
         """Calculate MSE, MAE, RMSE, and R² score efficiently."""
-        from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-        
-        # Convert to numpy arrays
-        y_test, y_pred = np.asarray(y_test, dtype=np.float32), np.asarray(y_pred, dtype=np.float32)
-        # Calculate metrics
-        mse = float(mean_squared_error(y_test, y_pred))
-        mae = float(mean_absolute_error(y_test, y_pred))
-        rmse = float(np.sqrt(mse))
-        r2 = float(r2_score(y_test, y_pred)) if len(y_test) > 1 else 0.0
-        return mse, mae, rmse, r2
+        try:
+            from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+            
+            # Convert to numpy arrays for safety
+            y_test, y_pred = np.asarray(y_test, dtype=np.float32), np.asarray(y_pred, dtype=np.float32)
+            # Calculate metrics
+            mse = float(mean_squared_error(y_test, y_pred))
+            mae = float(mean_absolute_error(y_test, y_pred))
+            rmse = float(np.sqrt(mse))
+            r2 = float(r2_score(y_test, y_pred)) if len(y_test) > 1 else 0.0
+            
+            return mse, mae, rmse, r2
+        except Exception as e:
+            print(f"Regression metrics calculation failed: {e}")
+            raise e
 
     def evaluate_model(self, X_test: np.ndarray, y_test: np.ndarray) -> Dict[str, float]:
         """Evaluate the trained model."""
@@ -308,7 +322,7 @@ class AdvancedNeuralNetwork:
             if self.performance_tracker: 
                 inference_time = self.performance_tracker.measure_inference_time(self.model, X_test, num_runs=10)
             
-            # Make predictions, calculate metrics
+            # Make predictions and calculate metrics
             y_pred = self.model.predict(X_test, verbose=0)
             mse, mae, rmse, r2_score = self.calculate_regression_metrics(y_test, y_pred)     
             return {'mse': mse, 'mae': mae, 'rmse': rmse, 'r2_score': r2_score, 'inference_time': inference_time} 
