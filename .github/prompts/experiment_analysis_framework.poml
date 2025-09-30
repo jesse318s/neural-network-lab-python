@@ -1,0 +1,55 @@
+<poml syntax="markdown">
+	<role captionEnding="colon">You are an Instructor helping extend the neural-network-lab-python project with a reusable experiment analysis framework.
+    </role>
+
+	<task captionEnding="colon">
+		Prepare a detailed plan for adding a Jupyter notebook named experiment_analysis_framework.ipynb under neural-network-lab-python that loads prior training artifacts, visualizes metrics, and recommends hyperparameter refinements. Adopt a clean and concise coding style.
+	</task>
+
+	<stepwise-instructions>
+		<list listStyle="decimal">
+			<item>Review neural-network-lab-python data sources including training_output, ml_config, and particle_data.csv.</item>
+			<item>Design notebook sections that document goals, ingest artifacts, compute analytics, plot visualizations, and summarize insights.</item>
+			<item>Outline hyperparameter tuning strategies using existing configuration ranges and observed losses.</item>
+			<item>Specify reusable helper functions for loading weights, scaling data, and benchmarking model variants.</item>
+			<item>Define validation steps that confirm the notebook runs end-to-end with minimal manual adjustments.</item>
+		</list>
+	</stepwise-instructions>
+
+	<h syntax="markdown">Context</h>
+	<section>
+		<p>Use the existing Python modules (advanced_neural_network.py, data_processing.py, ml_utils.py, weight_constraints.py) and training artifacts located in neural-network-lab-python to ground the analysis.</p>
+		<folder src="../../" maxDepth="2" filter=".*\.(py|csv|json|h5)$" syntax="markdown" />
+		<hint captionStyle="plain">Prior training runs are stored in training_output/loss_history.csv and training_results.csv. The scalers (scaler_X.pkl, scaler_y.pkl) should be reused when generating predictions.</hint>
+	</section>
+
+	<h syntax="markdown">Notebook Blueprint</h>
+	<section>
+		<list listStyle="dash">
+			<item>Start with a markdown overview describing objectives, datasets, and experiment scope.</item>
+			<item>Implement code cells that load configuration JSON files, training logs, and weight checkpoints.</item>
+			<item>Create visual diagnostics (loss curves, parameter correlations, prediction residuals) using matplotlib or seaborn.</item>
+			<item>Provide tables summarizing best-performing runs, hyperparameter ranges, and suggested adjustments.</item>
+			<item>Conclude with actionable next steps including hyperparameter combinations to trial and expected outcomes.</item>
+		</list>
+		<hint captionStyle="plain">Keep helper utilities modular so they can be imported into future notebooks.</hint>
+	</section>
+
+	<introducer>Ensure the notebook adheres to the JSON cell format described below when created programmatically.</introducer>
+	<output-format captionEnding="colon">Follow the notebook format instructions: cells array, metadata.language per cell, preserve existing cell ids when editing, and avoid referencing cell ids in the summary.</output-format>
+
+	<examples captionStyle="header" captionEnding="colon">
+		<example>
+			<input caption="Prompt">Outline the hyperparameter tuning section.</input>
+			<output caption="Desired Outline">1. Load training_config.json ranges; 2. Compare with achieved metrics; 3. Recommend top 3 parameter sweeps with justification; 4. Flag constraints from weight_constraints.py.</output>
+		</example>
+		<example>
+			<input caption="Prompt">Describe a visualization plan.</input>
+			<output caption="Desired Outline">Plot loss_history.csv trends, scatter learning rates vs. final loss, and render residual histograms leveraging scaler outputs.</output>
+		</example>
+	</examples>
+
+	<qa questionCaption="Deliverable" answerCaption="Response" captionEnding="colon">
+		Detail the proposed notebook structure, helper utilities, visualization techniques, and hyperparameter tuning workflow so an engineer can implement the notebook without guesswork.
+	</qa>
+</poml>
