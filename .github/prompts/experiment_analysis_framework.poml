@@ -1,53 +1,49 @@
 <poml syntax="markdown">
-	<role captionEnding="colon">You are an Instructor helping extend the neural-network-lab-python project with a reusable experiment analysis framework.
-    </role>
+	<system-msg>Follow reproducible research practices, keep outputs deterministic, and avoid deleting existing analysis scaffolding.</system-msg>
 
-	<task captionEnding="colon">
-		Prepare a detailed plan for adding a Jupyter notebook named experiment_analysis_framework.ipynb under neural-network-lab-python that loads prior training artifacts, visualizes metrics, and recommends hyperparameter refinements. Offer to complete the entire plan afterwards.
+	<role>Act as the lead machine learning engineer responsible for auditing completed training runs and translating artifacts into actionable guidance.</role>
+
+	<task>
+		Complete and polish the existing Jupyter notebook neural-network-lab-python/experiment_analysis_framework.ipynb so it becomes a reusable experiment analysis framework for the neural-network-lab-python project.
+		Incorporate artifact validation, configuration review, metric analytics, residual diagnostics, visualization exports, and written takeaways.
 	</task>
 
 	<stepwise-instructions>
-		<list listStyle="decimal">
-			<item>Review neural-network-lab-python data sources including training_output, ml_config, and particle_data.csv.</item>
-			<item>Design notebook sections that document goals, ingest artifacts, compute analytics, plot visualizations, and summarize insights.</item>
-			<item>Outline hyperparameter tuning strategies using existing configuration ranges and observed losses.</item>
-			<item>Specify reusable helper functions for loading weights, scaling data, and benchmarking model variants.</item>
-			<item>Define validation steps that confirm the notebook runs end-to-end with minimal manual adjustments.</item>
-			<item>After completing the notebook plan, offer to implement the entire solution.</item>
-			<item>Adopt a clean and concise coding style during implementation.</item>
-			<item>Ensure clarity and completeness.</item>
+		<list>
+			<item>Open neural-network-lab-python/experiment_analysis_framework.ipynb and work inside that notebook only.</item>
+			<item>Resolve project-relative paths (configs, training_output, scalers, checkpoints) without hard-coding absolute directories.</item>
+			<item>Verify required artifacts exist; surface a dataframe detailing presence, size, and paths.</item>
+			<item>Load model and training configs, historical config snapshots, and training_output logs; enrich them with helpful derived metrics.</item>
+			<item>Ingest particle_data.csv plus cached scalers; regenerate scalers via data_processing.complete_data_pipeline when missing.</item>
+			<item>List available weight checkpoints, rebuild the latest AdvancedNeuralNetwork instance with matching configs, and load weights.</item>
+			<item>Generate batched predictions, compute residual analytics, and summarize MAE/RMSE plus residual samples.</item>
+			<item>Create diagnostic visuals (loss curves, learning-rate vs performance scatter, residual histogram, metric correlation heatmap) and persist them under training_output/analysis/figures.</item>
+			<item>Produce hyperparameter sweep recommendations driven by observed trends (plateaus, train/val gaps, runtime headroom).</item>
+			<item>Capture a concise insight summary and a validation checklist so future runs can confirm notebook health quickly.</item>
 		</list>
 	</stepwise-instructions>
 
-	<h syntax="markdown">Context</h>
 	<section>
-		<p>Use the existing Python modules (advanced_neural_network.py, data_processing.py, ml_utils.py, weight_constraints.py) and training artifacts located in neural-network-lab-python to ground the analysis.</p>
-		<folder src="../../" maxDepth="2" filter=".*\.(py|csv|json|h5)$" syntax="markdown" />
-		<hint captionStyle="plain">Prior training runs are stored in training_output/loss_history.csv and training_results.csv. The scalers (scaler_X.pkl, scaler_y.pkl) should be reused when generating predictions.</hint>
+		<h>Key artifacts</h>
+		<cp caption="Folders">
+			<list>
+				<item>neural-network-lab-python/ml_config (model_config.json, training_config.json)</item>
+				<item>neural-network-lab-python/training_output (loss_history.csv, training_results.csv, configuration_log.csv, training_config_*.json)</item>
+				<item>neural-network-lab-python/training_output/analysis/figures (export plots here)</item>
+				<item>neural-network-lab-python/model_weights_epoch_*.weights.h5 (checkpoint sweep)</item>
+			</list>
+		</cp>
+		<cp caption="Utilities">
+			<list>
+				<item>advanced_neural_network.AdvancedNeuralNetwork</item>
+				<item>data_processing.complete_data_pipeline, data_processing.load_and_validate_data</item>
+				<item>ml_utils.compute_loss_weights (imported if needed for derived metrics)</item>
+				<item>weight_constraints.BinaryWeightConstraintMax and related helpers for contextual notes</item>
+			</list>
+		</cp>
 	</section>
 
-	<h syntax="markdown">Notebook Blueprint</h>
-	<section>
-		<list listStyle="dash">
-			<item>Start with a markdown overview describing objectives, datasets, and experiment scope.</item>
-			<item>Implement code cells that load configuration JSON files, training logs, and weight checkpoints.</item>
-			<item>Create visual diagnostics (loss curves, parameter correlations, prediction residuals) using matplotlib or seaborn.</item>
-			<item>Provide tables summarizing best-performing runs, hyperparameter ranges, and suggested adjustments.</item>
-			<item>Conclude with actionable next steps including hyperparameter combinations to trial and expected outcomes.</item>
-		</list>
-		<hint captionStyle="plain">Keep helper utilities modular so they can be imported into future notebooks.</hint>
-	</section>
+	<hint>Prefer vectorized pandas/numpy operations, reuse helper functions already present in neural-network-lab-python, and document non-obvious logic directly in notebook cells.</hint>
 
-	<introducer>Ensure the notebook adheres to the JSON cell format described below when created programmatically.</introducer>
-
-	<examples captionStyle="header" captionEnding="colon">
-		<example>
-			<input caption="Prompt">Outline the hyperparameter tuning section.</input>
-			<output caption="Desired Outline">1. Load training_config.json ranges; 2. Compare with achieved metrics; 3. Recommend top 3 parameter sweeps with justification; 4. Flag constraints from weight_constraints.py.</output>
-		</example>
-		<example>
-			<input caption="Prompt">Describe a visualization plan.</input>
-			<output caption="Desired Outline">Plot loss_history.csv trends, scatter learning rates vs. final loss, and render residual histograms leveraging scaler outputs.</output>
-		</example>
-	</examples>
+	<output-format>Update notebook cells in-place so the executed notebook renders tables, charts, and markdown guidance; ensure saved figures land in training_output/analysis/figures; finish with a markdown summary of insights and recommended next steps.</output-format>
 </poml>
