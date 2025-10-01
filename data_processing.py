@@ -42,8 +42,8 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
 
         for i in range(num_particles):
             t, vx0, vy0, x0, y0, m, q, B = [data[k][i] for k in 
-                ['simulation_time', 'initial_velocity_x', 'initial_velocity_y',
-                 'initial_position_x', 'initial_position_y', 'mass', 'charge', 'magnetic_field_strength']]
+                ['simulation_time', 'initial_velocity_x', 'initial_velocity_y', 'initial_position_x', 
+                 'initial_position_y', 'mass', 'charge', 'magnetic_field_strength']]
             
             if q != 0 and m != 0 and abs(q * B / m) > 1e-10:  # Charged particle with significant magnetic field
                 # Cyclotron frequency
