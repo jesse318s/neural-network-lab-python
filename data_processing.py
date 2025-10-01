@@ -46,42 +46,26 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
                  'initial_position_x', 'initial_position_y', 'mass', 'charge', 'magnetic_field_strength']]
             
             if q != 0 and m != 0 and abs(q * B / m) > 1e-10:  # Charged particle with significant magnetic field
-                # Cyclotron frequency (using appropriate scaling)
+                # Cyclotron frequency
                 omega = (q * B) / m
                 omega_t = omega * t
-                # Correct cyclotron motion equations
-                cos_wt = np.cos(omega_t)
-                sin_wt = np.sin(omega_t)
-                # Final velocities (rotation of initial velocity vector)
-                vx_final = vx0 * cos_wt - vy0 * sin_wt
-                vy_final = vx0 * sin_wt + vy0 * cos_wt
+                cos_ot = np.cos(omega_t)
+                sin_ot = np.sin(omega_t)
+
+                # Velocity rotation
+                vx_final = vx0 * cos_ot - vy0 * sin_ot
+                vy_final = vx0 * sin_ot + vy0 * cos_ot
                 
-                # Final positions (cycloid trajectory)
-                if abs(omega) > 1e-10: #believe wrong
-                    x_final = x0 + (vx0 * sin_wt - vy0 * (cos_wt - 1)) / omega
-                    y_final = y0 + (vx0 * (cos_wt - 1) + vy0 * sin_wt) / omega
-                else: #mayeb wrong
-                    # Fallback to linear motion if omega is too small
-                    x_final = x0 + vx0 * t
-                    y_final = y0 + vy0 * t          
+                # Position update
+                x_final = x0 + (vx0 * sin_ot + vy0 * (cos_ot - 1)) / omega
+                y_final = y0 + (vy0 * sin_ot + vx0 * (1 - cos_ot)) / omega
             else:  # Neutral particle or negligible magnetic field - linear motion
                 vx_final, vy_final = vx0, vy0
                 x_final, y_final = x0 + vx0 * t, y0 + vy0 * t
             
-            # Add some noise to simulate measurement errors
-            noise_factor = 0.05
-            # Ensure we don't add noise to zero values
-            vx_noise = noise_factor * max(abs(vx_final), 0.1) * np.random.normal(0, 1)
-            vy_noise = noise_factor * max(abs(vy_final), 0.1) * np.random.normal(0, 1)
-            x_noise = noise_factor * max(abs(x_final), 0.1) * np.random.normal(0, 1)
-            y_noise = noise_factor * max(abs(y_final), 0.1) * np.random.normal(0, 1)
-            vx_final += vx_noise
-            vy_final += vy_noise
-            x_final += x_noise
-            y_final += y_noise
             # Calculate derived quantities
-            kinetic_energy = 0.5 * m * (vx_final**2 + vy_final**2) 
-            trajectory_length = np.sqrt((x_final - x0)**2 + (y_final - y0)**2)
+            kinetic_energy = 0.5 * m * (vx_final**2 + vy_final**2)
+            trajectory_length = np.sqrt((x_final - x0)**2 + (y_final - y0)**2) # Displacement for simplicity
             outputs.append([vx_final, vy_final, x_final, y_final, kinetic_energy, trajectory_length])
         
         output_names = ['final_velocity_x', 'final_velocity_y', 'final_position_x',
