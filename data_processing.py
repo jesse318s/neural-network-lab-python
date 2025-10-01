@@ -51,7 +51,7 @@ def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -
                 omega_t = omega * t
                 cos_ot = np.cos(omega_t)
                 sin_ot = np.sin(omega_t)
-                # Velocity rotation
+                # Velocity update
                 vx_final = vx0 * cos_ot - vy0 * sin_ot
                 vy_final = vx0 * sin_ot + vy0 * cos_ot          
                 # Position update
