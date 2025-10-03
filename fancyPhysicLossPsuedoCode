@@ -1,23 +1,28 @@
-def KineticCompoent(xVelocity, yVelocity):
-  return (xVelocity**2+yVelocity**2)/2
+#pos = positon, vel = velocity, mag=magnetic 
 
-def magneticPotential(magneticField,yPosition,xPostion,xVelocity,yVelocity,charge):
-  crossProduct=(yPosition*xVelocity-xPosition*yVelocity)
-  MagneticFieldPotential=charge*magneticField*crossProduct
-  return abs(MagneticFieldPotential)
+def KineticComponet(xVel, yVel):
+  return (xVely**2+yVel**2)/2
+
+def magneticPotential(magnField,yPos,xPos,xVel,yVel,charge):
+  crossProduct=(yPos*xVel-xPos*yVel)
+  magFieldPotential=abs(charge*magField*crossProduct)
+  return magFieldPotential
   
-def (magneticField, charge,xPositionOrig, yPositionOrig,  xVelocityOrig, yVelocityOrig, xPositionNow, yPositionnNow,  xVelocitynNow, yVelocitynNow):
-  KCorig, KCNow=KineticCompoent(xVelocityOrig, yVelocityOrig, kineticCompoent(xVelocityNow, yVelocityNow) 
-  magneticPotentialOrig=magneticPotential(magneticField,yPositionOrig,xPostionOrig,xVelocityOrig,yVelocityOrig)
-  magneticPotentialNow=magneticPotential(magneticField,yPositionNow,xPostionNow,xVelocityNow,yVelocityNow)
-  diff=KCnow-KCorig+agneticPotentialNow-magneticPotentialOrig
+def (magField, charge,xPosOrig, yPosnOrig,  xVelOrig, yVelOrig, xPosNow, yPosNow,  xVelNow, yVelNow):
+  KCOrig, KCNow=KineticComponet(xVelyOrig, yVelOrig), kineticComponet(xVelNow, yVelNow) 
+  magPotentialOrig=magneticPotential(magField,yPosOrig,xPosOrig,xVelOrig,yVelOrig)
+  magPotentialNow=magneticPotential(magField,yPosNow,xPosNow,xVelNow,yVelNow)
+  diff=KCNow-KCOrig+magPotentialNow-magPotentialOrig
   return abs(diff)
 
-#energy in system must remain costant, that is potential + kinetic
-#this sees if that remains true, mass is ignored because it can be factored out
-#magnetic potential comes from charge * MagneticField x Velocity (the Lorentz Force), where crossproduct is x
-#To find crossproduct, or to find component of velocity traveling perpendicular to magnetic field, if we assume field is centered at origin (0,0)
-#It is  Velocity x Location, dividing by distance form origin would give velocity component in right direction, but we do not do that as
+#energy in system must remain constant, that is, potential + kinetic
+#This sees if that remains true, mass is ignored because it can be factored out
+#magnetic potential comes from charge * MagneticField x Velocity (the Lorentz Force), where cross product is x
+#To find the cross product, or to find the component of velocity traveling perpendicular to the magnetic field, 
+#if we assume the field is centered at the origin (0,0)
+#It is Velocity x Location, dividing by distance from origin would give velocity component in the right direction, but we do not do that as
 #that extra distance component converts force to energy
-#we need absolute value of this, as potential field could be pointing in two different directions towards or away but we only care about magnitude
-#this loss function makes sure part of physics is followed, but can not give exact answers
+#we need the absolute value of this, as the potential field could be pointing in two different directions towards or away, 
+#but we only care about the magnitude
+# This loss function makes sure part of physics is followed, but cannot give exact answers
+
