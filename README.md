@@ -5,7 +5,7 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 ## Features
 
 - **Binary Weight Constraints**: Control binary precision of neural network weights
-- **Oscillation Dampening**: Prevent weight oscillations during training  
+- **Oscillation Dampening**: Prevent weight oscillations during training
 - **Adaptive Loss Functions**: Dynamically adjusts MSE/MAE based on training
 - **Performance Tracking**: Comprehensive metrics collection with CSV export
 - **Error Resilience**: Graceful degradation on component failures
@@ -13,15 +13,18 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 ## Core Components
 
 ### Weight Constraints
+
 - **Binary Precision Control**: Limits binary digits in weight representations
 - **Oscillation Dampening**: Detects and prevents weight oscillation patterns
 
 ### Adaptive Loss Functions
+
 - **R²-Based**: Modifies weights based on validation R² score
 - **Loss-Based**: Adapts based on previous loss values
 - **Combined Strategy**: Intelligently combines both strategies
 
 ### Performance Tracking
+
 - Training metrics and result tracking
 - Memory usage and timing measurements
 - CSV export with comprehensive logging
@@ -77,7 +80,7 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ├── requirements.txt             # Dependencies
 ├── test_main.py                 # Test suite
 ├── weight_constraints.py        # Binary weight management
-├── saved_weights/               # Model weights generated during training 
+├── saved_weights/               # Model weights generated during training
 └── training_output/             # Generated results (name may vary based on config)
     ├── training_results.csv
     ├── loss_history.csv
@@ -88,6 +91,7 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ## Output Files
 
 Training generates comprehensive logs and metrics:
+
 - Training and validation metrics per epoch
 - Weight evolution and constraint applications
 - Loss function component tracking
@@ -97,15 +101,19 @@ Training generates comprehensive logs and metrics:
 ## Key Features
 
 ### Binary Weight Constraints
+
 Controls weight precision at the binary level, preventing explosive growth while maintaining numerical stability.
 
-### Oscillation Dampening  
+### Oscillation Dampening
+
 Detects weight oscillation patterns across epochs and applies dampening to stabilize training.
 
 ### Adaptive Loss Functions
+
 Dynamically adjusts MSE/MAE weighting based on R² and loss history.
 
 ### Error Resilience
+
 Implements graceful degradation - training continues even when individual components encounter errors.
 
 ## Testing
@@ -122,10 +130,11 @@ Key configuration options:
 
 ```json
 {
-    "enable_weight_oscillation_dampener": true,
-    "enable_binary_change_max": true,
-    "max_additional_binary_digits": 16,
-    "enable_binary_precision_max": true,
-    "max_binary_digits": 24
+  "enable_weight_oscillation_dampener": true,
+  "enable_binary_change_max": true,
+  "max_additional_binary_digits": 16,
+  "enable_binary_precision_max": true,
+  "max_binary_digits": 24,
+  "loss_weighting_strategy": "combined"
 }
 ```
