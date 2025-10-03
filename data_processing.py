@@ -213,7 +213,7 @@ def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: 
         return dummy_X[:6], dummy_X[6:8], dummy_X[8:], dummy_y[:6], dummy_y[6:8], dummy_y[8:]
 
 
-def complete_data_pipeline(csv_path: str = 'particle_data.csv', num_particles: int = 1000) -> Tuple[np.ndarray, ...]:
+def complete_data_pipeline(csv_path: str = 'particle_data.csv', num_particles: int = 2000) -> Tuple[np.ndarray, ...]:
     """
     Execute complete data loading, validation, and preprocessing pipeline.
     
