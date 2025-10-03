@@ -59,7 +59,7 @@ from main import train_with_tracking
 # Load data and create model
 data_splits = complete_data_pipeline(num_particles=1000)
 X_train, X_val, X_test, y_train, y_val, y_test = data_splits
-config = {'epochs': 50, 'batch_size': 32, 'learning_rate': 0.001}
+config = {'epochs': 50, 'batch_size': 32, 'learning_rate': 0.001, 'dropout_rate': 0.02}
 model = AdvancedNeuralNetwork((X_train.shape[1],), y_train.shape[1], config)
 
 # Train with tracking
