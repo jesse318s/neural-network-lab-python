@@ -19,7 +19,7 @@ def adaptiveLoss(lossList,weightList):
 #generally we should increase bigger weights more and smaller weights less as it seems bigger weights more important
 #square is to make sure its not linear and for other reasons later explained
 #this makes it like you are speeding up or slowing down sine function fluctation used before
-#square also makes speed up of indvidual factors more different, to explore different "offsets" or "phases" better
+#square also makes speed up of individual factors more different, to explore different "offsets" or "phases" better
 #does reverse direction if zero or negative, one 
 #normalization keeps it bounded
 #unitVector function was found to be faster than using pure numpy implentation
