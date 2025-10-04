@@ -1,4 +1,6 @@
 #pos = positon, vel = velocity, mag=magnetic 
+import numpy as np
+import math
 
 def KineticComponet(xVel, yVel):
   return (xVely**2+yVel**2)/2
@@ -28,7 +30,7 @@ def (magField, charge,xPosOrig, yPosnOrig,  xVelOrig, yVelOrig, xPosNow, yPosNow
 
 
 #sine fitting weights
-import math
+
 
 def epochWeightSineForOneWeight(epoch,numberOfLossFunctions,number): 
   #fluctuates weights based on sine curve, making sure always positive, and weights add up to one
@@ -42,20 +44,42 @@ return weightsArray
 
 #curve fitting fancy
 
-import numpy as np
+def unitVector(x):
+        square=np.square(x)
+        scale=0
+        for z in range(0,len(x)):
+                scale=scale+square[z]
+        return x/scale
+
+def adaptiveLossNoSin(lossList,weightList):
+        diff=lossList[:-1]-lossList[:-2]
+        square=np.squared(weightList[-1])
+        unit=unitVector(square)
+        if diff < 0:
+                return -1*unit
+        return unit
+
+#if weights are improving from before, 
+#generally we should increase bigger weights more and smaller weights less as it seems bigger weights more important
+#square is to make sure its not linear and for other reasons later explained
+#this makes it like you are speeding up or slowing down sine function fluctation used before
+#square also makes speed up of individual factors more different, to explore different "offsets" or "phases" better
+#does reverse direction if zero or negative, one 
+#normalization keeps it bounded
+#unitVector function was found to be faster than using pure numpy implentation
+
 
 def curveFancy(loss, weightsList, epochs,numberOfLossFunctions):
   minTodoFancy=numberOfLossFunctions+2
-  if epcochs > minTodoFancy: #make sure enoough points for curve fitting, ele use sine funciton above to colect more varied points
-    #insert fancy function
+  if epochs > minTodoFancy: #make sure enoough points for curve fitting, ele use sine funciton above to colect more varied points
+    adaptiveLossNoSin(lossList,weightList)+epochWeightSineForOneWeight(epoch,numberOfLossFunctions)
     newWeights[newWeights == 0] = 0.1 #make sure no weight is zero, as then no data there and it vanishes
     min=np.min(newWeights)
     if min < 0: newWeights=newWeights+min #no negative weights, as this would make things worse in soem direction
-    return newWeights=newWeights/np.linalg.norm(newWeight) #normalized, so its bounded and nothing grows to extreme
-else:
-  return newWeights=epochWeightSineForOneWeight(epoch,numberOfLossFunctions)
+    return newWeights=unitVector(newWeights) #normalized, so its bounded and nothing grows to extreme
+  else:
+    return newWeights=epochWeightSineForOneWeight(epoch,numberOfLossFunctions)
 
-#need to right fancy function still
 
 
 
