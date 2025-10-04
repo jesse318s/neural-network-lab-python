@@ -35,7 +35,7 @@ def (magField, charge,xPosOrig, yPosnOrig,  xVelOrig, yVelOrig, xPosNow, yPosNow
 
 def epochWeightSineForOneWeight(epoch,numberOfLossFunctions,number): 
   #fluctuates weights based on sine curve, making sure always positive, and weights add up to one
-  return (math.sin(epoch+2*pi*number/numberOfLossFunctions)+1)/2
+  return (math.sin(epoch+2*math.pi*number/numberOfLossFunctions)+1)/2
 
 def epochWeightSineBased(epoch,numberOfLossFunctions): #does weights for all loss functions 
   weightsArray=[]
@@ -59,7 +59,7 @@ def unitVector(x):
 
 def adaptiveLossNoSin(lossList,weightList):
         diff=lossList[:-1]-lossList[:-2]
-        square=np.squared(weightList[-1])
+        square=np.square(weightList[-1])
         unit=unitVector(square)
         if diff < 0:
                 return -1*unit
@@ -70,14 +70,15 @@ def adaptiveLossNoSin(lossList,weightList):
 #square is to make sure its not linear and for other reasons later explained
 #this makes it like you are speeding up or slowing down sine function fluctation used before
 #square also makes speed up of individual factors more different, to explore different "offsets" or "phases" better
-#does reverse direction if zero or negative, one 
+#does reverse direction if change in loss is zero or negative  
 #normalization keeps it bounded
 #unitVector function was found to be faster than using pure numpy implentation
 
 
 def curveFancy(loss, weightsList, epochs,numberOfLossFunctions):
   minTodoFancy=numberOfLossFunctions+2
-  if epochs > minTodoFancy: #make sure enoough points for curve fitting, ele use sine funciton above to colect more varied points
+  if minTodoFancy < 7: minTodoFancy = 7 #makes sure at least one cycle as, as 2Pi rounded up is seven
+  if epochs > minTodoFancy: #make sure enough points for curve fitting, ele use sine funciton above to colect more varied points
     adaptiveLossNoSin(lossList,weightList)+epochWeightSineForOneWeight(epoch,numberOfLossFunctions)
     newWeights[newWeights == 0] = 0.1 #make sure no weight is zero, as then no data there and it vanishes
     min=np.min(newWeights)
