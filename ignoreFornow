@@ -1,0 +1,18 @@
+import scipy
+
+
+
+popt, pcov=scipy.optimize.curve_fit(lambda x,a,b,c: a*numpy.exp(b*x)+c,  x,  y)
+a, b, c = popt
+
+from scipy.optimize import minimize
+import numpy as np
+
+func = lambda x: x[0] * (4 - x[0] * x[1])
+x0 = np.array([0, 2])
+bounds = [(-1, 1), (2, 10)]
+min_val = minimize(func, x0, bounds=bounds).fun
+max_val = minimize(lambda x: -func(x), x0, bounds=bounds).fun
+
+print(min_val, max_val)
+
