@@ -26,3 +26,37 @@ def (magField, charge,xPosOrig, yPosnOrig,  xVelOrig, yVelOrig, xPosNow, yPosNow
 #but we only care about the magnitude
 # This loss function makes sure part of physics is followed, but cannot give exact answers
 
+
+#sine fitting weights
+import math
+
+def epochWeightSineForOneWeight(epoch,numberOfLossFunctions,number): 
+  #fluctuates weights based on sine curve, making sure always positive, and weights add up to one
+  return (math.sin(epoch+2*pi*number/numberOfLossFunctions)+1)/2
+
+def epochWeightSineBased(epoch,numberOfLossFunctions): #does weights for all loss functions 
+  weightsArray=[]
+  for number in range (0, numberOfLossFunctions):
+    weightsArray=weightsArray.append(epochWeightSineForOneWeigh(epoch,numberOfLossFunctions,number)
+return weightsArray
+
+#curve fitting fancy
+
+import numpy as np
+
+def curveFancy(loss, weightsList, epochs,numberOfLossFunctions):
+  minTodoFancy=numberOfLossFunctions+2
+  if epcochs > minTodoFancy: #make sure enoough points for curve fitting, ele use sine funciton above to colect more varied points
+    #insert fancy function
+    newWeights[newWeights == 0] = 0.1 #make sure no weight is zero, as then no data there and it vanishes
+    min=np.min(newWeights)
+    if min < 0: newWeights=newWeights+min #no negative weights, as this would make things worse in soem direction
+    return newWeights=newWeights/np.linalg.norm(newWeight) #normalized, so its bounded and nothing grows to extreme
+else:
+  return newWeights=epochWeightSineForOneWeight(epoch,numberOfLossFunctions)
+
+#need to right fancy function still
+
+
+
+
