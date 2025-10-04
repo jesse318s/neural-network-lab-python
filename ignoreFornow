@@ -1,18 +1,18 @@
-import scipy
-
-
-
-popt, pcov=scipy.optimize.curve_fit(lambda x,a,b,c: a*numpy.exp(b*x)+c,  x,  y)
-a, b, c = popt
-
-from scipy.optimize import minimize
 import numpy as np
 
-func = lambda x: x[0] * (4 - x[0] * x[1])
-x0 = np.array([0, 2])
-bounds = [(-1, 1), (2, 10)]
-min_val = minimize(func, x0, bounds=bounds).fun
-max_val = minimize(lambda x: -func(x), x0, bounds=bounds).fun
+def adaptiveLoss(lossList,weightList):
+        diff=lossList[:-1]-lossList[:-2]
+        square=np.squared(weightList[-1])
+        unit=square/np.linalg.norm(square)
+        if diff < 0:
+                return -1*unit
+        return unit
 
-print(min_val, max_val)
+#if weights are improving from before, 
+#generally we should increase bigger weights more and smaller weights less as it seems bigger weights more important
+#square is to make sure its not linear and for other reasons later explained
+#this makes it like you are speeding up or slowing down sine function fluctation used before
+#square also makes speed up of indvidual factors more different, to explore different "offsets" or "phases" better
+#does reverse direction if zero or negative, one 
+#normalization keeps it bounded
 
