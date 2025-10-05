@@ -171,6 +171,42 @@ class TestDataProcessing(unittest.TestCase):
         self.assertEqual(len(processed_data), 6)
 
 
+class TestAdvancedNeuralNetwork(unittest.TestCase):
+    """Test the AdvancedNeuralNetwork class."""
+    
+    def setUp(self):
+        if not (WEIGHT_CONSTRAINTS_AVAILABLE and ADAPTIVE_LOSS_AVAILABLE and 
+                PERFORMANCE_TRACKER_AVAILABLE and DATA_PROCESSING_AVAILABLE):
+            self.skipTest("Required modules for AdvancedNeuralNetwork not available")
+        
+        from main import AdvancedNeuralNetwork, complete_data_pipeline, train_with_tracking
+        self.AdvancedNeuralNetwork = AdvancedNeuralNetwork
+        self.complete_data_pipeline = complete_data_pipeline
+        self.train_with_tracking = train_with_tracking
+    
+    def test_model_creation(self):
+        """Test creating an instance of AdvancedNeuralNetwork."""
+        model = self.AdvancedNeuralNetwork((10,), 2, config={})
+
+        self.assertIsNotNone(model)
+    
+    def test_complete_data_pipeline(self):
+        """Test the complete data pipeline function."""
+        data_splits = self.complete_data_pipeline(num_particles=100)
+
+        self.assertEqual(len(data_splits), 6)
+    
+    def test_training_with_tracking(self):
+        """Test training with performance tracking."""
+        data_splits = self.complete_data_pipeline(num_particles=100)
+        training_config = {'epochs': 1, 'batch_size': 16}
+        X_train, X_val, X_test, y_train, y_val, y_test = data_splits
+        model = self.AdvancedNeuralNetwork((X_train.shape[1],), y_train.shape[1], config={})
+        results = self.train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_test, training_config)
+        
+        self.assertIn('test', results)
+
+
 class TestIntegration(unittest.TestCase):
     """Basic integration tests."""
     
