@@ -201,7 +201,7 @@ class OscillationDampener(BinaryWeightConstraint):
             shrinkage_factor = 1 - np.exp(-2 * raw_factor)
             # Determine number of digits to zero from all significant bits (at least 1)
             digits_to_zero = max(1, int(1 + shrinkage_factor * (bit_count - 1)))
-            # Zero out the specified number of least significant bits (reducing the precision)
+            # Zero out the specified number of least significant bits (reducing the precision of oscillations)
             packed = struct.pack('f', weight)
             bits = struct.unpack('I', packed)[0]
 
