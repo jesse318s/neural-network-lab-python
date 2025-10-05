@@ -1,0 +1,11 @@
+{
+  "hidden_layers": [128, 64, 32, 16],
+  "activation": "relu",
+  "optimizer": "adam",
+  "learning_rate": 0.002,
+  "dropout_rate": 0.02,
+  "enable_weight_oscillation_dampener": true,
+  "enable_binary_change_max": true,
+  "max_additional_binary_digits": 16,
+  "loss_weighting_strategy": "combined"
+}
