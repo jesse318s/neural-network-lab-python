@@ -1,3 +1,5 @@
+#Weights here refer to weights to balance relative loss functions, like MAE and MSE, not weights used between connections between neurons
+
 #pos = positon, vel = velocity, mag=magnetic 
 import numpy as np
 import math
