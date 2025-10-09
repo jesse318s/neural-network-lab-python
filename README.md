@@ -1,6 +1,6 @@
 # neural-network-lab-python
 
-A TensorFlow implementation featuring custom weight constraints, adaptive loss functions, and performance tracking for neural network training with particle physics simulation data.
+A TensorFlow implementation featuring custom weight constraints, adaptive loss functions, performance tracking, and experiment analysis for neural network training with particle physics simulation data.
 
 ## Features
 
@@ -8,6 +8,7 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 - **Oscillation Dampening**: Prevent weight oscillations during training
 - **Adaptive Loss Functions**: Dynamically adjusts MSE/MAE based on training
 - **Performance Tracking**: Comprehensive metrics collection with CSV export
+- **Experiment Analysis Framework**: Tools for analyzing training experiments
 - **Error Resilience**: Graceful degradation on component failures
 
 ## Core Components
@@ -28,6 +29,11 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 - Training metrics and result tracking
 - Memory usage and timing measurements
 - CSV export with comprehensive logging
+
+### Experiment Analysis Framework
+
+- Tools for analyzing and visualizing training experiments
+- Provides hyperparameter tuning insights
 
 ## Installation
 
@@ -69,19 +75,21 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ## Project Structure
 
 ```
-├── ml_config/                   # ML configuration files
+├── ml_config/                        # ML configuration files
 |   ├── model_config.json
 |   └── training_config.json
-├── advanced_neural_network.py   # Core neural network implementation
-├── data_processing.py           # Data processing functionality
-├── main.py                      # Main training script
-├── ml_utils.py                  # ML utilities (adaptive loss)
-├── performance_tracker.py       # Metrics tracking and CSV output
-├── requirements.txt             # Dependencies
-├── test_main.py                 # Test suite
-├── weight_constraints.py        # Binary weight management
-├── saved_weights/               # Model weights generated during training
-└── training_output/             # Generated results (name may vary based on config)
+├── advanced_neural_network.py        # Core neural network implementation
+├── data_processing.py                # Data processing functionality
+├── experiment_analysis_framework.py  # Experiment analysis tools
+├── main.py                           # Main training script
+├── ml_utils.py                       # ML utilities (adaptive loss)
+├── performance_tracker.py            # Metrics tracking and CSV output
+├── requirements.txt                  # Dependencies
+├── test_main.py                      # Test suite
+├── weight_constraints.py             # Binary weight management
+├── saved_weights/                    # Model weights generated during training
+└── training_output/                  # Generated results (name may vary based on config)
+    ├── analysis/
     ├── training_results.csv
     ├── loss_history.csv
     ├── training_log.txt
@@ -97,6 +105,11 @@ Training generates comprehensive logs and metrics:
 - Loss function component tracking
 - Model weights and performance statistics
 - Error logs and configuration records
+
+Analysis tools help visualize and interpret results:
+
+- Loss curves
+- Metric trends
 
 ## Key Features
 
