@@ -266,6 +266,7 @@ class PerformanceTracker:
         try:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             config_id = f"training_config_{timestamp}"
+            self.weight_file_sizes = {k.replace("\\", "/"): v for k, v in self.weight_file_sizes.items()}
             config_data = {
                 'config_id': config_id,
                 'timestamp': datetime.now().isoformat(),

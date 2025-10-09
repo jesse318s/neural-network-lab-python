@@ -17,7 +17,8 @@ import shutil
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
-    from weight_constraints import BinaryWeightConstraintMax, BinaryWeightConstraintChanges, OscillationDampener
+    from weight_constraints import (BinaryWeightConstraintMax, BinaryWeightConstraintChanges, 
+        OscillationDampener, AdaptiveOscillationDampener)
     WEIGHT_CONSTRAINTS_AVAILABLE = True
 except ImportError:
     WEIGHT_CONSTRAINTS_AVAILABLE = False
@@ -72,6 +73,20 @@ class TestWeightConstraints(unittest.TestCase):
     def test_oscillation_dampener(self):
         """Test oscillation dampener functionality."""
         dampener = OscillationDampener()
+        dampener_weight_values = [0.41, 0.51, 0.31]
+        unstable_weights = np.array([[0.81]])
+        
+        for val in dampener_weight_values:
+            dampener.add_weights(np.array([[val]]))
+
+        result = dampener.apply_constraint(unstable_weights)
+        self.assertIsInstance(result, np.ndarray)
+        self.assertEqual(result.shape, unstable_weights.shape)
+        self.assertLess(result[0,0], unstable_weights[0,0])
+
+    def test_adaptive_oscillation_dampener(self):
+        """Test adaptive oscillation dampener functionality."""
+        dampener = AdaptiveOscillationDampener()
         dampener_weight_values = [0.41, 0.51, 0.31]
         unstable_weights = np.array([[0.81]])
         
@@ -169,6 +184,42 @@ class TestDataProcessing(unittest.TestCase):
         
         self.assertIsInstance(processed_data, tuple)
         self.assertEqual(len(processed_data), 6)
+
+
+class TestAdvancedNeuralNetwork(unittest.TestCase):
+    """Test the AdvancedNeuralNetwork class."""
+    
+    def setUp(self):
+        if not (WEIGHT_CONSTRAINTS_AVAILABLE and ADAPTIVE_LOSS_AVAILABLE and 
+                PERFORMANCE_TRACKER_AVAILABLE and DATA_PROCESSING_AVAILABLE):
+            self.skipTest("Required modules for AdvancedNeuralNetwork not available")
+        
+        from main import AdvancedNeuralNetwork, complete_data_pipeline, train_with_tracking
+        self.AdvancedNeuralNetwork = AdvancedNeuralNetwork
+        self.complete_data_pipeline = complete_data_pipeline
+        self.train_with_tracking = train_with_tracking
+    
+    def test_model_creation(self):
+        """Test creating an instance of AdvancedNeuralNetwork."""
+        model = self.AdvancedNeuralNetwork((10,), 2, config={})
+
+        self.assertIsNotNone(model)
+    
+    def test_complete_data_pipeline(self):
+        """Test the complete data pipeline function."""
+        data_splits = self.complete_data_pipeline(num_particles=100)
+
+        self.assertEqual(len(data_splits), 6)
+    
+    def test_training_with_tracking(self):
+        """Test training with performance tracking."""
+        data_splits = self.complete_data_pipeline(num_particles=100)
+        training_config = {'epochs': 1, 'batch_size': 16}
+        X_train, X_val, X_test, y_train, y_val, y_test = data_splits
+        model = self.AdvancedNeuralNetwork((X_train.shape[1],), y_train.shape[1], config={})
+        results = self.train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_test, training_config)
+        
+        self.assertIn('test', results)
 
 
 class TestIntegration(unittest.TestCase):
