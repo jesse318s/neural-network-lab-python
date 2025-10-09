@@ -15,7 +15,8 @@ os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
 import tensorflow as tf
 
 # Import custom modules
-from weight_constraints import BinaryWeightConstraintChanges, BinaryWeightConstraintMax, OscillationDampener
+from weight_constraints import (BinaryWeightConstraintChanges, BinaryWeightConstraintMax, 
+    OscillationDampener, AdaptiveOscillationDampener)
 from performance_tracker import PerformanceTracker
 from ml_utils import create_adaptive_loss_fn
 
@@ -63,10 +64,13 @@ class AdvancedNeuralNetwork:
     def _init_oscillation_dampener(self):
         """Initialize oscillation dampener."""
         try:
-            if self.config.get('enable_weight_oscillation_dampener', False):
-                return OscillationDampener()
+            if not self.config.get('enable_weight_oscillation_dampener', False):
+                return None
             
-            return None
+            if self.config.get('use_adaptive_oscillation_dampener', False):
+                return AdaptiveOscillationDampener()
+            
+            return OscillationDampener()
         except Exception as e:
             self.errors.append(f"Oscillation dampener failed: {e}")
             return None

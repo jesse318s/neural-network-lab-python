@@ -131,6 +131,7 @@ Key configuration options:
 ```json
 {
   "enable_weight_oscillation_dampener": true,
+  "use_adaptive_oscillation_dampener": true,
   "enable_binary_change_max": true,
   "max_additional_binary_digits": 16,
   "enable_binary_precision_max": true,

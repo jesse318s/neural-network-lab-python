@@ -17,7 +17,8 @@ import shutil
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
-    from weight_constraints import BinaryWeightConstraintMax, BinaryWeightConstraintChanges, OscillationDampener
+    from weight_constraints import (BinaryWeightConstraintMax, BinaryWeightConstraintChanges, 
+        OscillationDampener, AdaptiveOscillationDampener)
     WEIGHT_CONSTRAINTS_AVAILABLE = True
 except ImportError:
     WEIGHT_CONSTRAINTS_AVAILABLE = False
@@ -72,6 +73,20 @@ class TestWeightConstraints(unittest.TestCase):
     def test_oscillation_dampener(self):
         """Test oscillation dampener functionality."""
         dampener = OscillationDampener()
+        dampener_weight_values = [0.41, 0.51, 0.31]
+        unstable_weights = np.array([[0.81]])
+        
+        for val in dampener_weight_values:
+            dampener.add_weights(np.array([[val]]))
+
+        result = dampener.apply_constraint(unstable_weights)
+        self.assertIsInstance(result, np.ndarray)
+        self.assertEqual(result.shape, unstable_weights.shape)
+        self.assertLess(result[0,0], unstable_weights[0,0])
+
+    def test_adaptive_oscillation_dampener(self):
+        """Test adaptive oscillation dampener functionality."""
+        dampener = AdaptiveOscillationDampener()
         dampener_weight_values = [0.41, 0.51, 0.31]
         unstable_weights = np.array([[0.81]])
         
