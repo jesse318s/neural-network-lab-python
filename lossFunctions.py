@@ -4,16 +4,28 @@
 import numpy as np
 import math
 
+def notListOrArray(x): #fix #this function not working right to test if array or list, or int or float of some kind for later functions
+	#so ugly try and excpet used instead
+  print(type(x),x)
+  if (type(x) != list) or (type(x) != np.array) or (type(x) != numpy.ndarray) :
+    return False
+  try:
+    q=x[0]
+    return False
+  except:
+    False
+  return True
+
 
 def unitVec(x):
         squared=np.square(x)
         scale=0
-        if isinstance(x, list):
+        if notListOrArray(squared):
                 for z in range(0,len(x)):
                         scale=scale+squared[z]
         else:
                 return 1
-        return x/scale
+        return np.divide(x,scale)
 
 def oneMaker(x): #makes all weights add up to one or negative one assuming all weights have the same sign
         return x/np.sum(np.abs(x))
@@ -64,11 +76,32 @@ def epochWeightSineBased(epoch,numberOfLossFuncs): #does weights for all loss fu
 
 #curve fitting fancy
 
+def squareButPreserveSigns(x): 
+  print(x)
+  if x < 0:
+    return -1*x**2
+  else:
+      return x**2
+
+
+def squarerDiffSignPreserver(x1,x2): #fix
+  print("whqdjadsjhjsahd")
+  diff=np.subtract(x1,x2)
+  out=[]
+  try:
+    print("diff", diff)
+    for z in range (0,len(diff)):
+      out=np.append(out,squareButPreserveSigns(diff[z]))
+  except: 
+       print("diff is in else ",diff, " ", type(diff))
+       return squareButPreserveSigns(diff)
+  return out
+    
 
 def adaptiveLossNoSin(lossList,weightList):
         diff=lossList[-1]-lossList[-2]
-        square=np.square(weightList[-1])
-        unit=unitVec(square)
+        squaredDiff=squarerDiffSignPreserver(weightList[-1],weightList[-2])
+        unit=unitVec(squaredDiff)
         if diff < 0:
                 return -1*unit
         return unit
@@ -81,16 +114,21 @@ def adaptiveLossNoSin(lossList,weightList):
 #does reverse direction if zero or negative, one 
 #normalization keeps it bounded
 #unitVector function was found to be faster than using a pure NumPy implementation
+#This new loss function is cleaner, and is based on differences between weights with sign being preserved
+#this makes it grow along derivative of function or negative derivative, so if things looking good with decreasing values for some
+#it decreases, if things look good with increasing it increases
+#and if it looked bad it flips direction
 
 
 
 def curveFancy(lossList, weightList,numberOfLossFuncs):
   minTodoFancy=numberOfLossFuncs+2
   epoch = 1
-  if isinstance(lossList, list): epoch=len(lossList)
+  if notListOrArray(lossList): epoch=len(lossList)
   if epoch > minTodoFancy: #make sure enough points for curve fitting, else use sine function above to collect more varied points
     newWeights=np.add(adaptiveLossNoSin(lossList,weightList),epochWeightSineBased(epoch,numberOfLossFuncs))
     newWeights[newWeights == 0] = 0.1 #make sure no weight is zero, as then no data there and it vanishes
+    print("debug newWeights line 109, ", newWeights, "daptiveLossNoSin(lossList,weightList)",epochWeightSineBased(epoch,numberOfLossFuncs))
     min=np.min(newWeights)
     if min < 0: newWeights=newWeights+min #no negative weights, as this would make things worse in some direction
     return oneMaker(newWeights) #normalized, so it's bounded and nothing grows to extreme
