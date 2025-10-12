@@ -82,9 +82,6 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ├── ml_config/                        # ML configuration files
 |   ├── model_config.json
 |   └── training_config.json
-├── ml_config/                        # ML configuration files
-|   ├── model_config.json
-|   └── training_config.json
 ├── advanced_neural_network.py        # Core neural network implementation
 ├── data_processing.py                # Data processing functionality
 ├── experiment_analysis_framework_refactored.ipynb  # Refactored experiment analysis notebook
