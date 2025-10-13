@@ -52,19 +52,7 @@ class JamesSteinWeightConstraint(tf.keras.constraints.Constraint):
         self.max_shrinkage = max_shrinkage
     
     def __call__(self, w: tf.Tensor) -> tf.Tensor:
-        """
-        Apply James-Stein shrinkage to the weight tensor.
-        
-        Parameters
-        ----------
-        w : tf.Tensor
-            Weight tensor to constrain.
-        
-        Returns
-        -------
-        tf.Tensor
-            Shrunk weight tensor with same shape as input.
-        """
+        """Apply James-Stein shrinkage to the weight tensor."""
         # Reshape weights to 1D vector for shrinkage computation
         original_shape = tf.shape(w)
         flat_weights = tf.reshape(w, [-1])
