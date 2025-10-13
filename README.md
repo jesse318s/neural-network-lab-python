@@ -86,7 +86,7 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ├── data_processing.py                  # Data processing functionality
 ├── experiment_analysis_framework.ipynb # Experiment analysis notebook
 ├── experiment_analysis_utils.py        # Analysis utility functions
-├── james_stein_constraint.py           # James-Stein weight constraint implementation
+├── james_stein_weight_constraint.py    # James-Stein weight constraint implementation
 ├── main.py                             # Main training script
 ├── ml_utils.py                         # ML utilities (adaptive loss)
 ├── performance_tracker.py              # Metrics tracking and CSV output
