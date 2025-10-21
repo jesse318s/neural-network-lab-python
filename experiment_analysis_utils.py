@@ -343,9 +343,9 @@ def build_model_from_config(
     network = AdvancedNeuralNetwork(
         input_shape=input_shape,
         output_shape=output_shape,
-        config=config_payload
+        config=config_payload, netWorkTwiceAslong=netWorkTwiceAsLonVarg
     )
-    network.compile_model()
+    network.compile_model() #added netWorkTwiceAslong
 
     return network.model
 
