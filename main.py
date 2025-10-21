@@ -14,10 +14,10 @@ from typing import Dict, Any
 from advanced_neural_network import AdvancedNeuralNetwork
 from data_processing import complete_data_pipeline
 
-
+#line 18 allows for twice as long?
 def train_with_tracking(model: AdvancedNeuralNetwork, 
                        X_train: np.ndarray, X_val: np.ndarray, X_test: np.ndarray, y_train: np.ndarray, 
-                       y_val: np.ndarray, y_test: np.ndarray, config: Dict[str, Any]) -> Dict[str, Any]:
+                       y_val: np.ndarray, y_test: np.ndarray, config: Dict[str, Any], netWorkTwiceAslong: bool ) -> Dict[str, Any]:
     """Complete training with comprehensive tracking."""
     # Compile model
     try:
