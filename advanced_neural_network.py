@@ -26,7 +26,7 @@ class AdvancedNeuralNetwork:
     Utilizes custom weight constraints and adaptive loss functions for training.
     """
     
-    def __init__(self, input_shape: Tuple[int], output_shape: int, config: Dict[str, Any]):
+    def __init__(self, input_shape: Tuple[int], output_shape: int, config: Dict[str, Any], netWorkTwiceAslong: bool): #added to make neuralNetwork twice as long
         self.input_shape, self.output_shape  = input_shape, output_shape
         self.config, self.errors = config, []
         # Initialize components with error handling
@@ -100,6 +100,9 @@ class AdvancedNeuralNetwork:
         
         for units in hidden_layers[1:]:
             model.add(tf.keras.layers.Dense(units, activation=activation))
+            if self.netWorkTwiceAslong == True: #added
+                 model.add(tf.keras.layers.Dense(units, activation=activation))
+                 print("twice as long")
 
             if dropout_rate > 0: model.add(tf.keras.layers.Dropout(dropout_rate))
         
