@@ -6,8 +6,7 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 
 - **Binary Weight Constraints**: Control binary precision of neural network weights
 - **Oscillation Dampening**: Prevent weight oscillations during training
-- **Adaptive Loss Functions**: Dynamically adjusts MSE/MAE based on training with multiple strategies including advanced curve-fitting
-- **Physics-Based Loss**: Energy conservation loss for particle physics simulations
+- **Adaptive Loss Functions**: Dynamically adjusts MSE/MAE based on training with multiple strategies
 - **Performance Tracking**: Comprehensive metrics collection with CSV export
 - **Experiment Analysis Framework**: Detailed diagnostics and visualizations
 - **Error Resilience**: Graceful degradation on component failures
@@ -24,12 +23,10 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 - **R²-Based**: Modifies weights based on validation R² score
 - **Loss-Based**: Adapts based on previous loss values
 - **Combined Strategy**: Intelligently combines both strategies
-- **Curve Fancy** ⭐ **NEW**: Advanced adaptive strategy using curve-fitting and sine-based exploration
+- **Curve Fancy**: Advanced adaptive strategy using curve-fitting and sine-based exploration
   - Early epochs: Systematic exploration using sine wave oscillation
   - Later epochs: Gradient-based adaptation with continued exploration
   - Automatically balances MSE/MAE emphasis based on training dynamics
-  - See `ADAPTIVE_LOSS_QUICKSTART.md` for usage guide
-  - See `ADAPTIVE_LOSS_STRATEGY.md` for mathematical details
 
 ### Performance Tracking
 
@@ -51,8 +48,6 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 ```bash
 pip install -r requirements.txt
 ```
-
-**Dependencies**: TensorFlow, NumPy, Pandas, scikit-learn, psutil
 
 ## Usage
 
@@ -99,10 +94,7 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ├── performance_tracker.py              # Metrics tracking and CSV output
 ├── requirements.txt                    # Dependencies
 ├── test_main.py                        # Test suite
-├── test_adaptive_loss.py               # Adaptive loss function tests
 ├── weight_constraints.py               # Binary weight management
-├── ADAPTIVE_LOSS_QUICKSTART.md         # Quick start guide for adaptive loss
-├── ADAPTIVE_LOSS_STRATEGY.md           # Detailed adaptive loss documentation
 ├── saved_weights/                      # Model weights generated during training
 └── training_output/                    # Generated results (name may vary based on config)
     ├── analysis/
@@ -111,7 +103,6 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
     ├── training_config_*.json
     ├── training_results.csv
     ├── loss_history.csv
-    ├── adaptive_loss_history.csv
     ├── training_log.txt
     └── configuration_log.csv
 ```
@@ -172,21 +163,9 @@ Key configuration options:
   "max_additional_binary_digits": 16,
   "enable_binary_precision_max": true,
   "max_binary_digits": 24,
-  "loss_weighting_strategy": "curve_fancy"
+  "loss_weighting_strategy": "combined"
 }
 ```
-
-**Loss Weighting Strategies:**
-- `"curve_fancy"` - Advanced adaptive strategy (recommended for most use cases)
-- `"combined"` - Balanced R² and loss-based adaptation
-- `"r2_based"` - Adapts based on R² score
-- `"loss_based"` - Adapts based on loss values
-- `"none"` - Fixed 50/50 weights (baseline)
-
-For detailed information on adaptive loss strategies, see:
-- **Quick Start**: `ADAPTIVE_LOSS_QUICKSTART.md`
-- **Full Documentation**: `ADAPTIVE_LOSS_STRATEGY.md`
-- **Test Examples**: `test_adaptive_loss.py`
 
 ## Experiment Analysis Framework
 

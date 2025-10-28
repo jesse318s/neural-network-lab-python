@@ -199,84 +199,8 @@ def curve_fancy(loss_list: List[float], weight_list: List[np.ndarray], number_of
 
 
 # ============================================================================
-# PHYSICS-BASED LOSS FUNCTIONS
-# ============================================================================
-
-def kinetic_component(x_vel: float, y_vel: float) -> float:
-    """
-    Calculate kinetic energy component (mass factored out).
-    
-    Args:
-        x_vel: Velocity in x direction
-        y_vel: Velocity in y direction
-        
-    Returns:
-        Kinetic energy value
-    """
-    return (x_vel**2 + y_vel**2) / 2
-
-
-def magnetic_potential(mag_field: float, y_pos: float, x_pos: float, 
-                       x_vel: float, y_vel: float, charge: float) -> float:
-    """
-    Calculate magnetic potential energy.
-    
-    Magnetic potential comes from charge * MagneticField x Velocity (Lorentz Force).
-    Cross product computed assuming field centered at origin.
-    
-    Args:
-        mag_field: Magnetic field strength
-        y_pos: Y position
-        x_pos: X position
-        x_vel: X velocity
-        y_vel: Y velocity
-        charge: Particle charge
-        
-    Returns:
-        Magnetic potential energy
-    """
-    cross_product = (y_pos * x_vel - x_pos * y_vel)
-    mag_field_potential = abs(charge * mag_field * cross_product)
-    
-    return mag_field_potential
-
-
-def physics_loss(mag_field: float, charge: float,
-                 x_pos_orig: float, y_pos_orig: float, x_vel_orig: float, y_vel_orig: float,
-                 x_pos_now: float, y_pos_now: float, x_vel_now: float, y_vel_now: float) -> float:
-    """
-    Physics-based loss function for particle dynamics.
-    
-    Energy in system must remain constant: potential + kinetic.
-    This checks if conservation of energy holds.
-    
-    Args:
-        mag_field: Magnetic field strength
-        charge: Particle charge
-        x_pos_orig, y_pos_orig: Original position
-        x_vel_orig, y_vel_orig: Original velocity
-        x_pos_now, y_pos_now: Current position
-        x_vel_now, y_vel_now: Current velocity
-        
-    Returns:
-        Absolute energy difference (loss value)
-    """
-    kc_orig = kinetic_component(x_vel_orig, y_vel_orig)
-    kc_now = kinetic_component(x_vel_now, y_vel_now)
-    
-    mag_potential_orig = magnetic_potential(mag_field, y_pos_orig, x_pos_orig, x_vel_orig, y_vel_orig, charge)
-    mag_potential_now = magnetic_potential(mag_field, y_pos_now, x_pos_now, x_vel_now, y_vel_now, charge)
-    
-    diff = kc_now - kc_orig + mag_potential_now - mag_potential_orig
-    
-    return abs(diff)
-
-
-# ============================================================================
 # STANDARD LOSS WEIGHT COMPUTATION
 # ============================================================================
-
-
 
 def compute_loss_weights(strategy: str, prev_r2: float = 0.5, prev_loss: float = 1.0, 
                         loss_history: Optional[List[float]] = None,
@@ -333,8 +257,6 @@ def compute_loss_weights(strategy: str, prev_r2: float = 0.5, prev_loss: float =
     except Exception as e:
         print(f"Warning: Error computing loss weights ({strategy}): {e}")
         return 0.5, 0.5
-
-
 
 
 def create_adaptive_loss_fn(strategy: str = 'r2_based'):
@@ -439,4 +361,3 @@ def create_adaptive_loss_fn(strategy: str = 'r2_based'):
     adaptive_loss.get_current_info = get_current_info
     adaptive_loss.get_history = get_history
     return adaptive_loss
-
