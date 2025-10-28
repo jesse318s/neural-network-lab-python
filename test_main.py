@@ -111,20 +111,24 @@ class TestAdaptiveLoss(unittest.TestCase):
         loss_fn_r2 = create_adaptive_loss_fn(strategy='r2_based')
         loss_fn_loss = create_adaptive_loss_fn(strategy='loss_based')
         loss_fn_combined = create_adaptive_loss_fn(strategy='combined')
+        loss_fn_fancy = create_adaptive_loss_fn(strategy='curve_fancy')
 
         self.assertTrue(callable(loss_fn_r2))
         self.assertTrue(callable(loss_fn_loss))
         self.assertTrue(callable(loss_fn_combined))
+        self.assertTrue(callable(loss_fn_fancy))
     
     def test_adaptive_loss_get_weights(self):
         """Test getting weights from compute_loss_weights function."""
         mse_weight_r2, mae_weight_r2 = compute_loss_weights('r2_based')
         mse_weight_loss, mae_weight_loss = compute_loss_weights('loss_based')
         mse_weight_combined, mae_weight_combined = compute_loss_weights('combined')
+        mse_weight_fancy, mae_weight_fancy = compute_loss_weights('curve_fancy')
         
         self.assertAlmostEqual(mse_weight_r2 + mae_weight_r2, 1.0)
         self.assertAlmostEqual(mse_weight_loss + mae_weight_loss, 1.0)
         self.assertAlmostEqual(mse_weight_combined + mae_weight_combined, 1.0)
+        self.assertAlmostEqual(mse_weight_fancy + mae_weight_fancy, 1.0)
 
 
 class TestPerformanceTracker(unittest.TestCase):
