@@ -184,8 +184,8 @@ def curve_fancy(loss_list: List[float], weight_list: List[np.ndarray], number_of
         
         new_weights = np.add(adaptive_component, sine_component)
         
-        # Make sure no weight is zero
-        new_weights[new_weights == 0] = 0.1
+        # Protect only MSE (index 0) from zero - preserves physics
+        if len(new_weights) > 0 and new_weights[0] == 0: new_weights[0] = 0.1
         
         # No negative weights
         min_val = np.min(new_weights)
