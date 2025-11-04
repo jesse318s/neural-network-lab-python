@@ -85,7 +85,7 @@ def squarer_diff_sign_preserver(x1: np.ndarray, x2: np.ndarray) -> np.ndarray:
         out = np.array([square_but_preserve_signs(d) for d in diff])
         return out
     except Exception:
-        return square_but_preserve_signs(diff)
+        return np.vectorize(square_but_preserve_signs)(diff)
 
 
 # ============================================================================
@@ -181,7 +181,6 @@ def curve_fancy(loss_list: List[float], weight_list: List[np.ndarray], number_of
         # Combine adaptive adjustment with sine exploration
         adaptive_component = adaptive_loss_no_sin(loss_list, weight_list)
         sine_component = epoch_weight_sine_based(epoch, number_of_loss_funcs)
-        
         new_weights = np.add(adaptive_component, sine_component)
         
         # Protect only MSE (index 0) from zero - preserves physics
