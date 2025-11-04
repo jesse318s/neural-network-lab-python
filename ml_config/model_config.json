@@ -8,5 +8,5 @@
   "use_adaptive_oscillation_dampener": true,
   "enable_binary_change_max": true,
   "max_additional_binary_digits": 16,
-  "loss_weighting_strategy": "curve_fancy"
+  "loss_weighting_strategy": "physics_aware"
 }

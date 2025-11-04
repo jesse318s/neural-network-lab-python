@@ -2,7 +2,7 @@
 ML Utilities for Neural Network Training
 
 This module combines adaptive loss functions and state management to enhance model training.
-Includes physics-based loss functions and adaptive curve-fitting loss strategies.
+Includes physics-aware loss functions and adaptive curve-fitting loss strategies.
 """
 
 import tensorflow as tf
@@ -159,11 +159,12 @@ def adaptive_loss_no_sin(loss_list: List[float], weight_list: List[np.ndarray]) 
     return unit
 
 
-def curve_fancy(loss_list: List[float], weight_list: List[np.ndarray], number_of_loss_funcs: int) -> np.ndarray:
+def physics_aware(loss_list: List[float], weight_list: List[np.ndarray], number_of_loss_funcs: int) -> np.ndarray:
     """
-    Fancy curve fitting for adaptive loss weights.
+    Physics-aware curve fitting for adaptive loss weights.
     
-    Combines adaptive gradient-based adjustment with sine-based exploration.
+    Combines adaptive gradient-based adjustment with sine-based exploration and 
+    physics preservation.
     Ensures no weight becomes zero and all weights remain positive.
     
     Args:
@@ -174,17 +175,21 @@ def curve_fancy(loss_list: List[float], weight_list: List[np.ndarray], number_of
     Returns:
         Normalized weight array
     """
-    min_to_do_fancy = number_of_loss_funcs + 2
+    min_to_do_loss = number_of_loss_funcs + 2
     epoch = len(loss_list) if isinstance(loss_list, list) else 1
     
-    if epoch > min_to_do_fancy:
+    if epoch > min_to_do_loss:
         # Combine adaptive adjustment with sine exploration
         adaptive_component = adaptive_loss_no_sin(loss_list, weight_list)
         sine_component = epoch_weight_sine_based(epoch, number_of_loss_funcs)
         new_weights = np.add(adaptive_component, sine_component)
         
         # Protect only MSE (index 0) from zero - preserves physics
-        if len(new_weights) > 0 and new_weights[0] == 0: new_weights[0] = 0.1
+        # Use 10% of mean weight as minimum to maintain relative balance
+        if len(new_weights) > 0 and new_weights[0] == 0:
+            mean_weight = np.mean(np.abs(new_weights))
+            # At least 5%, ideally 10% of mean
+            new_weights[0] = max(0.05, mean_weight * 0.1)
         
         # No negative weights
         min_val = np.min(new_weights)
@@ -209,11 +214,11 @@ def compute_loss_weights(strategy: str, prev_r2: float = 0.5, prev_loss: float =
     Compute adaptive loss function weights based on training progress.
     
     Args:
-        strategy: Weighting strategy ('r2_based', 'loss_based', 'combined', 'curve_fancy')
+        strategy: Weighting strategy ('r2_based', 'loss_based', 'combined', 'physics_aware')
         prev_r2: Previous epoch's R² score
         prev_loss: Previous epoch's loss value
-        loss_history: Complete loss history for curve_fancy strategy
-        weight_history: Complete weight history for curve_fancy strategy
+        loss_history: Complete loss history for physics_aware strategy
+        weight_history: Complete weight history for physics_aware strategy
         epoch: Current epoch number
         
     Returns:
@@ -239,15 +244,15 @@ def compute_loss_weights(strategy: str, prev_r2: float = 0.5, prev_loss: float =
             final_mae = (r2_mae + loss_mae) / 2
             total = final_mse + final_mae
             return (final_mse / total, final_mae / total) if total > 0 else (0.5, 0.5)
-        elif strategy == 'curve_fancy':
-            # Adaptive curve fitting strategy
+        elif strategy == 'physics_aware':
+            # Adaptive physics-aware curve fitting strategy
             if loss_history is None or weight_history is None or len(loss_history) < 2:
                 # Not enough history, use sine-based exploration
                 weights = epoch_weight_sine_based(epoch, 2)
                 return float(weights[0]), float(weights[1])
             
-            # Use curve fancy algorithm
-            weights = curve_fancy(loss_history, weight_history, 2)
+            # Use physics-aware algorithm
+            weights = physics_aware(loss_history, weight_history, 2)
             
             if len(weights) >= 2: return float(weights[0]), float(weights[1])
             
@@ -263,7 +268,7 @@ def create_adaptive_loss_fn(strategy: str = 'r2_based'):
     Create an adaptive loss function with state management.
     
     Args:
-        strategy: Weighting strategy to use ('r2_based', 'loss_based', 'combined', 'curve_fancy')
+        strategy: Weighting strategy to use ('r2_based', 'loss_based', 'combined', 'physics_aware')
         
     Returns:
         Adaptive loss function with update capabilities
@@ -313,8 +318,8 @@ def create_adaptive_loss_fn(strategy: str = 'r2_based'):
 
             state['history'].append(loss_info)
             
-            # Update weight history for curve_fancy strategy
-            if strategy == 'curve_fancy':
+            # Update weight history for physics_aware strategy
+            if strategy == 'physics_aware':
                 state['weight_history'].append(np.array([mse_weight, mae_weight]))
             
             return combined_loss
