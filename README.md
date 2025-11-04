@@ -23,10 +23,7 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 - **R²-Based**: Modifies weights based on validation R² score
 - **Loss-Based**: Adapts based on previous loss values
 - **Combined Strategy**: Intelligently combines both strategies
-- **Curve Fancy**: Advanced adaptive strategy using curve-fitting and sine-based exploration
-  - Early epochs: Systematic exploration using sine wave oscillation
-  - Later epochs: Gradient-based adaptation with continued exploration
-  - Automatically balances MSE/MAE emphasis based on training dynamics
+- **Physics-Aware**: Advanced adaptive strategy using curve-fitting, sine-based exploration, and physics preservation
 
 ### Performance Tracking
 
@@ -163,7 +160,7 @@ Key configuration options:
   "max_additional_binary_digits": 16,
   "enable_binary_precision_max": true,
   "max_binary_digits": 24,
-  "loss_weighting_strategy": "combined"
+  "loss_weighting_strategy": "physics_aware"
 }
 ```
 
