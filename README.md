@@ -6,7 +6,7 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 
 - **Binary Weight Constraints**: Control binary precision of neural network weights
 - **Oscillation Dampening**: Prevent weight oscillations during training
-- **Adaptive Loss Functions**: Dynamically adjusts MSE/MAE based on training
+- **Adaptive Loss Functions**: Dynamically adjusts MSE/MAE based on training with multiple strategies
 - **Performance Tracking**: Comprehensive metrics collection with CSV export
 - **Experiment Analysis Framework**: Detailed diagnostics and visualizations
 - **Error Resilience**: Graceful degradation on component failures
@@ -23,6 +23,10 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 - **R²-Based**: Modifies weights based on validation R² score
 - **Loss-Based**: Adapts based on previous loss values
 - **Combined Strategy**: Intelligently combines both strategies
+- **Curve Fancy**: Advanced adaptive strategy using curve-fitting and sine-based exploration
+  - Early epochs: Systematic exploration using sine wave oscillation
+  - Later epochs: Gradient-based adaptation with continued exploration
+  - Automatically balances MSE/MAE emphasis based on training dynamics
 
 ### Performance Tracking
 
@@ -44,8 +48,6 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 ```bash
 pip install -r requirements.txt
 ```
-
-**Dependencies**: TensorFlow, NumPy, Pandas, scikit-learn, psutil
 
 ## Usage
 
@@ -88,7 +90,7 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ├── experiment_analysis_utils.py        # Analysis utility functions
 ├── james_stein_weight_constraint.py    # James-Stein weight constraint implementation
 ├── main.py                             # Main training script
-├── ml_utils.py                         # ML utilities (adaptive loss)
+├── ml_utils.py                         # ML utilities (adaptive loss functions)
 ├── performance_tracker.py              # Metrics tracking and CSV output
 ├── requirements.txt                    # Dependencies
 ├── test_main.py                        # Test suite
