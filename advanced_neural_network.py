@@ -257,7 +257,7 @@ class AdvancedNeuralNetwork:
             avg_train_mse = float(np.mean(epoch_mse))
             avg_train_mae = float(np.mean(epoch_mae))
             # Apply weight constraints
-            apply_constraints = epoch >= ((epoch + 1) % constraint_interval == 0)
+            apply_constraints = (epoch + 1) % constraint_interval == 0
             applied_constraints = self._apply_weight_constraints() if apply_constraints else []
 
             # Update performance tracker
