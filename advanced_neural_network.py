@@ -93,20 +93,31 @@ class AdvancedNeuralNetwork:
     
     def _build_model(self) -> tf.keras.Model:
         """Build the neural network model."""
-        hidden_layers = self.config.get('hidden_layers', [64, 32, 16])
+        hidden_layers = self.config.get('hidden_layers', [128, 64, 32])
         activation = self.config.get('activation', 'relu')
-        dropout_rate = self.config.get('dropout_rate', 0.2)  
-        model = tf.keras.Sequential([
-            tf.keras.layers.Input(shape=self.input_shape),
-            tf.keras.layers.Dense(hidden_layers[0], activation=activation),
-            tf.keras.layers.Dropout(dropout_rate) if dropout_rate > 0 else tf.keras.layers.Lambda(lambda x: x),
-        ])
-        
-        for units in hidden_layers[1:]:
-            model.add(tf.keras.layers.Dense(units, activation=activation))
+        dropout_rate = self.config.get('dropout_rate', 0.2)
+        use_batch_norm = self.config.get('use_batch_norm', True)
+        batch_norm_momentum = self.config.get('batch_norm_momentum', 0.9)
+        l2_reg = self.config.get('l2_regularization', 0.0)
+        kernel_regularizer = tf.keras.regularizers.L2(l2_reg) if l2_reg > 0 else None
+        model = tf.keras.Sequential()
 
-            if dropout_rate > 0: model.add(tf.keras.layers.Dropout(dropout_rate))
-        
+        model.add(tf.keras.layers.Input(shape=self.input_shape))
+
+        for units in hidden_layers:
+            model.add(tf.keras.layers.Dense(units, use_bias=not use_batch_norm, kernel_regularizer=kernel_regularizer))
+
+            if use_batch_norm:
+                model.add(tf.keras.layers.BatchNormalization(momentum=batch_norm_momentum))
+
+            if activation.lower() == 'prelu':
+                model.add(tf.keras.layers.PReLU())
+            else:
+                model.add(tf.keras.layers.Activation(activation))
+
+            if dropout_rate > 0:
+                model.add(tf.keras.layers.Dropout(dropout_rate))
+
         model.add(tf.keras.layers.Dense(self.output_shape, activation='linear'))
         return model
     
@@ -170,22 +181,26 @@ class AdvancedNeuralNetwork:
     def _custom_training_step(self, X_batch: np.ndarray, y_batch: np.ndarray) -> Dict[str, Any]:
         """Perform a custom training step with adaptive loss."""
         try:
+            x_tensor = tf.convert_to_tensor(X_batch, dtype=tf.float32)
+            y_tensor = tf.convert_to_tensor(y_batch, dtype=tf.float32)
+
             with tf.GradientTape() as tape:
-                y_pred = self.model(X_batch, training=True)
+                y_pred = self.model(x_tensor, training=True)
 
                 if self.adaptive_loss:
-                    loss_value = self.adaptive_loss(y_batch, y_pred)
+                    loss_value = self.adaptive_loss(y_tensor, y_pred)
                 else:
-                    loss_value = tf.reduce_mean(tf.math.squared_difference(y_batch, y_pred))
-            
+                    loss_value = tf.reduce_mean(tf.math.squared_difference(y_tensor, y_pred))
+
             gradients = tape.gradient(loss_value, self.model.trainable_variables)
 
             if gradients is None:
                 raise ValueError("Gradients computation returned None.")
 
             self.model.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
-            mse, mae = tf.reduce_mean(tf.square(y_batch - y_pred)), tf.reduce_mean(tf.abs(y_batch - y_pred))
-            return {'loss': float(loss_value.numpy()), 'mse': float(mse.numpy()), 'mae': float(mae.numpy())}
+            mse = tf.reduce_mean(tf.square(y_tensor - y_pred))
+            mae = tf.reduce_mean(tf.abs(y_tensor - y_pred))
+            return {'loss': float(tf.keras.backend.get_value(loss_value)), 'mse': float(mse.numpy()), 'mae': float(mae.numpy())}
         except ValueError as ve:
             self.errors.append(f"Validation error in training step: {ve}")
             return {'loss': 1.0, 'mse': 1.0, 'mae': 1.0}
@@ -196,6 +211,11 @@ class AdvancedNeuralNetwork:
     def train_with_custom_constraints(self, X_train: np.ndarray, y_train: np.ndarray, X_val: np.ndarray, y_val: np.ndarray, 
                                       epochs: int = 50, batch_size: int = 32) -> Dict[str, Any]:
         """Train the model with custom weight constraints and adaptive loss."""
+        X_train = np.asarray(X_train, dtype=np.float32)
+        X_val = np.asarray(X_val, dtype=np.float32)
+        y_train = np.asarray(y_train, dtype=np.float32)
+        y_val = np.asarray(y_val, dtype=np.float32)
+        constraint_interval = max(1, self.config.get('constraint_interval', 1))
         # Start training tracking
         model_config = self.config.copy()
         training_config = {'epochs': epochs, 'batch_size': batch_size}
@@ -208,7 +228,7 @@ class AdvancedNeuralNetwork:
             'val_loss': [], 'val_mae': [], 'val_rmse': [], 'val_r2': [],
             'epoch_time': [], 'applied_constraints': []
         }
-        num_batches = max(1, len(X_train) // batch_size)
+        num_batches = max(1, int(np.ceil(len(X_train) / batch_size)))
         
         for epoch in range(epochs):
             if self.performance_tracker: self.performance_tracker.start_epoch(epoch)
@@ -224,6 +244,9 @@ class AdvancedNeuralNetwork:
                 start_idx = batch_idx * batch_size
                 end_idx = min(start_idx + batch_size, len(X_train))
                 X_batch, y_batch = X_train_shuffled[start_idx:end_idx], y_train_shuffled[start_idx:end_idx]
+                
+                if end_idx <= start_idx: continue
+
                 metrics = self._custom_training_step(X_batch, y_batch)
                 epoch_losses.append(metrics['loss'])
                 epoch_mse.append(metrics['mse'])
@@ -234,7 +257,8 @@ class AdvancedNeuralNetwork:
             avg_train_mse = float(np.mean(epoch_mse))
             avg_train_mae = float(np.mean(epoch_mae))
             # Apply weight constraints
-            applied_constraints = self._apply_weight_constraints()
+            apply_constraints = epoch >= ((epoch + 1) % constraint_interval == 0)
+            applied_constraints = self._apply_weight_constraints() if apply_constraints else []
 
             # Update performance tracker
             for constraint in applied_constraints:
