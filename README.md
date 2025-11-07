@@ -154,6 +154,7 @@ Key configuration options:
 
 ```json
 {
+  "constraint_interval": 10,
   "enable_weight_oscillation_dampener": true,
   "use_adaptive_oscillation_dampener": true,
   "enable_binary_change_max": true,
