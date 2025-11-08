@@ -1,16 +1,14 @@
 {
-  "hidden_layers": [512, 256, 128, 64],
-  "activation": "relu",
+  "hidden_layers": [512, 384, 256, 128, 64],
+  "activation": "prelu",
   "optimizer": "adam",
   "learning_rate": 0.001,
-  "dropout_rate": 0.08,
+  "dropout_rate": 0.04,
   "use_batch_norm": true,
-  "batch_norm_momentum": 0.9,
+  "batch_norm_momentum": 0.95,
   "l2_regularization": 0.00001,
   "constraint_interval": 3,
   "enable_weight_oscillation_dampener": true,
   "use_adaptive_oscillation_dampener": true,
-  "enable_binary_change_max": true,
-  "max_additional_binary_digits": 4,
   "loss_weighting_strategy": "physics_aware"
 }

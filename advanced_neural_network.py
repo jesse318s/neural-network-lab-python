@@ -96,7 +96,7 @@ class AdvancedNeuralNetwork:
         hidden_layers = self.config.get('hidden_layers', [128, 64, 32])
         activation = self.config.get('activation', 'relu')
         dropout_rate = self.config.get('dropout_rate', 0.2)
-        use_batch_norm = self.config.get('use_batch_norm', True)
+        use_batch_norm = self.config.get('use_batch_norm', False)
         batch_norm_momentum = self.config.get('batch_norm_momentum', 0.9)
         l2_reg = self.config.get('l2_regularization', 0.0)
         kernel_regularizer = tf.keras.regularizers.L2(l2_reg) if l2_reg > 0 else None
