@@ -25,14 +25,12 @@ from data_processing import complete_data_pipeline, load_and_validate_data
 PROJECT_NAME = "neural-network-lab-python"
 
 INPUT_FEATURES = [
-    "mass",
-    "initial_velocity_x",
-    "initial_velocity_y",
-    "initial_position_x",
-    "initial_position_y",
-    "charge",
-    "magnetic_field_strength",
-    "simulation_time"
+    'mass', 'initial_velocity_x', 'initial_velocity_y', 'initial_position_x',
+    'initial_position_y', 'charge', 'magnetic_field_strength', 'simulation_time',
+    'initial_speed', 'initial_position_mag', 'initial_momentum_x', 'initial_momentum_y',
+    'initial_momentum_mag', 'momentum_dot_position', 'charge_field_product', 'abs_charge',
+    'cyclotron_frequency', 'cyclotron_phase', 'lorentz_force_mag', 'sim_time_field', 'time_squared',
+    'sin_cyclotron_phase', 'cos_cyclotron_phase'
 ]
 
 OUTPUT_TARGETS = [
@@ -316,8 +314,13 @@ def load_scalers(paths: Dict[str, Path]) -> Tuple[Any, Any]:
 
 
 def load_particle_data(paths: Dict[str, Path]) -> pd.DataFrame:
-    """Load particle simulation data with validation safeguards."""
+    """Load particle simulation data with validation safeguards and derived features."""
+    from data_processing import add_derived_features
+    
     dataset = load_and_validate_data(csv_path=str(paths["data_path"]))
+    
+    # Add derived features for compatibility with training pipeline
+    dataset = add_derived_features(dataset)
 
     if "particle_id" in dataset.columns:
         dataset = dataset.sort_values("particle_id").reset_index(drop=True)
@@ -399,7 +402,18 @@ def compute_predictions(
     if model is None:
         return pd.DataFrame(), {}
 
-    feature_subset = particle_df[INPUT_FEATURES].copy()
+    # Add derived features if not present
+    from data_processing import add_derived_features
+    
+    particle_df_with_features = add_derived_features(particle_df)
+    
+    # Check if all required features are available
+    missing_features = [f for f in INPUT_FEATURES if f not in particle_df_with_features.columns]
+    if missing_features:
+        print(f"⚠️ Warning: Missing features for prediction: {missing_features[:5]}")
+        return pd.DataFrame(), {}
+    
+    feature_subset = particle_df_with_features[INPUT_FEATURES].copy()
 
     if sample_size and len(feature_subset) > sample_size:
         feature_subset = feature_subset.sample(sample_size, random_state=42).sort_index()
@@ -408,13 +422,13 @@ def compute_predictions(
     predictions_scaled = model.predict(scaled_inputs, verbose=0)
     predictions = scaler_y.inverse_transform(predictions_scaled) if scaler_y is not None else predictions_scaled
 
-    actual_outputs = particle_df.loc[feature_subset.index, OUTPUT_TARGETS].values
+    actual_outputs = particle_df_with_features.loc[feature_subset.index, OUTPUT_TARGETS].values
     residuals = predictions - actual_outputs
 
     residual_df = pd.DataFrame(index=feature_subset.index)
 
-    if "particle_id" in particle_df.columns:
-        residual_df["particle_id"] = particle_df.loc[feature_subset.index, "particle_id"]
+    if "particle_id" in particle_df_with_features.columns:
+        residual_df["particle_id"] = particle_df_with_features.loc[feature_subset.index, "particle_id"]
 
     for idx, target in enumerate(OUTPUT_TARGETS):
         residual_df[f"actual_{target}"] = actual_outputs[:, idx]
