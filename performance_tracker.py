@@ -183,6 +183,18 @@ class PerformanceTracker:
             self._save_training_results_csv()
             self._save_configuration_log()
             self._save_training_log()
+            # Optionally save animated graphs if sufficient data exists
+            try:
+                if len(self.training_history) >= 3:
+                    from animation_utils import create_training_animation
+                    figures_dir = os.path.join(self.output_dir, 'analysis', 'figures')
+                    os.makedirs(figures_dir, exist_ok=True)
+                    gif_path = os.path.join(figures_dir, 'training_progress.gif')
+                    created = create_training_animation(self.training_history, gif_path, fps=6, dpi=110, max_frames=200)
+                    if created:
+                        print(f"Animated training graph saved to {created}")
+            except Exception as e:
+                self._handle_error(f"Error saving animation: {e}")
             print(f"Results saved to {self.output_dir}")
         except Exception as e:
             self._handle_error(f"Error saving results: {e}")

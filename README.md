@@ -10,6 +10,9 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 - **Performance Tracking**: Comprehensive metrics collection with CSV export
 - **Experiment Analysis Framework**: Detailed diagnostics and visualizations
 - **Error Resilience**: Graceful degradation on component failures
+- **Config Presets & Data Config**: Ready-to-use model presets and particle generator backup config
+- **Animated Training Graphs**: Matplotlib animations saved as GIFs
+- **HPO Agent**: Lightweight hyperparameter tuning agent
 
 ## Core Components
 
@@ -58,6 +61,14 @@ python main.py
 python test_main.py
 ```
 
+### Use a model preset
+
+Optionally select a preset by environment variable; falls back to `ml_config/model_config.json`:
+
+```powershell
+$env:MODEL_CONFIG_PRESET = "deep_regularized"; python main.py
+```
+
 ### Basic Example
 
 ```python
@@ -80,7 +91,13 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ```
 ├── ml_config/                          # ML configuration files
 |   ├── model_config.json
-|   └── training_config.json
+|   ├── training_config.json
+|   ├── model_presets/                # Preset model configs
+|   |   ├── baseline.json
+|   |   ├── fast_debug.json
+|   |   ├── deep_regularized.json
+|   |   └── high_precision.json
+|   └── particle_generation_config.json  # Backup data generation ranges
 ├── advanced_neural_network.py          # Core neural network implementation
 ├── data_processing.py                  # Data processing functionality
 ├── experiment_analysis_framework.ipynb # Experiment analysis notebook
@@ -139,6 +156,24 @@ Dynamically adjusts MSE/MAE weighting based on R² and loss history.
 ### Error Resilience
 
 Implements graceful degradation - training continues even when individual components encounter errors.
+
+## Animated Training Graphs
+
+When at least 3 epochs are recorded, an animated GIF visualizing train/val loss and R² progression is saved to:
+
+- `training_output/analysis/figures/training_progress.gif`
+
+Requires `Pillow` (included in `requirements.txt`).
+
+## Hyperparameter Tuning Agent
+
+See `Agents.md` for details. Run randomized search across presets:
+
+```powershell
+python hpo_agent.py --max-trials 20 --presets baseline,deep_regularized --epochs 25 --batch-size 64
+```
+
+Results saved to `training_output/analysis/hpo_results.csv`.
 
 ## Testing
 
