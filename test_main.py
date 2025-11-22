@@ -6,18 +6,18 @@ including weight constraints, adaptive loss functions, and performance tracking.
 """
 
 import unittest
-import numpy as np
-import pandas as pd
 import os
 import sys
-import tempfile
 import shutil
+import tempfile
+import numpy as np
+import pandas as pd
 
 # Add the current directory to the path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
-    from weight_constraints import (BinaryWeightConstraintMax, BinaryWeightConstraintChanges, 
+    from weight_constraints import (BinaryWeightConstraintMax, BinaryWeightConstraintChanges,
         OscillationDampener, AdaptiveOscillationDampener)
     WEIGHT_CONSTRAINTS_AVAILABLE = True
 except ImportError:
@@ -36,7 +36,8 @@ except ImportError:
     PERFORMANCE_TRACKER_AVAILABLE = False
 
 try:
-    from data_processing import generate_particle_data, load_and_validate_data, preprocess_for_training
+    from data_processing import (generate_particle_data,
+        load_and_validate_data, preprocess_for_training)
     DATA_PROCESSING_AVAILABLE = True
 except ImportError:
     DATA_PROCESSING_AVAILABLE = False
@@ -44,17 +45,17 @@ except ImportError:
 
 class TestWeightConstraints(unittest.TestCase):
     """Test weight constraint functionality."""
-    
+
     def setUp(self):
         if not WEIGHT_CONSTRAINTS_AVAILABLE:
             self.skipTest("Weight constraints module not available")
-    
+
     def test_binary_weight_constraint_max(self):
         """Test binary weight constraint max functionality."""
         constraint = BinaryWeightConstraintMax(max_binary_digits=8)
         weights = np.array([[0.125344, -0.875444], [1.5444, 0.75444]])
         result = constraint.apply_constraint(weights)
-        
+
         self.assertEqual(result.shape, weights.shape)
         self.assertIsInstance(result, np.ndarray)
         self.assertLess(result[0,0], weights[0,0])
@@ -69,13 +70,13 @@ class TestWeightConstraints(unittest.TestCase):
         self.assertEqual(result.shape, weights.shape)
         self.assertIsInstance(result, np.ndarray)
         self.assertLess(result[0,0], weights[0,0])
-    
+
     def test_oscillation_dampener(self):
         """Test oscillation dampener functionality."""
         dampener = OscillationDampener()
         dampener_weight_values = [0.41, 0.51, 0.31]
         unstable_weights = np.array([[0.81]])
-        
+
         for val in dampener_weight_values:
             dampener.add_weights(np.array([[val]]))
 
@@ -89,7 +90,7 @@ class TestWeightConstraints(unittest.TestCase):
         dampener = AdaptiveOscillationDampener()
         dampener_weight_values = [0.41, 0.51, 0.31]
         unstable_weights = np.array([[0.81]])
-        
+
         for val in dampener_weight_values:
             dampener.add_weights(np.array([[val]]))
 
@@ -101,11 +102,11 @@ class TestWeightConstraints(unittest.TestCase):
 
 class TestAdaptiveLoss(unittest.TestCase):
     """Test adaptive loss function functionality."""
-    
+
     def setUp(self):
         if not ADAPTIVE_LOSS_AVAILABLE:
             self.skipTest("Adaptive loss module not available")
-    
+
     def test_adaptive_loss_initialization(self):
         """Test adaptive loss function creation."""
         loss_fn_r2 = create_adaptive_loss_fn(strategy='r2_based')
@@ -117,14 +118,14 @@ class TestAdaptiveLoss(unittest.TestCase):
         self.assertTrue(callable(loss_fn_loss))
         self.assertTrue(callable(loss_fn_combined))
         self.assertTrue(callable(loss_fn_physics))
-    
+
     def test_adaptive_loss_get_weights(self):
         """Test getting weights from compute_loss_weights function."""
         mse_weight_r2, mae_weight_r2 = compute_loss_weights('r2_based')
         mse_weight_loss, mae_weight_loss = compute_loss_weights('loss_based')
         mse_weight_combined, mae_weight_combined = compute_loss_weights('combined')
         mse_weight_physics, mae_weight_physics = compute_loss_weights('physics_aware')
-        
+
         self.assertAlmostEqual(mse_weight_r2 + mae_weight_r2, 1.0)
         self.assertAlmostEqual(mse_weight_loss + mae_weight_loss, 1.0)
         self.assertAlmostEqual(mse_weight_combined + mae_weight_combined, 1.0)
@@ -133,102 +134,103 @@ class TestAdaptiveLoss(unittest.TestCase):
 
 class TestPerformanceTracker(unittest.TestCase):
     """Test performance tracking functionality."""
-    
+
     def setUp(self):
         if not PERFORMANCE_TRACKER_AVAILABLE:
             self.skipTest("Performance tracker module not available")
-        
+
         self.temp_dir = tempfile.mkdtemp()
         self.tracker = PerformanceTracker(output_dir=self.temp_dir)
-    
+
     def tearDown(self):
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
-    
+
     def test_performance_tracker_initialization(self):
         """Test initialization of PerformanceTracker."""
         self.assertEqual(self.tracker.output_dir, self.temp_dir)
         self.assertEqual(self.tracker.current_r2, 0.0)
-    
+
     def test_get_summary(self):
         """Test getting performance summary."""
         summary = self.tracker.get_summary()
-        
+
         self.assertIsInstance(summary, dict)
         self.assertIn('current_r2', summary)
 
 
 class TestDataProcessing(unittest.TestCase):
     """Test data processing functionality."""
-    
+
     def setUp(self):
         if not DATA_PROCESSING_AVAILABLE:
             self.skipTest("Data processing module not available")
-    
+
     def test_generate_particle_data(self):
         """Test particle data generation."""
         data = generate_particle_data()
-        
-        self.assertIsInstance(data, pd.DataFrame)
-        self.assertGreater(len(data), 0)
-        self.assertEqual(data.shape, (10, 15)) 
-    
-    def test_load_and_validate_data(self):
-        """Test loading and validating data."""
-        data = load_and_validate_data()
-        
+
         self.assertIsInstance(data, pd.DataFrame)
         self.assertGreater(len(data), 0)
         self.assertEqual(data.shape, (10, 15))
-    
+
+    def test_load_and_validate_data(self):
+        """Test loading and validating data."""
+        data = load_and_validate_data()
+
+        self.assertIsInstance(data, pd.DataFrame)
+        self.assertGreater(len(data), 0)
+        self.assertEqual(data.shape, (10, 15))
+
     def test_preprocess_for_training(self):
         """Test preprocessing data for training."""
         dataframe = pd.DataFrame({'mass': [1.0], 'kinetic_energy': [1.0]})
         processed_data = preprocess_for_training(dataframe)
-        
+
         self.assertIsInstance(processed_data, tuple)
         self.assertEqual(len(processed_data), 6)
 
 
 class TestAdvancedNeuralNetwork(unittest.TestCase):
     """Test the AdvancedNeuralNetwork class."""
-    
+
     def setUp(self):
-        if not (WEIGHT_CONSTRAINTS_AVAILABLE and ADAPTIVE_LOSS_AVAILABLE and 
+        if not (WEIGHT_CONSTRAINTS_AVAILABLE and ADAPTIVE_LOSS_AVAILABLE and
                 PERFORMANCE_TRACKER_AVAILABLE and DATA_PROCESSING_AVAILABLE):
             self.skipTest("Required modules for AdvancedNeuralNetwork not available")
-        
-        from main import AdvancedNeuralNetwork, complete_data_pipeline, train_with_tracking
-        self.AdvancedNeuralNetwork = AdvancedNeuralNetwork
+
+        from main import AdvancedNeuralNetwork, complete_data_pipeline, train_with_tracking # pylint: disable=import-outside-toplevel
+        self.advanced_neural_network = AdvancedNeuralNetwork
         self.complete_data_pipeline = complete_data_pipeline
         self.train_with_tracking = train_with_tracking
-    
+
     def test_model_creation(self):
         """Test creating an instance of AdvancedNeuralNetwork."""
-        model = self.AdvancedNeuralNetwork((10,), 2, config={})
+        model = self.advanced_neural_network((10,), 2, config={})
 
         self.assertIsNotNone(model)
-    
+
     def test_complete_data_pipeline(self):
         """Test the complete data pipeline function."""
         data_splits = self.complete_data_pipeline(num_particles=100)
 
         self.assertEqual(len(data_splits), 6)
-    
+
     def test_training_with_tracking(self):
         """Test training with performance tracking."""
         data_splits = self.complete_data_pipeline(num_particles=100)
         training_config = {'epochs': 1, 'batch_size': 16}
-        X_train, X_val, X_test, y_train, y_val, y_test = data_splits
-        model = self.AdvancedNeuralNetwork((X_train.shape[1],), y_train.shape[1], config={})
-        results = self.train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_test, training_config)
-        
+        x_train, x_val, x_test, y_train, y_val, y_test = data_splits
+        model = self.advanced_neural_network((x_train.shape[1],), y_train.shape[1], config={})
+        results = self.train_with_tracking(model, x_train, x_val, x_test,
+            y_train, y_val, y_test, training_config)
+
         self.assertIn('test', results)
 
 
 class TestIntegration(unittest.TestCase):
     """Basic integration tests."""
-    
+
     def test_component_availability(self):
         """Test that components can be imported."""
         components = {
@@ -240,13 +242,13 @@ class TestIntegration(unittest.TestCase):
         available_count = sum(components.values())
 
         self.assertEqual(available_count, len(components))
-    
+
     def test_numpy_compatibility(self):
         """Test NumPy array handling."""
         constraint = BinaryWeightConstraintMax(max_binary_digits=3)
         array = np.array([[0.5, 0.3], [0.7, 0.2]])
         result = constraint.apply_constraint(array)
-        
+
         self.assertIsInstance(result, np.ndarray)
         self.assertEqual(result.shape, array.shape)
 
