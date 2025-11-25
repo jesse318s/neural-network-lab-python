@@ -1,0 +1,34 @@
+
+# Pylint configuration for neural-network-lab-python
+# Enables line-length checking (C0301) and sets sensible defaults
+
+[MASTER]
+# Common directories to ignore during linting
+ignore=.venv,venv,__pycache__,build,dist
+jobs=1
+
+[MESSAGES CONTROL]
+# Keep project-specific disables but ensure C0301 (line-too-long) is enabled
+# Existing disables (preserve): C0103 (invalid-name), W0718 (raise-missing-from)
+#R0913: Too many arguments (8/5) (too-many-arguments)
+#R0917: Too many positional arguments (8/5) (too-many-positional-arguments)
+disable=missing-docstring, R0913, R0917 #C0103,W0718,
+#one change
+# Explicitly enable line-too-long checks
+enable=C0301
+
+[FORMAT]
+# Maximum allowed line length
+max-line-length=88
+# Use 4 spaces for indentation
+indent-string='    '
+
+[REPORTS]
+output-format=text
+reports=no
+score=yes
+
+[BASIC]
+# Allow a few short common variable names, changed so includes special names
+good-names=i,j,k,ex,_,id, X_train, X_val, X_test, y_train, y_val, y_test
+
