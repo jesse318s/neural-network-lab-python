@@ -11,43 +11,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 
-def add_derived_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Add physics-aware derived features to aid model learning."""
-    try:
-        df = df.copy()
-        eps = 1e-8
-        vx = df['initial_velocity_x'].astype(np.float32)
-        vy = df['initial_velocity_y'].astype(np.float32)
-        x0 = df['initial_position_x'].astype(np.float32)
-        y0 = df['initial_position_y'].astype(np.float32)
-        mass = df['mass'].astype(np.float32)
-        charge = df['charge'].astype(np.float32)
-        field = df['magnetic_field_strength'].astype(np.float32)
-        time_vals = df['simulation_time'].astype(np.float32)
-        df['initial_speed'] = np.sqrt(vx**2 + vy**2)
-        df['initial_position_mag'] = np.sqrt(x0**2 + y0**2)
-        df['initial_momentum_x'] = mass * vx
-        df['initial_momentum_y'] = mass * vy
-        df['initial_momentum_mag'] = np.sqrt(df['initial_momentum_x']**2 + df['initial_momentum_y']**2)
-        df['momentum_dot_position'] = (df['initial_momentum_x'] * x0) + (df['initial_momentum_y'] * y0)
-        df['charge_field_product'] = charge * field
-        df['abs_charge'] = np.abs(charge)
-        safe_mass = np.where(np.abs(mass) > eps, mass, eps)
-        cyclotron_frequency = (charge * field) / safe_mass
-        cyclotron_frequency = np.where(np.abs(charge) > eps, cyclotron_frequency, 0.0)
-        df['cyclotron_frequency'] = cyclotron_frequency
-        df['cyclotron_phase'] = cyclotron_frequency * time_vals
-        df['lorentz_force_mag'] = np.abs(charge) * field * df['initial_speed']
-        df['sim_time_field'] = time_vals * field
-        df['time_squared'] = time_vals**2
-        df['sin_cyclotron_phase'] = np.sin(df['cyclotron_phase'])
-        df['cos_cyclotron_phase'] = np.cos(df['cyclotron_phase'])
-        return df
-    except Exception as e:
-        print(f"Warning: Failed to add derived features: {e}")
-        return df
-
-
 def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -> pd.DataFrame:
     """
     Generate synthetic particle simulation data with physics-based calculations.
@@ -190,6 +153,43 @@ def load_and_validate_data(csv_path: str = 'particle_data.csv') -> pd.DataFrame:
     except Exception as e:
         print(f"Error loading/validating data: {e}")
         return generate_particle_data(save_to_file=False)
+
+
+def add_derived_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Add physics-aware derived features to aid model learning."""
+    try:
+        df = df.copy()
+        eps = 1e-8
+        vx = df['initial_velocity_x'].astype(np.float32)
+        vy = df['initial_velocity_y'].astype(np.float32)
+        x0 = df['initial_position_x'].astype(np.float32)
+        y0 = df['initial_position_y'].astype(np.float32)
+        mass = df['mass'].astype(np.float32)
+        charge = df['charge'].astype(np.float32)
+        field = df['magnetic_field_strength'].astype(np.float32)
+        time_vals = df['simulation_time'].astype(np.float32)
+        df['initial_speed'] = np.sqrt(vx**2 + vy**2)
+        df['initial_position_mag'] = np.sqrt(x0**2 + y0**2)
+        df['initial_momentum_x'] = mass * vx
+        df['initial_momentum_y'] = mass * vy
+        df['initial_momentum_mag'] = np.sqrt(df['initial_momentum_x']**2 + df['initial_momentum_y']**2)
+        df['momentum_dot_position'] = (df['initial_momentum_x'] * x0) + (df['initial_momentum_y'] * y0)
+        df['charge_field_product'] = charge * field
+        df['abs_charge'] = np.abs(charge)
+        safe_mass = np.where(np.abs(mass) > eps, mass, eps)
+        cyclotron_frequency = (charge * field) / safe_mass
+        cyclotron_frequency = np.where(np.abs(charge) > eps, cyclotron_frequency, 0.0)
+        df['cyclotron_frequency'] = cyclotron_frequency
+        df['cyclotron_phase'] = cyclotron_frequency * time_vals
+        df['lorentz_force_mag'] = np.abs(charge) * field * df['initial_speed']
+        df['sim_time_field'] = time_vals * field
+        df['time_squared'] = time_vals**2
+        df['sin_cyclotron_phase'] = np.sin(df['cyclotron_phase'])
+        df['cos_cyclotron_phase'] = np.cos(df['cyclotron_phase'])
+        return df
+    except Exception as e:
+        print(f"Warning: Failed to add derived features: {e}")
+        return df
 
 
 def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: float = 0.2,
