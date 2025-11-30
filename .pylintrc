@@ -1,0 +1,17 @@
+# Pylint configuration for neural-network-lab-python
+
+[MASTER]
+# Common directories to ignore during linting
+ignore-paths=.venv/.*,venv/.*
+# Use all available CPU cores for linting
+jobs=0
+# Do not store the pylint cache
+persistent=no
+
+[MESSAGES CONTROL]
+# Disable specific warnings that are not relevant for this project
+disable=missing-docstring, too-many-arguments, too-many-positional-arguments
+
+[BASIC]
+# Allow a few short common variable names, changed so includes special names
+good-names=i,j,k,ex,_,id,X_train,X_val,X_test,y_train,y_val,y_test
