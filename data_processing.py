@@ -4,38 +4,72 @@ Implements railway-style error handling for robust execution.
 """
 
 import os
-from typing import Tuple
+from typing import Tuple, Optional, Dict, Any
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 
-def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -> pd.DataFrame:
+def _load_generation_config(config_path: str = 'ml_config/particle_generation_config.json') -> Optional[Dict[str, Any]]:
+    """Attempt to load particle generation configuration from JSON file."""
+    try:
+        if os.path.exists(config_path):
+            import json
+
+            with open(config_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"Warning: Failed to load particle generation config: {e}")
+    
+    return None
+
+
+def generate_particle_data(num_particles: int = 10, save_to_file: bool = True,
+                           config_path: Optional[str] = 'ml_config/particle_generation_config.json') -> pd.DataFrame:
     """
     Generate synthetic particle simulation data with physics-based calculations.
     
     Args:
         num_particles: Number of particles to simulate
         save_to_file: Whether to save data to CSV
+        config_path: Optional path to a JSON config to control generation ranges
         
     Returns:
         DataFrame with particle simulation data
     """
     try:
-        np.random.seed(42)
+        # Load config if present
+        cfg = _load_generation_config(config_path) if config_path else None
+
+        # Respect explicitly provided num_particles; otherwise use config default if available
+        if cfg and (num_particles is None or (isinstance(num_particles, int) and num_particles <= 0)):
+            num_particles = int(cfg.get('num_particles_default', 10))
+
+        # Seed
+        seed = int(cfg.get('random_seed', 42)) if cfg else 42
         
-        # Generate input parameters
+        np.random.seed(seed)
+        
+        # Generate input parameters and pull ranges from config when available
+        mass_min, mass_max = (cfg.get('mass_range', [0.1, 10.0]) if cfg else [0.1, 10.0])
+        vx_min, vx_max = (cfg.get('velocity_x_range', [-5.0, 5.0]) if cfg else [-5.0, 5.0])
+        vy_min, vy_max = (cfg.get('velocity_y_range', [-5.0, 5.0]) if cfg else [-5.0, 5.0])
+        x_min, x_max = (cfg.get('position_x_range', [-10.0, 10.0]) if cfg else [-10.0, 10.0])
+        y_min, y_max = (cfg.get('position_y_range', [-10.0, 10.0]) if cfg else [-10.0, 10.0])
+        charges = (cfg.get('charge_values', [-1, 0, 1]) if cfg else [-1, 0, 1])
+        B_min, B_max = (cfg.get('magnetic_field_range', [0.1, 2.0]) if cfg else [0.1, 2.0])
+        t_min, t_max = (cfg.get('simulation_time_range', [1.0, 10.0]) if cfg else [1.0, 10.0])
         data = {
             'particle_id': range(1, num_particles + 1),
-            'mass': np.random.uniform(0.1, 10.0, num_particles),
-            'initial_velocity_x': np.random.uniform(-5.0, 5.0, num_particles),
-            'initial_velocity_y': np.random.uniform(-5.0, 5.0, num_particles),
-            'initial_position_x': np.random.uniform(-10.0, 10.0, num_particles),
-            'initial_position_y': np.random.uniform(-10.0, 10.0, num_particles),
-            'charge': np.random.choice([-1, 0, 1], num_particles),
-            'magnetic_field_strength': np.random.uniform(0.1, 2.0, num_particles),
-            'simulation_time': np.random.uniform(1.0, 10.0, num_particles)
+            'mass': np.random.uniform(mass_min, mass_max, num_particles),
+            'initial_velocity_x': np.random.uniform(vx_min, vx_max, num_particles),
+            'initial_velocity_y': np.random.uniform(vy_min, vy_max, num_particles),
+            'initial_position_x': np.random.uniform(x_min, x_max, num_particles),
+            'initial_position_y': np.random.uniform(y_min, y_max, num_particles),
+            'charge': np.random.choice(charges, num_particles),
+            'magnetic_field_strength': np.random.uniform(B_min, B_max, num_particles),
+            'simulation_time': np.random.uniform(t_min, t_max, num_particles)
         }
         # Calculate physics outputs
         outputs = []

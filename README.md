@@ -10,6 +10,7 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 - **Performance Tracking**: Comprehensive metrics collection with CSV export
 - **Experiment Analysis Framework**: Detailed diagnostics and visualizations
 - **Error Resilience**: Graceful degradation on component failures
+- **HPO Agent**: Lightweight hyperparameter tuning agent
 
 ## Core Components
 
@@ -80,7 +81,13 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ```
 ├── ml_config/                          # ML configuration files
 |   ├── model_config.json
-|   └── training_config.json
+|   ├── training_config.json
+|   ├── particle_generation_config.json
+|   └── model_presets/                  # Preset model configs
+|       ├── baseline.json
+|       ├── fast_debug.json
+|       ├── deep_regularized.json
+|       └── high_precision.json
 ├── advanced_neural_network.py          # Core neural network implementation
 ├── data_processing.py                  # Data processing functionality
 ├── experiment_analysis_framework.ipynb # Experiment analysis notebook
@@ -139,6 +146,16 @@ Dynamically adjusts MSE/MAE weighting based on R² and loss history.
 ### Error Resilience
 
 Implements graceful degradation - training continues even when individual components encounter errors.
+
+### Hyperparameter Tuning Agent
+
+See `.github\agents\hyperparameter-tuner.md` for details. Run randomized search across presets:
+
+```powershell
+python hpo_agent.py --max-trials 20 --presets baseline,deep_regularized --epochs 25 --batch-size 64
+```
+
+Results saved to `training_output/analysis/hpo_results.csv`.
 
 ## Testing
 

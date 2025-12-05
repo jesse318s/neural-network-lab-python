@@ -1,0 +1,13 @@
+{
+  "hidden_layers": [64, 32],
+  "activation": "relu",
+  "optimizer": "adam",
+  "learning_rate": 0.001,
+  "dropout_rate": 0.0,
+  "use_batch_norm": false,
+  "l2_regularization": 0.0,
+  "constraint_interval": 5,
+  "enable_weight_oscillation_dampener": false,
+  "use_adaptive_oscillation_dampener": false,
+  "loss_weighting_strategy": "combined"
+}

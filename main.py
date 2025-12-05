@@ -7,6 +7,7 @@ for particle physics simulations.
 """
 
 import json
+import os
 import numpy as np
 from typing import Dict, Any
 
@@ -120,10 +121,22 @@ def main():
 
     # Load model config and training config
     try:
-        with open('ml_config/model_config.json', 'r') as f:
-            model_config = json.load(f)
+        # Optional preset override via env var
+        preset_name = os.environ.get('MODEL_CONFIG_PRESET')
+        preset_path = f"ml_config/model_presets/{preset_name}.json" if preset_name else None
 
-        with open('ml_config/training_config.json', 'r') as f:
+        if preset_path and os.path.exists(preset_path):
+            with open(preset_path, 'r', encoding='utf-8') as f:
+                model_config = json.load(f)
+            
+            print(f"✓ Loaded model preset: {preset_name}")
+        else:
+            with open('ml_config/model_config.json', 'r', encoding='utf-8') as f:
+                model_config = json.load(f)
+            
+            if preset_name: print(f"⚠ Preset '{preset_name}' not found. Using default model_config.json")
+
+        with open('ml_config/training_config.json', 'r', encoding='utf-8') as f:
             training_config = json.load(f)
     except Exception as e:
         print(f"✗ Failed to load configuration: {e}")
