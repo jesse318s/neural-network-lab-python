@@ -277,10 +277,14 @@ def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: 
         
         # Save scalers
         try:
-            import joblib
+            import pickle
 
-            joblib.dump(scaler_X, 'scaler_X.pkl')
-            joblib.dump(scaler_y, 'scaler_y.pkl')
+            with open('scaler_X.pkl', 'wb') as f:
+                pickle.dump(scaler_X, f)
+
+            with open('scaler_y.pkl', 'wb') as f:
+                pickle.dump(scaler_y, f)
+
             print("Scalers saved to scaler_X.pkl and scaler_y.pkl")
         except (ImportError, Exception) as e:
             print(f"Warning: Could not save scalers: {e}")
