@@ -7,13 +7,12 @@ target: vscode
 ## Goals
 - Automate short training runs across model presets and hyperparameters
 - Log metrics and produce a consolidated CSV for quick comparison
-- Keep dependencies minimal and work headlessly
 
 ## How it works
 - Data is prepared once via `complete_data_pipeline`.
 - For each trial, the agent:
   - Picks a model preset from `ml_config/model_presets/`
-  - Samples a hyperparameter configuration
+  - Samples a hyperparameter configuration if not benchmarking
   - Trains an `AdvancedNeuralNetwork` for N epochs
   - Records key metrics (best R², final R², test metrics)
 - All trials are saved to `training_output/analysis/hpo_results.csv`.
@@ -27,7 +26,7 @@ Examples:
 - `high_precision.json` – medium-deep with tighter constraints
 
 ## Search space
-Randomly sampled per trial:
+Randomly sampled per trial if not benchmarking:
 - activation: {relu, prelu}
 - optimizer: {adam, rmsprop, sgd}
 - learning_rate: ~[3e-4, 1e-3]
