@@ -33,6 +33,7 @@ ANALYSIS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def load_preset(name: str) -> Dict[str, Any]:
+    """Load a model preset configuration by name."""
     path = PRESETS_DIR / f"{name}.json"
 
     if not path.exists(): raise FileNotFoundError(f"Preset not found: {path}")
@@ -71,6 +72,7 @@ def sample_hyperparams(rng: random.Random) -> Dict[str, Any]:
 def run_trial(preset: Dict[str, Any], overrides: Dict[str, Any],
               epochs: int, batch_size: int,
               data_cache: Tuple[np.ndarray, ...]) -> Dict[str, Any]:
+    """Run a single training trial with given preset and hyperparameter overrides."""
     X_train, X_val, X_test, y_train, y_val, y_test = data_cache
     cfg = dict(preset)
 
@@ -97,6 +99,7 @@ def run_trial(preset: Dict[str, Any], overrides: Dict[str, Any],
 
 
 def save_results(rows: List[Dict[str, Any]], out_path: Path) -> None:
+    """Save the aggregated results to a CSV file."""
     import pandas as pd
 
     df = pd.DataFrame(rows)
@@ -104,6 +107,7 @@ def save_results(rows: List[Dict[str, Any]], out_path: Path) -> None:
 
 
 def main():
+    """Main function to run the hyperparameter optimization agent."""
     parser = argparse.ArgumentParser(description="Hyperparameter Tuning Agent")
     
     parser.add_argument("--max-trials", type=int, default=10)
