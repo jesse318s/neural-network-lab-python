@@ -54,6 +54,7 @@ class TestModelCreation(unittest.TestCase):
         input_shape = (15,)
         output_dim = 3
         model = AdvancedNeuralNetwork(input_shape, output_dim, config={})
+
         self.assertIsNotNone(model)
 
 

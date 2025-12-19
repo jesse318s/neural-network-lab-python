@@ -7,7 +7,6 @@ for particle physics simulations.
 """
 
 import json
-import os
 import numpy as np
 from typing import Dict, Any
 
