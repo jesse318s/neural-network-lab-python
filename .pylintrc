@@ -14,4 +14,4 @@ disable=missing-docstring, too-many-arguments, too-many-positional-arguments
 
 [BASIC]
 # Allow a few short common variable names, changed so includes special names
-good-names=i,j,k,ex,_,id,X_train,X_val,X_test,y_train,y_val,y_test
+good-names=ex,id,X_train,X_val,X_test,y_train,y_val,y_test
