@@ -23,7 +23,6 @@ Examples:
 - `baseline.json` – small, fast network
 - `fast_debug.json` – minimal layers for quick debugging
 - `deep_regularized.json` – large network with dropout, batch norm, L2
-- `high_precision.json` – medium-deep with tighter constraints
 
 ## Search space
 Randomly sampled per trial if not benchmarking:
@@ -52,4 +51,3 @@ Outputs to:
 ## Tips
 - Use smaller `--epochs` (10–25) for exploration; rerun best configs with higher epochs.
 - Inspect `training_output/configuration_log.csv` for per-run details.
-- Check `training_output/analysis/figures/` for animated training graphs produced during runs with >=3 epochs.

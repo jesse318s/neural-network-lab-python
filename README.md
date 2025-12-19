@@ -56,7 +56,7 @@ pip install -r requirements.txt
 python main.py
 
 # Run tests
-python test_main.py
+python tests/test_main.py
 ```
 
 ### Basic Example
@@ -79,25 +79,41 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ## Project Structure
 
 ```
-├── ml_config/                          # ML configuration files
+├── .github/                            # GitHub configurations
+|   ├── agents/
+|   |   └── hyperparameter-tuner.md
+|   └── prompts/
+|       ├── advanced_tensorflow_lab.poml
+|       └── advanced_tensorflow_lab.prompt.md
+├── .vscode/                            # VS Code configurations
+|   └── settings.json
+├── ml_config/                          # ML configurations
+|   |── model_presets/
+|   |   ├── baseline.json
+|   |   ├── fast_debug.json
+|   |   └── deep_regularized.json
 |   ├── model_config.json
 |   ├── training_config.json
-|   ├── particle_generation_config.json
-|   └── model_presets/                  # Preset model configs
-|       ├── baseline.json
-|       ├── fast_debug.json
-|       ├── deep_regularized.json
-|       └── high_precision.json
+|   └── particle_generation_config.json
+├── tests/                              # Project test suite
+|   |── __init__.py
+|   |── test_adaptive_loss.py
+|   |── test_data_processing.py
+|   |── test_integration.py
+|   |── test_main.py
+|   |── test_performance_tracker.py
+|   └── test_weight_constraints.py
 ├── advanced_neural_network.py          # Core neural network implementation
+├── AGENTS.md                           # Documentation for agents
 ├── data_processing.py                  # Data processing functionality
 ├── experiment_analysis_framework.ipynb # Experiment analysis notebook
 ├── experiment_analysis_utils.py        # Analysis utility functions
+├── hpo_agent.py                        # Hyperparameter optimization agent script
 ├── james_stein_weight_constraint.py    # James-Stein weight constraint implementation
 ├── main.py                             # Main training script
 ├── ml_utils.py                         # ML utilities (adaptive loss functions)
 ├── performance_tracker.py              # Metrics tracking and CSV output
 ├── requirements.txt                    # Dependencies
-├── test_main.py                        # Test suite
 ├── weight_constraints.py               # Binary weight management
 ├── saved_weights/                      # Model weights generated during training
 └── training_output/                    # Generated results (name may vary based on config)
@@ -120,14 +136,6 @@ Training generates comprehensive logs and metrics:
 - Loss function component tracking
 - Model weights and performance statistics
 - Error logs and configuration records
-
-Analysis tools provide comprehensive experiment diagnostics:
-
-- **Training Dynamics Dashboard**: Loss curves, R² progression, memory usage, generalization gap
-- **Residual Analysis Suite**: Distribution histograms, Q-Q plots, scatter plots, per-target breakdowns
-- **Hyperparameter Impact Heatmap**: Correlation matrix showing parameter-performance relationships
-- **James-Stein Comparison**: Statistical comparison of weight constraint methods
-- **Baseline Benchmarking**: Performance vs mean predictor, linear regression, unconstrained models
 
 ## Key Features
 
@@ -160,10 +168,10 @@ Results saved to `training_output/analysis/hpo_results.csv`.
 ## Testing
 
 ```bash
-python test_main.py # Run standard tests
+python tests/test_main.py # Run standard tests
 ```
 
-Tests cover weight constraints, adaptive loss functions, performance tracking, and error handling.
+Testing covers core functionalities including weight constraints, adaptive loss functions, and performance tracking.
 
 ## Configuration
 
