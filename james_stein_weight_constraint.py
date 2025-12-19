@@ -204,9 +204,12 @@ def create_james_stein_model(
     for units in hidden_layers:
         model.add(tf.keras.layers.Dense(
             units,
-            activation=activation,
+            activation=None if activation.lower() == 'prelu' else activation,
             kernel_constraint=js_constraint
         ))
+        
+        if activation.lower() == 'prelu':
+            model.add(tf.keras.layers.PReLU())
 
         if dropout_rate > 0:
             model.add(tf.keras.layers.Dropout(dropout_rate))

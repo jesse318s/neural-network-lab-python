@@ -4,38 +4,72 @@ Implements railway-style error handling for robust execution.
 """
 
 import os
-from typing import Tuple
+from typing import Tuple, Optional, Dict, Any
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 
-def generate_particle_data(num_particles: int = 10, save_to_file: bool = True) -> pd.DataFrame:
+def _load_generation_config(config_path: str = 'ml_config/particle_generation_config.json') -> Optional[Dict[str, Any]]:
+    """Attempt to load particle generation configuration from JSON file."""
+    try:
+        if os.path.exists(config_path):
+            import json
+
+            with open(config_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"Warning: Failed to load particle generation config: {e}")
+    
+    return None
+
+
+def generate_particle_data(num_particles: int = 10, save_to_file: bool = True,
+                           config_path: Optional[str] = 'ml_config/particle_generation_config.json') -> pd.DataFrame:
     """
     Generate synthetic particle simulation data with physics-based calculations.
     
     Args:
         num_particles: Number of particles to simulate
         save_to_file: Whether to save data to CSV
+        config_path: Optional path to a JSON config to control generation ranges
         
     Returns:
         DataFrame with particle simulation data
     """
     try:
-        np.random.seed(42)
+        # Load config if present
+        cfg = _load_generation_config(config_path) if config_path else None
+
+        # Respect explicitly provided num_particles; otherwise use config default if available
+        if cfg and (num_particles is None or (isinstance(num_particles, int) and num_particles <= 0)):
+            num_particles = int(cfg.get('num_particles_default', 10))
+
+        # Seed
+        seed = int(cfg.get('random_seed', 42)) if cfg else 42
         
-        # Generate input parameters
+        np.random.seed(seed)
+        
+        # Generate input parameters and pull ranges from config when available
+        mass_min, mass_max = (cfg.get('mass_range', [0.1, 10.0]) if cfg else [0.1, 10.0])
+        vx_min, vx_max = (cfg.get('velocity_x_range', [-5.0, 5.0]) if cfg else [-5.0, 5.0])
+        vy_min, vy_max = (cfg.get('velocity_y_range', [-5.0, 5.0]) if cfg else [-5.0, 5.0])
+        x_min, x_max = (cfg.get('position_x_range', [-10.0, 10.0]) if cfg else [-10.0, 10.0])
+        y_min, y_max = (cfg.get('position_y_range', [-10.0, 10.0]) if cfg else [-10.0, 10.0])
+        charges = (cfg.get('charge_values', [-1, 0, 1]) if cfg else [-1, 0, 1])
+        B_min, B_max = (cfg.get('magnetic_field_range', [0.1, 2.0]) if cfg else [0.1, 2.0])
+        t_min, t_max = (cfg.get('simulation_time_range', [1.0, 10.0]) if cfg else [1.0, 10.0])
         data = {
             'particle_id': range(1, num_particles + 1),
-            'mass': np.random.uniform(0.1, 10.0, num_particles),
-            'initial_velocity_x': np.random.uniform(-5.0, 5.0, num_particles),
-            'initial_velocity_y': np.random.uniform(-5.0, 5.0, num_particles),
-            'initial_position_x': np.random.uniform(-10.0, 10.0, num_particles),
-            'initial_position_y': np.random.uniform(-10.0, 10.0, num_particles),
-            'charge': np.random.choice([-1, 0, 1], num_particles),
-            'magnetic_field_strength': np.random.uniform(0.1, 2.0, num_particles),
-            'simulation_time': np.random.uniform(1.0, 10.0, num_particles)
+            'mass': np.random.uniform(mass_min, mass_max, num_particles),
+            'initial_velocity_x': np.random.uniform(vx_min, vx_max, num_particles),
+            'initial_velocity_y': np.random.uniform(vy_min, vy_max, num_particles),
+            'initial_position_x': np.random.uniform(x_min, x_max, num_particles),
+            'initial_position_y': np.random.uniform(y_min, y_max, num_particles),
+            'charge': np.random.choice(charges, num_particles),
+            'magnetic_field_strength': np.random.uniform(B_min, B_max, num_particles),
+            'simulation_time': np.random.uniform(t_min, t_max, num_particles)
         }
         # Calculate physics outputs
         outputs = []
@@ -155,6 +189,43 @@ def load_and_validate_data(csv_path: str = 'particle_data.csv') -> pd.DataFrame:
         return generate_particle_data(save_to_file=False)
 
 
+def add_derived_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Add physics-aware derived features to aid model learning."""
+    try:
+        df = df.copy()
+        eps = 1e-8
+        vx = df['initial_velocity_x'].astype(np.float32)
+        vy = df['initial_velocity_y'].astype(np.float32)
+        x0 = df['initial_position_x'].astype(np.float32)
+        y0 = df['initial_position_y'].astype(np.float32)
+        mass = df['mass'].astype(np.float32)
+        charge = df['charge'].astype(np.float32)
+        field = df['magnetic_field_strength'].astype(np.float32)
+        time_vals = df['simulation_time'].astype(np.float32)
+        df['initial_speed'] = np.sqrt(vx**2 + vy**2)
+        df['initial_position_mag'] = np.sqrt(x0**2 + y0**2)
+        df['initial_momentum_x'] = mass * vx
+        df['initial_momentum_y'] = mass * vy
+        df['initial_momentum_mag'] = np.sqrt(df['initial_momentum_x']**2 + df['initial_momentum_y']**2)
+        df['momentum_dot_position'] = (df['initial_momentum_x'] * x0) + (df['initial_momentum_y'] * y0)
+        df['charge_field_product'] = charge * field
+        df['abs_charge'] = np.abs(charge)
+        safe_mass = np.where(np.abs(mass) > eps, mass, eps)
+        cyclotron_frequency = (charge * field) / safe_mass
+        cyclotron_frequency = np.where(np.abs(charge) > eps, cyclotron_frequency, 0.0)
+        df['cyclotron_frequency'] = cyclotron_frequency
+        df['cyclotron_phase'] = cyclotron_frequency * time_vals
+        df['lorentz_force_mag'] = np.abs(charge) * field * df['initial_speed']
+        df['sim_time_field'] = time_vals * field
+        df['time_squared'] = time_vals**2
+        df['sin_cyclotron_phase'] = np.sin(df['cyclotron_phase'])
+        df['cos_cyclotron_phase'] = np.cos(df['cyclotron_phase'])
+        return df
+    except Exception as e:
+        print(f"Warning: Failed to add derived features: {e}")
+        return df
+
+
 def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: float = 0.2,
                            random_state: int = 42) -> Tuple[np.ndarray, ...]:
     """
@@ -170,9 +241,15 @@ def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: 
         Tuple of (X_train, X_val, X_test, y_train, y_val, y_test)
     """
     try:
-        # Define features
-        input_features = ['mass', 'initial_velocity_x', 'initial_velocity_y', 'initial_position_x',
-                         'initial_position_y', 'charge', 'magnetic_field_strength', 'simulation_time']
+        df = add_derived_features(df)
+        input_features = [
+            'mass', 'initial_velocity_x', 'initial_velocity_y', 'initial_position_x',
+            'initial_position_y', 'charge', 'magnetic_field_strength', 'simulation_time',
+            'initial_speed', 'initial_position_mag', 'initial_momentum_x', 'initial_momentum_y',
+            'initial_momentum_mag', 'momentum_dot_position', 'charge_field_product', 'abs_charge',
+            'cyclotron_frequency', 'cyclotron_phase', 'lorentz_force_mag', 'sim_time_field', 'time_squared',
+            'sin_cyclotron_phase', 'cos_cyclotron_phase'
+        ]
         output_features = ['final_velocity_x', 'final_velocity_y', 'final_position_x',
                           'final_position_y', 'kinetic_energy', 'trajectory_length']
         # Filter available features
@@ -183,24 +260,31 @@ def preprocess_for_training(df: pd.DataFrame, test_size: float = 0.2, val_size: 
             raise ValueError(f"Insufficient features: inputs={len(available_inputs)}, outputs={len(available_outputs)}")
         
         # Extract and clean data
-        X, y = df[available_inputs].values, df[available_outputs].values  
+        X = df[available_inputs].values.astype(np.float32)
+        y = df[available_outputs].values.astype(np.float32)
         # Split data
         X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
         X_train, X_val, y_train, y_val = train_test_split(X_train_val, y_train_val, 
                                                           test_size=val_size, random_state=random_state)
         # Scale features
         scaler_X, scaler_y = StandardScaler(), StandardScaler()
-        X_train_scaled = scaler_X.fit_transform(X_train)
-        X_val_scaled, X_test_scaled = scaler_X.transform(X_val), scaler_X.transform(X_test)
-        y_train_scaled = scaler_y.fit_transform(y_train)
-        y_val_scaled, y_test_scaled = scaler_y.transform(y_val), scaler_y.transform(y_test)
+        X_train_scaled = scaler_X.fit_transform(X_train).astype(np.float32)
+        X_val_scaled = scaler_X.transform(X_val).astype(np.float32)
+        X_test_scaled = scaler_X.transform(X_test).astype(np.float32)
+        y_train_scaled = scaler_y.fit_transform(y_train).astype(np.float32)
+        y_val_scaled = scaler_y.transform(y_val).astype(np.float32)
+        y_test_scaled = scaler_y.transform(y_test).astype(np.float32)
         
         # Save scalers
         try:
-            import joblib
+            import pickle
 
-            joblib.dump(scaler_X, 'scaler_X.pkl')
-            joblib.dump(scaler_y, 'scaler_y.pkl')
+            with open('scaler_X.pkl', 'wb') as f:
+                pickle.dump(scaler_X, f)
+
+            with open('scaler_y.pkl', 'wb') as f:
+                pickle.dump(scaler_y, f)
+
             print("Scalers saved to scaler_X.pkl and scaler_y.pkl")
         except (ImportError, Exception) as e:
             print(f"Warning: Could not save scalers: {e}")

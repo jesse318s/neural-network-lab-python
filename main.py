@@ -102,7 +102,7 @@ def main():
 
     # Load and prepare data
     try:
-        data_splits = complete_data_pipeline(num_particles=2000)
+        data_splits = complete_data_pipeline(num_particles=5000)
         X_train, X_val, X_test, y_train, y_val, y_test = data_splits
         print(f"✓ Data loaded successfully:")
         print(f"  Training: {X_train.shape[0]}, Validation: {X_val.shape[0]}, Test: {X_test.shape[0]}")
@@ -120,10 +120,10 @@ def main():
 
     # Load model config and training config
     try:
-        with open('ml_config/model_config.json', 'r') as f:
+        with open('ml_config/model_config.json', 'r', encoding='utf-8') as f:
             model_config = json.load(f)
 
-        with open('ml_config/training_config.json', 'r') as f:
+        with open('ml_config/training_config.json', 'r', encoding='utf-8') as f:
             training_config = json.load(f)
     except Exception as e:
         print(f"✗ Failed to load configuration: {e}")

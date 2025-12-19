@@ -1,0 +1,13 @@
+{
+  "num_particles_default": 2000,
+  "mass_range": [0.1, 10.0],
+  "velocity_x_range": [-5.0, 5.0],
+  "velocity_y_range": [-5.0, 5.0],
+  "position_x_range": [-10.0, 10.0],
+  "position_y_range": [-10.0, 10.0],
+  "charge_values": [-1, 0, 1],
+  "magnetic_field_range": [0.1, 2.0],
+  "simulation_time_range": [1.0, 10.0],
+  "random_seed": 42,
+  "save_to_file": true
+}

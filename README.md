@@ -10,6 +10,7 @@ A TensorFlow implementation featuring custom weight constraints, adaptive loss f
 - **Performance Tracking**: Comprehensive metrics collection with CSV export
 - **Experiment Analysis Framework**: Detailed diagnostics and visualizations
 - **Error Resilience**: Graceful degradation on component failures
+- **HPO Agent**: Lightweight hyperparameter tuning agent
 
 ## Core Components
 
@@ -55,7 +56,7 @@ pip install -r requirements.txt
 python main.py
 
 # Run tests
-python test_main.py
+python tests/test_main.py
 ```
 
 ### Basic Example
@@ -78,19 +79,41 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 ## Project Structure
 
 ```
-├── ml_config/                          # ML configuration files
+├── .github/                            # GitHub configurations
+|   ├── agents/
+|   |   └── hyperparameter-tuner.md
+|   └── prompts/
+|       ├── advanced_tensorflow_lab.poml
+|       └── advanced_tensorflow_lab.prompt.md
+├── .vscode/                            # VS Code configurations
+|   └── settings.json
+├── ml_config/                          # ML configurations
+|   |── model_presets/
+|   |   ├── baseline.json
+|   |   ├── fast_debug.json
+|   |   └── deep_regularized.json
 |   ├── model_config.json
-|   └── training_config.json
+|   ├── training_config.json
+|   └── particle_generation_config.json
+├── tests/                              # Project test suite
+|   |── __init__.py
+|   |── test_adaptive_loss.py
+|   |── test_data_processing.py
+|   |── test_integration.py
+|   |── test_main.py
+|   |── test_performance_tracker.py
+|   └── test_weight_constraints.py
 ├── advanced_neural_network.py          # Core neural network implementation
+├── AGENTS.md                           # Documentation for agents
 ├── data_processing.py                  # Data processing functionality
 ├── experiment_analysis_framework.ipynb # Experiment analysis notebook
 ├── experiment_analysis_utils.py        # Analysis utility functions
+├── hpo_agent.py                        # Hyperparameter optimization agent script
 ├── james_stein_weight_constraint.py    # James-Stein weight constraint implementation
 ├── main.py                             # Main training script
 ├── ml_utils.py                         # ML utilities (adaptive loss functions)
 ├── performance_tracker.py              # Metrics tracking and CSV output
 ├── requirements.txt                    # Dependencies
-├── test_main.py                        # Test suite
 ├── weight_constraints.py               # Binary weight management
 ├── saved_weights/                      # Model weights generated during training
 └── training_output/                    # Generated results (name may vary based on config)
@@ -114,14 +137,6 @@ Training generates comprehensive logs and metrics:
 - Model weights and performance statistics
 - Error logs and configuration records
 
-Analysis tools provide comprehensive experiment diagnostics:
-
-- **Training Dynamics Dashboard**: Loss curves, R² progression, memory usage, generalization gap
-- **Residual Analysis Suite**: Distribution histograms, Q-Q plots, scatter plots, per-target breakdowns
-- **Hyperparameter Impact Heatmap**: Correlation matrix showing parameter-performance relationships
-- **James-Stein Comparison**: Statistical comparison of weight constraint methods
-- **Baseline Benchmarking**: Performance vs mean predictor, linear regression, unconstrained models
-
 ## Key Features
 
 ### Binary Weight Constraints
@@ -140,13 +155,23 @@ Dynamically adjusts MSE/MAE weighting based on R² and loss history.
 
 Implements graceful degradation - training continues even when individual components encounter errors.
 
+### Hyperparameter Tuning Agent
+
+See `.github\agents\hyperparameter-tuner.md` for details. Run randomized search across presets:
+
+```powershell
+python hpo_agent.py --max-trials 20 --presets baseline,deep_regularized --epochs 25 --batch-size 64
+```
+
+Results saved to `training_output/analysis/hpo_results.csv`.
+
 ## Testing
 
 ```bash
-python test_main.py # Run standard tests
+python tests/test_main.py # Run standard tests
 ```
 
-Tests cover weight constraints, adaptive loss functions, performance tracking, and error handling.
+Testing covers core functionalities including weight constraints, adaptive loss functions, and performance tracking.
 
 ## Configuration
 
@@ -154,6 +179,7 @@ Key configuration options:
 
 ```json
 {
+  "constraint_interval": 10,
   "enable_weight_oscillation_dampener": true,
   "use_adaptive_oscillation_dampener": true,
   "enable_binary_change_max": true,
@@ -184,12 +210,14 @@ Execute the `experiment_analysis_framework.ipynb` notebook in VS Code with the J
 
 The notebook automatically:
 
-1. **Validates artifacts**: Checks for required training outputs, configs, and checkpoints
-2. **Loads data**: Ingests training logs, particle data, scalers, and model weights
-3. **Generates visualizations**: Creates high-quality figures
+1. **Validates artifacts**: Checks for required training outputs, configs, and checkpoints with graceful degradation
+2. **Loads data**: Ingests training logs, particle data, scalers, and model weights with automatic fallbacks
+3. **Generates visualizations**: Creates high-quality figures (training logs analyzed even if model unavailable)
 4. **Performs benchmarking**: Compares model against baselines and James-Stein shrinkage
 5. **Provides recommendations**: Statistical hyperparameter suggestions with confidence intervals
 6. **Exports results**: Saves figures and JSON summary with key metrics
+
+**Note**: The framework handles missing or incompatible artifacts gracefully. If model checkpoints can't be loaded due to architecture changes, training log analysis continues and scalers are automatically regenerated when needed.
 
 ### Key Features
 
@@ -210,6 +238,8 @@ Four-panel diagnostic including:
 - Q-Q plot for normality testing
 - Residuals vs predicted values scatter
 - Per-target residual boxplots
+
+**Note**: Requires successful model checkpoint loading. Skipped gracefully if model unavailable.
 
 #### 3. James-Stein Estimator Comparison
 
@@ -353,6 +383,14 @@ custom_residuals, custom_metrics = compute_predictions(
 **Issue**: Missing artifacts error
 
 - **Solution**: Run `main.py` to generate training outputs first
+
+**Issue**: Model checkpoint architecture mismatch warning
+
+- **Solution**: The framework gracefully handles this - training log analysis continues. Run a new training session with current configuration to generate compatible checkpoints for prediction analysis.
+
+**Issue**: Scaler feature mismatch warning
+
+- **Solution**: Scalers are automatically regenerated when feature sets change. The framework handles this automatically for baseline comparisons.
 
 **Issue**: Kernel crashes during James-Stein comparison
 
