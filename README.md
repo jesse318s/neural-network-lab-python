@@ -80,11 +80,8 @@ results = train_with_tracking(model, X_train, X_val, X_test, y_train, y_val, y_t
 
 ```
 ├── .github/                            # GitHub configurations
-|   ├── agents/
-|   |   └── hyperparameter-tuner.md
-|   └── prompts/
-|       ├── advanced_tensorflow_lab.poml
-|       └── advanced_tensorflow_lab.prompt.md
+|   └── agents/
+|       └── hyperparameter-tuner.md
 ├── .vscode/                            # VS Code configurations
 |   └── settings.json
 ├── ml_config/                          # ML configurations
